@@ -36,6 +36,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseBlock;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseNodeVisitor;
@@ -64,6 +67,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	private final UUID queryId;
 	private BaseBlock currentBlock;
 	private final LinkedList<BaseBlock> blockStack;
+	private Log log;
 	
 	public DynamicNodeVisitor( TicketSrcActor ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
 		
@@ -72,6 +76,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		setTopLevelContext( tlc );
 		setTicketSrc( ticketSrc );
 		setRepl( repl );
+		log = LogFactory.getLog( DynamicNodeVisitor.class );
 	}
 
 	@Override
@@ -190,14 +195,23 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		int channel;
 		SingleExpr se;
 		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: "+applyExpr.toString().replace( '\n', ' ' ) );
+		
 		// prepare reduced apply expression
 		channel = applyExpr.getChannel();
 		rest = applyExpr.hasRest();
 		applyExpr1 = new ApplyExpr( channel, rest );
 
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: Trying to reduce task expression." );		
+		
 		// try to reduce task expression
 		taskExpr1 = applyExpr.getTaskExpr().visit( this );
 		applyExpr1.setTaskExpr( taskExpr1 );
+		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: Trying to reduce parameter list." );		
 		
 		// try to reduce the parameter list
 		try {
@@ -208,42 +222,48 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 			throw new RuntimeException( e );
 		}
 		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: Trying to push rest bindings." );		
+				
 		// try to push the rest
 		try {
+
 			applyExpr1.attemptPushRest();
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor accept ApplyExpr: Push of rest bindings successful or none present." );		
+			
 		}
 		catch( NotDerivableException e ) {
+
 			// if it does not work in this round, it may still work in the next
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor accept ApplyExpr: Push of rest bindings not successful. It may still work later." );		
 		}
 		
 		if( taskExpr1.getNumSingleExpr() == 1 ) {
 			
 			// task expression is single expression
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor accept ApplyExpr: Task expression is single expression." );		
 
 			try {
 				
 				if( taskExpr1.getNumAtom() == 1 ) {
 					
 					// task expression is single value
+					if( log.isTraceEnabled() )
+						log.trace( "DynamicNodeVisitor accept ApplyExpr: Task expression is single value." );		
 					
 					se = taskExpr1.getSingleExpr( 0 );
 					
-					if( !( se instanceof LambdaExpr ) )
+					if( !( se instanceof LambdaExpr ) ) {
+						
+						if( log.isTraceEnabled() )
+							log.trace( "DynamicNodeVisitor accept ApplyExpr: Singular task expression is not a lambda expression. Returning what we have so far: "+applyExpr1.toString().replace( '\n', ' ' ) );		
+
 						return new CompoundExpr( applyExpr1 );
-					
-					/* lambdaExpr = ( LambdaExpr )se;
-					
-					if( lambdaExpr instanceof NativeLambdaExpr )
-						
-						// lambda expression is native
-						
-						// reduce
-						return reduceSingleNative( applyExpr1 );
-						
-					// lambda expression is foreign
-					
-					// combine and create tickets
-					return combineForeign( applyExpr1 ); */
+					}
 					
 					// combine parameters
 					return combineParam( applyExpr1 );
@@ -251,22 +271,29 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				}
 					
 				// task expression is single expression but multiple value
-								
 				return reducePotentiallyCorrelated( applyExpr1 );
 			}
 			catch( NotDerivableException e ) {
 
 				// cardinality cannot be derived yet
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor accept ApplyExpr: Cardinality cannot be derived yet. Returning what we have so far: "+applyExpr.toString().replace( '\n', ' ' ) );		
+
 				return new CompoundExpr( applyExpr1 );
 			}
 		}
 			
 		// task expression is multiple
-		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: Task expression is multiple." );		
+				
 		return reducePotentiallyCorrelated( applyExpr1 );
 
 	}
 
+	
+	
+	
 	@Override
 	public CompoundExpr accept( CompoundExpr ce ) {
 		
@@ -472,16 +499,22 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		CombiHelper helper;
 		int i, n;
-		CompoundExpr ce;
+		CompoundExpr ce, ce0;
 		Block bindingBlock;
 		LambdaExpr lambda;
 		ApplyExpr singularApplyExpr;
 		QualifiedTicket qt;
 		
 		try {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: "+applyExpr.toString().replace( '\n', ' ') );
 		
 			helper = new CombiHelper( applyExpr );
 			n = helper.getCardinality();
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Creating CombiHelper with cardinality "+n );
 						
 			ce = new CompoundExpr();
 			
@@ -493,16 +526,31 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				singularApplyExpr = new ApplyExpr( applyExpr.getChannel(), applyExpr.hasRest() );
 				singularApplyExpr.setParamBindMap( bindingBlock.getParamBindMap() );
 				singularApplyExpr.setTaskExpr( new CompoundExpr( lambda ) );
-
+				
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Enumerating singular application "+singularApplyExpr.toString().replace( '\n', ' ' ) );
+			
 				if( lambda instanceof ForeignLambdaExpr ) {
 					
+					if( log.isTraceEnabled() )
+						log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Task expression is foreign." );
+				
 					if( singularApplyExpr.isParamNormal() ) {
 						
+						if( log.isTraceEnabled() )
+							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Application parameters are in normal form." );
+
 						qt = ticketSrc.requestTicket( repl, queryId, singularApplyExpr );
 						
+						if( log.isTraceEnabled() )
+							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Ticket requested. Appending "+qt.toString().replace( '\n', ' ' ) );
+												
 						ce.addSingleExpr( qt );
 						continue;
 					}
+					
+					if( log.isTraceEnabled() )
+						log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Application parameters are not in normal form. Appending what we have so far: "+singularApplyExpr.toString().replace( '\n', ' ' ) );
 					
 					ce.addSingleExpr( singularApplyExpr );
 					continue;
@@ -511,16 +559,31 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				
 				if( lambda instanceof NativeLambdaExpr ) {
 					
-					ce.addCompoundExpr( reduceSingleNative( singularApplyExpr ) );
+					if( log.isTraceEnabled() )
+						log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Task expression is native." );
+
+					ce0 = reduceSingleNative( singularApplyExpr );
+					
+					if( log.isTraceEnabled() )
+						log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Appending result of single native reduction step: "+ce0.toString().replace( '\n', ' ' ) );
+
+					ce.addCompoundExpr( ce0 );
 					continue;
 				}
 				
 				throw new RuntimeException( "Lambda expression type not recognized." );
 			}
 			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Combination complete; returning: "+ce.toString().replace( '\n', ' ' ) );			
+			
 			return ce;
 		}
 		catch( NotDerivableException e ) {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Some information could not be derived. Returning what we have so far: "+applyExpr.toString().replace( '\n', ' ' ) );
+					
 			return new CompoundExpr( applyExpr );
 		}
 	}
@@ -590,6 +653,10 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		int channel;
 		CompoundExpr targetCompoundExpr;
 		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reduceSingleNative ApplyExpr: "+applyExpr.toString().replace( '\n', ' ' ) );
+
+		
 		taskResult = applyExpr.getTaskExpr();
 		try {
 			if( taskResult.getNumAtom() != 1 )
@@ -619,7 +686,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		try {
 			pushIntoBlock( applyExpr.getParamBlock() );
 		} catch( NotDerivableException e ) {
-			throw new RuntimeException( e.getMessage() );
+			throw new RuntimeException( e );
 		}
 		
 		targetNameExpr = lambda.getPrototype().getOutput( channel-1 );
