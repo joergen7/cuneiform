@@ -138,8 +138,8 @@ public class CombiHelper {
 					// TODO: Will this still work when output variable is reduce?
 					ce = new CompoundExpr( bindingBlock.getExpr( name ).getSingleExpr( j ) );
 										
-					if( ce.getNumAtom() > 1 )
-						throw new RuntimeException( "Enumeration resulted in non-singular expression "+ce+"." );
+					if( ce.getNumAtom() != 1 )
+						throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce );
 					
 					block.putAssign( name, ce );
 				}

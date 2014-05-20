@@ -543,7 +543,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 						qt = ticketSrc.requestTicket( repl, queryId, singularApplyExpr );
 						
 						if( log.isTraceEnabled() )
-							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Ticket requested. Appending "+qt.toString().replace( '\n', ' ' ) );
+							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Ticket requested. Appending qualified ticket: "+qt.toString().replace( '\n', ' ' ) );
 												
 						ce.addSingleExpr( qt );
 						continue;
@@ -582,53 +582,79 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		catch( NotDerivableException e ) {
 			
 			if( log.isTraceEnabled() )
-				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Some information could not be derived. Returning what we have so far: "+applyExpr.toString().replace( '\n', ' ' ) );
+				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Some information could not be derived. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
 					
 			return new CompoundExpr( applyExpr );
 		}
 	}
 
 	private void popBlock() {		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor popping out of block." );
+
 		currentBlock = blockStack.pop();
 	}
 
 	private void pushIntoBlock( Block block ) {
+		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor pushing into block." );
+
+		
 		blockStack.push( currentBlock );
 		currentBlock = block;
 	}
 	
 	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) {
 		
-		CompoundExpr taskExpr, ce;
+		CompoundExpr taskExpr, ce, ce0;
 		SingleExpr se;
 		LambdaExpr lambda;
 		Prototype prototype;
 		ApplyExpr applyExpr1;
 		int i, n;
 		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: "+applyExpr.toString().replace( '\n', ' ' ) );
+
+		
 		taskExpr = applyExpr.getTaskExpr();
 		se = taskExpr.getSingleExpr( 0 );
 		
-		if( !( se instanceof LambdaExpr ) )
+		if( !( se instanceof LambdaExpr ) ) {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Task expression is not a lambda expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
+			
 			return new CompoundExpr( applyExpr );
+		}
 		
 		lambda = ( LambdaExpr )se;
 		prototype = lambda.getPrototype();
 		
-		if( prototype.isTaskCorrelated() )
+		if( prototype.isTaskCorrelated() ) {
 			
 			// task parameter is correlated
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is task-correlated." );
 			
 			// combine and create tickets
 			
 			return  combineParam( applyExpr );
+		}
 		
 		// enumerate task expression and create an application from each
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is not task-correlated.Enumerate task expressions and create application for each." );
 		
 		try {	
 			n = taskExpr.getNumAtom();
 		}
-		catch( NotDerivableException e ) {			
+		catch( NotDerivableException e ) {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Could not derive cardinality of task expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
+
 			return new CompoundExpr( applyExpr );
 		}
 		
@@ -637,11 +663,34 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		for( i = 0; i < n; i++ ) {
 			
 			applyExpr1 = applyExpr.clone();
-			applyExpr1.setTaskExpr( new CompoundExpr( taskExpr.getSingleExpr( i ) ) );
+			
+			// TODO: This won't work if the task expression was the result of an output-reduce task
+			ce0 = new CompoundExpr( taskExpr.getSingleExpr( i ) );
+			
+			try {
+				if( ce0.getNumAtom() != 1 )
+					throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce0 );
+			} catch (NotDerivableException e) {
+				throw new RuntimeException( e );
+			}
+			
+			applyExpr1.setTaskExpr( ce0 );
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Appending "+applyExpr.toString().replace( '\n', ' ' ) );
+			
 			ce.addSingleExpr( applyExpr1 );
 		}
 		
-		return ce.visit( this );
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Trying to reduce "+ce.toString().replace( '\n', ' ' ) );
+		
+		ce0 = ce.visit( this );
+		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Returning "+ce0.toString().replace( '\n', ' ' ) );		
+		
+		return ce0;
 	}
 	
 	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) {
@@ -700,6 +749,9 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		popBlock();
 		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor reduceSingleNative ApplyExpr: Returning "+targetCompoundExpr.toString().replace( '\n', ' ' ) );
+
 		return targetCompoundExpr;
 
 	}
