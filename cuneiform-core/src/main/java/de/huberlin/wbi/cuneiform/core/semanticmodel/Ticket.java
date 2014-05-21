@@ -116,6 +116,10 @@ public class Ticket extends Block {
 		return runId;
 	}
 	
+	public String getTaskName() {
+		return lambdaExpr.getTaskName();
+	}
+	
 	public long getTicketId() {
 		
 		long h;
@@ -177,6 +181,10 @@ public class Ticket extends Block {
 		catch( NotBoundException e ) {
 			throw new RuntimeException( e );
 		}
+	}
+	
+	public boolean hasTaskName() {
+		return lambdaExpr.hasTaskName();
 	}
 	
 	public boolean isEvaluated() {

@@ -233,10 +233,18 @@ public class TicketSrcActor extends Actor {
 		ticketId = ticket.getTicketId();
 		
 		if( cacheMap.containsKey( ticketId ) ) {
+			
+			if( log.isDebugEnabled() )
+				log.debug( "Returning ticket "+ticketId+" from cache." );
+			
 			ticket = cacheMap.get( ticketId );
 			qt = new QualifiedTicket( ticket, channel );
 		}
 		else {
+			
+			if( log.isDebugEnabled() )
+				log.debug( "Creating new ticket "+ticketId+"." );			
+			
 			qt = new QualifiedTicket( ticket, channel );
 			putTicket( queryId, ticket );
 			cacheMap.put( ticketId, ticket );

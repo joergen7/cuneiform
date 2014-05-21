@@ -189,7 +189,7 @@ public abstract class Invocation {
 	}
 	
 	public String getTaskName() {
-		return null;
+		return ticket.getTaskName();
 	}
 	
 	public Ticket getTicket() {
@@ -201,7 +201,7 @@ public abstract class Invocation {
 	}
 	
 	public boolean hasTaskName() {
-		return false;
+		return ticket.hasTaskName();
 	}
 	
 	public void setTicket( Ticket ticket ) {

@@ -46,17 +46,29 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		LANGID_BASH, LANGID_LISP, LANGID_OCTAVE, LANGID_R, LANGID_PYTHON, LANGID_PERL, LANGID_SCALA
 	};
 	
-	private int lang;
-	private String body;
+	private final int lang;
+	private final String body;
+	private String name;
 	
 	public ForeignLambdaExpr( Prototype prototype, String langLabel, String body ) {
 		this( prototype, labelToInt( langLabel ), body );
 	}
 	
 	public ForeignLambdaExpr( Prototype prototype, int lang, String body ) {
+
 		super( prototype );
-		setLang( lang );
-		setBody( body );
+		
+		if( body == null )
+			throw new NullPointerException( "Body must not be null." );
+		
+		if( body.isEmpty() )
+			throw new RuntimeException( "Body must not be empty." );
+		
+		if( lang < 0 || lang > 6 )
+			throw new RuntimeException( "Language id "+lang+" not recognized. Must be a number in [0,6]." );
+		
+		this.body = body;		
+		this.lang = lang;
 	}
 	
 	public String getBody() {
@@ -81,25 +93,23 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		return h;
 	}
 
-
-	
-	public void setBody( String body ) {
-		
-		if( body == null )
-			throw new NullPointerException( "Body must not be null." );
-		
-		if( body.isEmpty() )
-			throw new RuntimeException( "Body must not be empty." );
-		
-		this.body = body;
+	public String getTaskName() {
+		return name;
 	}
 	
-	public void setLang( int lang ) {
+	public boolean hasTaskName() {
+		return name != null;
+	}	
+	
+	public void setTaskName( String name ) {
 		
-		if( lang < 0 || lang > 6 )
-			throw new RuntimeException( "Language id '"+lang+"' not recognized. Must be a number in [0,6]." );
+		if( name == null )
+			throw new NullPointerException( "Task name must not be null." );
 		
-		this.lang = lang;
+		if( name.isEmpty() )
+			throw new RuntimeException( "Task name must not be empty." );
+		
+		this.name = name;
 	}
 	
 	@Override

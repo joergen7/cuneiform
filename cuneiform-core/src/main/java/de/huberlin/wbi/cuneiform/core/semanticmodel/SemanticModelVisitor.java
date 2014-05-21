@@ -123,6 +123,9 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	public Node visitAssign( @NotNull CuneiformParser.AssignContext ctx ) {
 		
 		Node nameExpr, compoundExpr;
+		CompoundExpr ce;
+		SingleExpr se;
+		ForeignLambdaExpr lambda;
 		
 		if( ctx.name().size() != 1 )
 			// sorted out in the channel-phase
@@ -145,7 +148,21 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 		if( !( compoundExpr instanceof CompoundExpr ) )
 			throw new RuntimeException( "Expected compound expression. Found "+compoundExpr.getClass().getName()+"." );
 		
-		currentBlock.putAssign( ( NameExpr )nameExpr, ( CompoundExpr )compoundExpr );
+		ce = ( CompoundExpr )compoundExpr;
+		
+		currentBlock.putAssign( ( NameExpr )nameExpr, ce );
+		
+		// if we assigned a single foreign lambda expression, store name
+		if( ce.getNumSingleExpr() == 1 ) {
+			
+			se = ce.getSingleExpr( 0 );
+			if( se instanceof ForeignLambdaExpr ) {
+				
+				lambda = ( ForeignLambdaExpr )se;
+				lambda.setTaskName( ( ( NameExpr )nameExpr ).getId() );
+			}
+				
+		}
 		
 		return currentBlock;
 	}
