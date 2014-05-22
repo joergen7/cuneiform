@@ -79,17 +79,16 @@ import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.ReduceVarContext;
  */
 public class PreListener extends CuneiformBaseListener implements ANTLRErrorListener {
 
-	private TokenStreamRewriter rewriter;
+	private final TokenStreamRewriter rewriter;
 	private final LinkedList<String> exprStack;
 	
 	public PreListener( CommonTokenStream tokenStream ) {
 		
+		if( tokenStream == null )
+			throw new NullPointerException( "Token stream must not be empty." );
+				
+		rewriter = new TokenStreamRewriter( tokenStream );
 		exprStack = new LinkedList<>();		
-		setTokenStream( tokenStream );
-	}
-	
-	public void removeErrorListeners() {
-		
 	}
 	
 	public static String process( String input ) {
@@ -207,14 +206,6 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 		return rewriter.getText();
 	}
 	
-	public void setTokenStream( CommonTokenStream tokenStream ) {
-		
-		if( tokenStream == null )
-			throw new NullPointerException( "Token stream must not be empty." );
-				
-		rewriter = new TokenStreamRewriter( tokenStream );
-	}
-
 	public static boolean containsParam( PrototypeContext prototype, String paramName ) {
 		
 		List<String> nameList;

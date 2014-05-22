@@ -40,43 +40,34 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class TicketReadyMsg extends Message {
 
-	private UUID runId;
-	private Ticket ticket;
+	private final UUID queryId;
+	private final Ticket ticket;
 
-	public TicketReadyMsg( Actor sender, UUID runId, Ticket ticket ) {
+	public TicketReadyMsg( Actor sender, UUID queryId, Ticket ticket ) {
+
 		super( sender );
-		setRunId( runId );
-		setTicket( ticket );
+		
+		if( ticket == null )
+			throw new NullPointerException( "Ticket set must not be null." );
+				
+		if( queryId == null )
+			throw new NullPointerException( "Run ID must not be null." );
+		
+		this.queryId = queryId;
+		this.ticket = ticket;		
 	}
 	
-	public UUID getRunId() {
-		return runId;
+	public UUID getQueryId() {
+		return queryId;
 	}
 	
 	public Ticket getTicket() {
 		return ticket;
 	}
 
-	public void setRunId( UUID runId ) {
-		
-		if( runId == null )
-			throw new NullPointerException( "Run ID must not be null." );
-		
-		this.runId = runId;
-	}
-	
-	public void setTicket( Ticket ticket ) {
-		
-		if( ticket == null )
-			throw new NullPointerException( "Ticket set must not be null." );
-				
-		this.ticket = ticket;
-		
-	}
-	
 	@Override
 	public String toString() {
-		return "{ ticketReady, \""+runId+"\", "+ticket.getTicketId()+", \""+ticket.toString().replace( '\n', ' ' )+"\" }";
+		return "{ ticketReady, \""+queryId+"\", "+ticket.getTicketId()+", \""+ticket.toString().replace( '\n', ' ' )+"\" }";
 	}
 
 

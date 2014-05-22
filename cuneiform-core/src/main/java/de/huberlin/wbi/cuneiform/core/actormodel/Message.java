@@ -34,21 +34,17 @@ package de.huberlin.wbi.cuneiform.core.actormodel;
 
 public abstract class Message {
 
-	private Actor sender;
+	private final Actor sender;
 	
 	public Message( Actor sender ) {
-		setSender( sender );
-	}
-	
-	public Actor getSender() {
-		return sender;
-	}
-	
-	public void setSender( Actor sender ) {
-		
+
 		if( sender == null )
 			throw new NullPointerException( "Sender must not be null." );
 		
 		this.sender = sender;
 	}
+	
+	public Actor getSender() {
+		return sender;
+	}	
 }

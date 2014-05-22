@@ -36,10 +36,10 @@ import java.util.Set;
 
 public class CombiHelper {
 
-	private Prototype prototype;
-	private BaseBlock bindingBlock;
-	private Param[] paramArray;
-	private CompoundExpr taskExpr;
+	private final Prototype prototype;
+	private final BaseBlock bindingBlock;
+	private final CompoundExpr taskExpr;
+	private final Param[] paramArray;
 	
 	public CombiHelper( ApplyExpr applyExpr ) {
 		this( applyExpr.getTaskExpr(), applyExpr );
@@ -47,9 +47,29 @@ public class CombiHelper {
 	
 	public CombiHelper( CompoundExpr taskExpr, BaseBlock bindingBlock ) {
 		
-		setBindingBlock( bindingBlock );
-		setTaskExpr( taskExpr );
-		init();
+		if( bindingBlock == null )
+			throw new NullPointerException( "Binding block must not be null." );
+		
+		if( taskExpr == null )
+			throw new NullPointerException( "Task expression must not be null." );
+		
+		this.taskExpr = taskExpr;		
+		this.prototype = ( ( LambdaExpr )taskExpr.getSingleExpr( 0 ) ).getPrototype();
+		this.bindingBlock = bindingBlock;
+
+		Set<Param> paramSet;
+		int i, n;
+		
+		// impose order on parameter names
+		paramSet = prototype.getParamSet();
+		
+		n = paramSet.size();
+		
+		// impose order on parameter set
+		paramArray = new Param[ n ];
+		i = 0;
+		for( Param param : paramSet )
+			paramArray[ i++ ] = param;
 		
 	}
 	
@@ -185,42 +205,5 @@ public class CombiHelper {
 		}
 		
 		throw new RuntimeException( "Parameter must at least contain one parameter name." );
-	}
-	
-	private void init() {
-		
-		Set<Param> paramSet;
-		int i, n;
-		
-		// impose order on parameter names
-		paramSet = prototype.getParamSet();
-		
-		n = paramSet.size();
-		
-		// impose order on parameter set
-		paramArray = new Param[ n ];
-		i = 0;
-		for( Param param : paramSet )
-			paramArray[ i++ ] = param;
-	}
-	
-	private void setTaskExpr( CompoundExpr taskExpr ) {
-				
-		if( taskExpr == null )
-			throw new NullPointerException( "Task expression must not be null." );
-		
-		this.taskExpr = taskExpr;
-		
-		this.prototype = ( ( LambdaExpr )taskExpr.getSingleExpr( 0 ) ).getPrototype();
-	}
-	
-	private void setBindingBlock( BaseBlock bindingBlock ) {
-		
-		if( bindingBlock == null )
-			throw new NullPointerException( "Binding block must not be null." );
-		
-		this.bindingBlock = bindingBlock;
-	}
-	
-
+	}	
 }

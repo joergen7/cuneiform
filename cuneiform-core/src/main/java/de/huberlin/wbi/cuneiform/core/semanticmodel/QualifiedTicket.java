@@ -36,13 +36,19 @@ import java.util.Set;
 
 public class QualifiedTicket implements SingleExpr {
 	
-	private Ticket ticket;
-	private int channel;
+	private final Ticket ticket;
+	private final int channel;
 	
 	public QualifiedTicket( Ticket ticket, int channel ) {
 		
-		setTicket( ticket );
-		setChannel( channel );
+		if( channel < 1 )
+			throw new RuntimeException( "Channel must at least be 1." );
+		
+		if( ticket == null )
+			throw new NullPointerException( "Ticket must not be null." );
+		
+		this.ticket = ticket;
+		this.channel = channel;
 	}
 
 	public int getChannel() {
@@ -69,22 +75,6 @@ public class QualifiedTicket implements SingleExpr {
 		}
 	}
 	
-	public void setChannel( int channel ) {
-		
-		if( channel < 1 ) 
-			throw new RuntimeException( "Channel must at least be 1." );
-		
-		this.channel = channel;
-	}
-	
-	public void setTicket( Ticket ticket ) {
-		
-		if( ticket == null )
-			throw new NullPointerException( "Ticket must not be null." );
-		
-		this.ticket = ticket;
-	}
-
 	@Override
 	public int getNumAtom() throws NotDerivableException {
 		return ticket.getNumAtom( channel );

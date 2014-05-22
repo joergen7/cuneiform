@@ -45,15 +45,20 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class TicketFinishedMsg extends Message {
 
-	private Ticket ticket;
+	private final Ticket ticket;
 	private final Set<JsonReportEntry> reportEntrySet;
 
 	public TicketFinishedMsg( BaseCreActor sender, Ticket ticket, Collection<JsonReportEntry> report ) {
 		
 		super( sender );
 		
+		if( ticket == null )
+			throw new NullPointerException( "Ticket must not be null." );
+		
+		this.ticket = ticket;
+		
 		reportEntrySet = new HashSet<>();
-		setTicket( ticket );
+
 		addReport( report );
 	}
 	
@@ -82,14 +87,6 @@ public class TicketFinishedMsg extends Message {
 		return ticket;
 	}
 	
-	public void setTicket( Ticket ticket ) {
-		
-		if( ticket == null )
-			throw new NullPointerException( "Ticket must not be null." );
-		
-		this.ticket = ticket;
-	}
-
 	@Override
 	public String toString() {
 		return "{ ticketFinished, "+ticket.getTicketId()+" }";

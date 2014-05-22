@@ -38,16 +38,23 @@ import java.util.Set;
 
 public class NameExpr implements SingleExpr, Param, Comparable<NameExpr> {
 	
-	private String id;
-	private Type type;
+	private final String id;
+	private final Type type;
 	
 	public NameExpr( String id ) {
 		this( id, null );
 	}
 	
 	public NameExpr( String id, Type type ) {
-		setId( id );
-		setType( type );
+
+		if( id == null )
+			throw new NullPointerException( "Id string must not be null." );
+		
+		if( id.isEmpty() )
+			throw new RuntimeException( "Id string must not be empty." );
+		
+		this.id = id;
+		this.type = type;
 	}
 	
 	@Override
@@ -84,21 +91,6 @@ public class NameExpr implements SingleExpr, Param, Comparable<NameExpr> {
 		return type != null;
 	}
 	
-	public void setId( String id ) {
-		
-		if( id == null )
-			throw new NullPointerException( "Id string must not be null." );
-		
-		if( id.isEmpty() )
-			throw new RuntimeException( "Id string must not be empty." );
-		
-		this.id = id;
-	}
-	
-	public void setType( Type type ) {		
-		this.type = type;
-	}
-
 	public ReduceVar toReduceVar() {
 		return new ReduceVar( id, type );
 	}

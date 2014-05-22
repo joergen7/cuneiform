@@ -65,10 +65,14 @@ import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.SingleExprContext;
 
 public class ChannelListener extends CuneiformBaseListener implements ANTLRErrorListener {
 
-	private TokenStreamRewriter rewriter;
+	private final TokenStreamRewriter rewriter;
 	
 	public ChannelListener( CommonTokenStream tokenStream ) {
-		setTokenStream( tokenStream );
+
+		if( tokenStream == null )
+			throw new NullPointerException( "Token stream must not be empty." );
+		
+		rewriter = new TokenStreamRewriter( tokenStream );
 	}
 	
 	@Override
@@ -150,14 +154,6 @@ public class ChannelListener extends CuneiformBaseListener implements ANTLRError
 		return rewriter.getText();
 	}
 	
-	public void setTokenStream( CommonTokenStream tokenStream ) {
-		
-		if( tokenStream == null )
-			throw new NullPointerException( "Token stream must not be empty." );
-		
-		rewriter = new TokenStreamRewriter( tokenStream );
-	}
-
 	public static String process( String input ) {
 
 		ANTLRInputStream instream;

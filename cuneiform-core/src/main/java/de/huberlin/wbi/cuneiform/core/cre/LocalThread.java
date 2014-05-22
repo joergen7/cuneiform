@@ -58,18 +58,34 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 public class LocalThread implements Runnable {
 
 	private final Invocation invoc;
-	private File buildDir;
-	private TicketSrcActor ticketSrc;
-	private BaseCreActor cre;
 	private final Log log;
+	private final File buildDir;
+	private final TicketSrcActor ticketSrc;
+	private final BaseCreActor cre;
 	
 	public LocalThread( TicketSrcActor ticketSrc, BaseCreActor cre, Ticket ticket, File buildDir ) {
 		
+		if( buildDir == null )
+			throw new NullPointerException( "Build directory must not be null." );
+		
+		if( !buildDir.exists() )
+			throw new RuntimeException( "Build directory does not exist." );
+		
+		if( !buildDir.isDirectory() )
+			throw new RuntimeException( "Directory expected." );
+		
+		if( cre == null )
+			throw new NullPointerException( "CRE actor must not be null." );
+		
+		if( ticketSrc == null )
+			throw new NullPointerException( "Ticket source must not be null." );
+		
+		this.ticketSrc = ticketSrc;
+		this.cre = cre;
+		this.buildDir = buildDir;
+
 		invoc = Invocation.createInvocation( ticket );
 		log = LogFactory.getLog( LocalThread.class );
-		setBuildDir( buildDir );
-		setTicketSrc( ticketSrc );
-		setCre( cre );
 	}
 	
 	@Override
@@ -318,36 +334,5 @@ public class LocalThread implements Runnable {
 		}
 
 		
-	}
-	
-	public void setBuildDir( File buildDir ) {
-		
-		if( buildDir == null )
-			throw new NullPointerException( "Build directory must not be null." );
-		
-		if( !buildDir.exists() )
-			throw new RuntimeException( "Build directory does not exist." );
-		
-		if( !buildDir.isDirectory() )
-			throw new RuntimeException( "Directory expected." );
-		
-		this.buildDir = buildDir;
-	}
-	
-	public void setCre( BaseCreActor cre ) {
-		
-		if( cre == null )
-			throw new NullPointerException( "CRE actor must not be null." );
-		
-		this.cre = cre;
-	}
-
-	public void setTicketSrc( TicketSrcActor ticketSrc ) {
-		
-		if( ticketSrc == null )
-			throw new NullPointerException( "Ticket source must not be null." );
-		
-		this.ticketSrc = ticketSrc;
-	}
-
+	}		
 }

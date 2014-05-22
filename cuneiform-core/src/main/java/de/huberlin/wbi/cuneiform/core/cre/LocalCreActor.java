@@ -45,12 +45,21 @@ public class LocalCreActor extends BaseCreActor {
 	private static final int NTHREADS = 2;
 	
 	private final ExecutorService executor;
-	private File buildDir;
+	private final File buildDir;
 	
 	public LocalCreActor( File buildDir ) {
 		
+		if( buildDir == null )
+			throw new NullPointerException( "Build directory must not be null." );
+		
+		if( !buildDir.exists() )
+			throw new RuntimeException( "Build directory does not exist." );
+		
+		if( !buildDir.isDirectory() )
+			throw new RuntimeException( "Directory expected." );
+		
+		this.buildDir = buildDir;
 		executor = Executors.newFixedThreadPool( NTHREADS );
-		setBuildDir( buildDir );
 	}
 	
 	@Override
@@ -82,20 +91,6 @@ public class LocalCreActor extends BaseCreActor {
 		
 	}
 	
-	private void setBuildDir( File buildDir ) {
-		
-		if( buildDir == null )
-			throw new NullPointerException( "Build directory must not be null." );
-		
-		if( !buildDir.exists() )
-			throw new RuntimeException( "Build directory does not exist." );
-		
-		if( !buildDir.isDirectory() )
-			throw new RuntimeException( "Directory expected." );
-		
-		this.buildDir = buildDir;
-	}
-
 	@Override
 	protected void shutdown() {
 		executor.shutdownNow();

@@ -6,10 +6,10 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class TicketFailedMsg extends Message {
 
-	private String script;
-	private String stdErr;
-	private String stdOut;
-	private Ticket ticket;
+	private final String script;
+	private final String stdErr;
+	private final String stdOut;
+	private final Ticket ticket;
 	
 	public TicketFailedMsg(
 		BaseCreActor sender,
@@ -20,10 +20,33 @@ public class TicketFailedMsg extends Message {
 		
 		super( sender );
 		
-		setTicket( ticket );
-		setScript( script );
-		setStdErr( stdErr );
-		setStdOut( stdOut );
+		if( script == null )
+			throw new NullPointerException( "Script must not be null." );
+		
+		if( script.isEmpty() )
+			throw new RuntimeException( "Script must not be empty." );
+		
+		if( ticket == null )
+			throw new NullPointerException( "Ticket must not be null." );
+		
+		if( stdOut == null )
+			this.stdOut = null;
+		else		
+			if( stdOut.isEmpty() )
+				this.stdOut = null;
+			else
+				this.stdOut = stdOut;
+		
+		if( stdErr == null )
+			this.stdErr = null;
+		else
+			if( stdErr.isEmpty() )
+				this.stdErr = null;
+			else
+				this.stdErr = stdErr;
+				
+		this.ticket = ticket;
+		this.script = script;
 	}
 	
 	public String getStdErr() {
@@ -54,55 +77,6 @@ public class TicketFailedMsg extends Message {
 		return stdOut != null;
 	}
 	
-	public void setScript( String script ) {
-		
-		if( script == null )
-			throw new NullPointerException( "Script must not be null." );
-		
-		if( script.isEmpty() )
-			throw new RuntimeException( "Script must not be empty." );
-		
-		this.script = script;
-	}
-	
-	public void setStdOut( String stdOut ) {
-		
-		if( stdOut == null ) {
-			this.stdOut = null;
-			return;
-		}
-		
-		if( stdOut.isEmpty() ) {
-			this.stdOut = null;
-			return;
-		}
-		
-		this.stdOut = stdOut;
-	}
-	
-	public void setStdErr( String stdErr ) {
-		
-		if( stdErr == null ) {
-			this.stdErr = null;
-			return;
-		}
-		
-		if( stdErr.isEmpty() ) {
-			this.stdErr = null;
-			return;
-		}
-		
-		this.stdErr = stdErr;
-	}
-	
-	public void setTicket( Ticket ticket ) {
-		
-		if( ticket == null )
-			throw new NullPointerException( "Ticket must not be null." );
-		
-		this.ticket = ticket;
-	}
-
 	@Override
 	public String toString() {
 		return "{ ticketFailed, \""+stdErr.replace( '\n', ' ' )+"\" }";

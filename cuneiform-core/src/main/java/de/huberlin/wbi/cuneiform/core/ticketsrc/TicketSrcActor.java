@@ -62,16 +62,21 @@ public class TicketSrcActor extends Actor {
 	private final Map<Ticket,Set<UUID>> ticketQueryMap;
 	private final Map<Long,Ticket> cacheMap;
 	private final UUID runId;
-	private BaseCreActor cre;
+	private final BaseCreActor cre;
 	
 	
 	public TicketSrcActor( BaseCreActor cre ) {
+		if( cre == null )
+			throw new NullPointerException( "CRE actor must not be null." );
+		
+		this.cre = cre;
+
 		queryTicketMap = new HashMap<>();
 		ticketQueryMap = new HashMap<>();
 		cacheMap = new HashMap<>();
 		replSet = new HashSet<>();
 		runId = UUID.randomUUID();
-		setCre( cre );
+
 		if( log.isDebugEnabled() )
 			log.debug( "New TicketSrcActor's UUID: "+runId );
 	}
@@ -294,12 +299,4 @@ public class TicketSrcActor extends Actor {
 
 	}
 
-	private void setCre( BaseCreActor cre ) {
-		
-		if( cre == null )
-			throw new NullPointerException( "CRE actor must not be null." );
-		
-		this.cre = cre;
-	}
-	
 }

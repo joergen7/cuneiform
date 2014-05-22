@@ -169,10 +169,10 @@ public class Prototype extends LambdaType implements Cloneable {
 		h = 0;
 		
 		for( NameExpr output : outputList )
-			h = Hash.add( h, output );
+			h = HashHelper.add( h, output );
 		
 		for( NameExpr param : getParamNameSet() )
-			h = Hash.add( h, param );
+			h = HashHelper.add( h, param );
 		
 		return h;
 	}

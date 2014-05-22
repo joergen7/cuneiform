@@ -42,15 +42,24 @@ import java.util.UUID;
 
 public class Ticket extends Block {
 
-	private ForeignLambdaExpr lambdaExpr;
+	private final ForeignLambdaExpr lambdaExpr;
 	private final Block bodyBlock;
-	private UUID runId;
+	private final UUID runId;
 	
-	public Ticket( ForeignLambdaExpr lambda, BaseBlock bindingBlock, UUID runId ) {
+	public Ticket( ForeignLambdaExpr lambdaExpr, BaseBlock bindingBlock, UUID runId ) {
 				
-		setForeignLambdaExpr( lambda );
 		setParamBindMap( bindingBlock.getParamBindMap() );
-		setRunId( runId );
+
+		if( runId == null )
+			throw new NullPointerException( "Run ID must not be null." );
+		
+		if( lambdaExpr == null )
+			throw new NullPointerException(
+				"Foreign lambda expression must not be null." );
+		
+		this.lambdaExpr = lambdaExpr;		
+		this.runId = runId;
+
 		bodyBlock = new Block();
 		
 		if( !isReady() )
@@ -130,7 +139,7 @@ public class Ticket extends Block {
 		
 		try {
 			
-			h = Hash.add( h, lambdaExpr.getBody() );
+			h = HashHelper.add( h, lambdaExpr.getBody() );
 			
 			nameList = new ArrayList<>();
 			for( NameExpr name : getNameSet() )
@@ -141,7 +150,7 @@ public class Ticket extends Block {
 
 			for( i = 0; i < n; i++ )
 				for( String s : getExpr( nameList.get( i ) ).normalize() )
-					h = Hash.add( h, s );
+					h = HashHelper.add( h, s );
 		}
 		catch( NotBoundException e ) {
 			throw new RuntimeException( e );
@@ -191,23 +200,6 @@ public class Ticket extends Block {
 		return !bodyBlock.isEmpty();
 	}
 	
-	public void setForeignLambdaExpr( ForeignLambdaExpr lambdaExpr ) {
-		
-		if( lambdaExpr == null )
-			throw new NullPointerException(
-				"Foreign lambda expression must not be null." );
-		
-		this.lambdaExpr = lambdaExpr;		
-	}
-	
-	public void setRunId( UUID runId ) {
-		
-		if( runId == null )
-			throw new NullPointerException( "Run ID must not be null." );
-		
-		this.runId = runId;
-	}
-
 	public void setValue( NameExpr outputNameExpr, CompoundExpr value ) {
 		bodyBlock.putAssign( outputNameExpr, value );
 	}

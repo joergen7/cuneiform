@@ -30,14 +30,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.huberlin.wbi.cuneiform.core.preprocess;
+package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-public class ChannelPhaseException extends ParseException {
+public class HashHelper {
 
-	private static final long serialVersionUID = 1462803603344407174L;
-
-	public ChannelPhaseException( Integer row, Integer col, String near, String msg ) {
-		super( row, col, near, msg );
+	private static final long PRIME = Long.valueOf( "99194853094755497" ); // large prime number below 9223372036854775807
+	
+	private static int abs( int x ) {
+		
+		if( x < 0 )
+			return -x;
+		
+		return x;
 	}
-
+	
+	public static long add( long a, Object b ) {
+		
+		long hash;
+		
+		hash = a<<2;
+		hash = hash%PRIME;
+		hash = ( hash+( abs( b.hashCode() ) ) )%PRIME;
+		
+		return hash;
+	}
+	
 }

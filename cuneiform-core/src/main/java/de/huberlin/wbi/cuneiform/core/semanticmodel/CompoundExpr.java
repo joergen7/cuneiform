@@ -32,8 +32,8 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class CompoundExpr implements Node, Cloneable {
@@ -41,7 +41,7 @@ public class CompoundExpr implements Node, Cloneable {
 	private final List<SingleExpr> singleExprList;
 	
 	public CompoundExpr() {
-		singleExprList = new LinkedList<>();
+		singleExprList = new ArrayList<>();
 	}
 	
 	public CompoundExpr( SingleExpr se ) {
@@ -161,7 +161,7 @@ public class CompoundExpr implements Node, Cloneable {
 		List<String> normalList;
 		QualifiedTicket qt;
 		
-		normalList = new LinkedList<>();
+		normalList = new ArrayList<>();
 		
 		for( SingleExpr se : singleExprList ) {
 			

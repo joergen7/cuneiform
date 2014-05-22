@@ -62,21 +62,29 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
-	private TicketSrcActor ticketSrc;
-	private BaseRepl repl;
+	private final TicketSrcActor ticketSrc;
+	private final BaseRepl repl;
 	private final UUID queryId;
 	private BaseBlock currentBlock;
 	private final LinkedList<BaseBlock> blockStack;
-	private Log log;
+	private final Log log;
 	
 	public DynamicNodeVisitor( TicketSrcActor ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
 		
+		if( ticketSrc == null )
+			throw new NullPointerException( "Ticket source must not be null." );
+		
+		if( repl == null )
+			throw new NullPointerException( "REPL must not be null." );
+		
+		this.repl = repl;
+		this.ticketSrc = ticketSrc;
+
 		queryId = UUID.randomUUID();
 		blockStack = new LinkedList<>();
-		setTopLevelContext( tlc );
-		setTicketSrc( ticketSrc );
-		setRepl( repl );
 		log = LogFactory.getLog( DynamicNodeVisitor.class );
+
+		setTopLevelContext( tlc );
 	}
 
 	@Override
@@ -437,23 +445,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	public UUID getRunId() {
 		return queryId;
 	}
-	
-	public void setRepl( BaseRepl repl ) {
-		
-		if( repl == null )
-			throw new NullPointerException( "REPL must not be null." );
-		
-		this.repl = repl;
-	}
-	
-	public void setTicketSrc( TicketSrcActor ticketSrc ) {
-		
-		if( ticketSrc == null )
-			throw new NullPointerException( "Ticket source must not be null." );
-		
-		this.ticketSrc = ticketSrc;
-	}
-	
+			
 	public void setTopLevelContext( TopLevelContext tlc ) {
 
 		if( tlc == null )

@@ -34,23 +34,20 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class NativeLambdaExpr extends LambdaExpr {
 
-	private Block bodyBlock;
+	private final Block bodyBlock;
 	
 	public NativeLambdaExpr( Prototype prototype, Block bodyBlock ) {
-		super( prototype );
-		setbodyBlock( bodyBlock );
-	}
-	
-	public Block getBodyBlock() {
-		return bodyBlock;
-	}
-	
-	public void setbodyBlock( Block bodyBlock ) {
 		
+		super( prototype );
+
 		if( bodyBlock == null )
 			throw new NullPointerException( "Body block must not be null." );
 		
 		this.bodyBlock = bodyBlock;
+	}
+	
+	public Block getBodyBlock() {
+		return bodyBlock;
 	}
 	
 	@Override

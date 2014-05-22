@@ -34,18 +34,10 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class DataType implements Type {
 
-	private String id;
+	private final String id;
 	
 	public DataType( String id ) {
-		setId( id );
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public void setId( String id ) {
-		
+
 		if( id == null )
 			throw new NullPointerException( "Id string must not be null." );
 		
@@ -53,6 +45,10 @@ public class DataType implements Type {
 			throw new RuntimeException( "Id string must not be empty." );
 		
 		this.id = id;
+	}
+	
+	public String getId() {
+		return id;
 	}
 	
 	@Override

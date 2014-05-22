@@ -32,8 +32,8 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class TopLevelContext extends BaseBlock {
@@ -46,7 +46,7 @@ public class TopLevelContext extends BaseBlock {
 	
 	public TopLevelContext( BaseBlock parent ) {
 		super( parent );
-		targetList = new LinkedList<>();
+		targetList = new ArrayList<>();
 	}
 	
 	public void addTarget( CompoundExpr target ) {

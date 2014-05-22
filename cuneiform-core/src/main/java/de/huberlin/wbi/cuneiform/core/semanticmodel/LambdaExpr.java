@@ -34,10 +34,14 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public abstract class LambdaExpr implements SingleExpr {
 
-	private Prototype prototype;
+	private final Prototype prototype;
 	
 	public LambdaExpr( Prototype prototype ) {
-		setPrototype( prototype );
+
+		if( prototype == null )
+			throw new NullPointerException( "Prototype must not be null." );
+		
+		this.prototype = prototype;
 	}
 
 	@Override
@@ -54,14 +58,6 @@ public abstract class LambdaExpr implements SingleExpr {
 		throw new RuntimeException( "Trying to convert lambda expression value to string expression value." );
 	}
 
-	
-	public void setPrototype( Prototype prototype ) {
-		
-		if( prototype == null )
-			throw new NullPointerException( "Prototype must not be null." );
-		
-		this.prototype = prototype;
-	}
 	
 	@Override
 	public String toString() {

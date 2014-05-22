@@ -38,11 +38,11 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class BashInvocation extends Invocation {
 
+	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
+
 	public BashInvocation( Ticket ticket ) {
 		super( ticket );
 	}
-
-	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
 
 	@Override
 	protected String getShebang() {

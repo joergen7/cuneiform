@@ -34,10 +34,14 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class StringExpr implements SingleExpr {
 
-	private String value;
+	private final String value;
 	
 	public StringExpr( String content ) {
-		setContent( content );
+
+		if( content == null )
+			throw new NullPointerException( "Content string must not be null." );
+		
+		this.value = content;
 	}
 	
 	@Override
@@ -71,14 +75,6 @@ public class StringExpr implements SingleExpr {
 	@Override
 	public int getNumAtom() throws NotDerivableException {		
 		return 1;
-	}
-	
-	public void setContent( String content ) {
-		
-		if( content == null )
-			throw new NullPointerException( "Content string must not be null." );
-		
-		this.value = content;
 	}
 	
 	@Override

@@ -38,14 +38,19 @@ public abstract class BaseRepl {
 
 	private final SemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
-	private TicketSrcActor ticketSrc;
-	private CompoundExpr ans;
+	private final TicketSrcActor ticketSrc;
 	private final Log log;
 	private final Log statLog;
+	private CompoundExpr ans;
 
 
 	public BaseRepl( TicketSrcActor ticketSrc ) {
-		setTicketSrc( ticketSrc );
+
+		if( ticketSrc == null )
+			throw new NullPointerException( "Ticket source actor must not be null." );
+		
+		this.ticketSrc = ticketSrc;
+		
 		runningMap = new HashMap<>();
 		state = new SemanticModelVisitor();
 		log = LogFactory.getLog( BaseRepl.class );
@@ -221,14 +226,6 @@ public abstract class BaseRepl {
 			for( JsonReportEntry entry : reportEntrySet )
 				statLog.debug( entry );
 			
-	}
-	
-	private void setTicketSrc( TicketSrcActor ticketSrc ) {
-		
-		if( ticketSrc == null )
-			throw new NullPointerException( "Ticket source actor must not be null." );
-		
-		this.ticketSrc = ticketSrc;
 	}
 	
 	public static String getLogo() {

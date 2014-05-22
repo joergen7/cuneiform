@@ -68,10 +68,14 @@ public abstract class Invocation {
 	public static final String LOCK_FILENAME = "__lock__";
 
 
-	private Ticket ticket;
+	private final Ticket ticket;
 	
 	public Invocation( Ticket ticket ) {
-		setTicket( ticket );
+
+		if( ticket == null )
+			throw new NullPointerException( "Ticket must not be null." );
+		
+		this.ticket = ticket;
 	}
 	
 	public void evalReport( Set<JsonReportEntry> report ) throws JSONException {
@@ -202,14 +206,6 @@ public abstract class Invocation {
 	
 	public boolean hasTaskName() {
 		return ticket.hasTaskName();
-	}
-	
-	public void setTicket( Ticket ticket ) {
-		
-		if( ticket == null )
-			throw new NullPointerException( "Ticket must not be null." );
-		
-		this.ticket = ticket;
 	}
 	
 	public String toScript() throws NotBoundException, NotDerivableException {

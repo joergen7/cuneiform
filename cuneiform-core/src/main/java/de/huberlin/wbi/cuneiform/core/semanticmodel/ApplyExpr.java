@@ -34,7 +34,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class ApplyExpr extends BaseBlock implements SingleExpr {
 
-	private int channel;
+	private final int channel;
 	private boolean rest;
 	private CompoundExpr taskExpr;
 	
@@ -43,8 +43,16 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	}
 	
 	public ApplyExpr( int channel, boolean inheritsExtra, BaseBlock parent ) {
+
 		super( parent );
-		setChannel( channel );
+
+		if( channel < 1 ) 
+			throw new SemanticModelException(
+				String.valueOf( channel ),
+				"Invalid channel "+channel+". Channel must be a positive integer." );
+		
+		this.channel = channel;
+		
 		setRest( inheritsExtra );
 	}
 	
@@ -210,17 +218,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 		
 		rest = false;
 	}
-	
-	public void setChannel( int channel ) {
-
-		if( channel < 1 ) 
-			throw new SemanticModelException(
-				String.valueOf( channel ),
-				"Invalid channel "+channel+". Channel must be a positive integer." );
 		
-		this.channel = channel;
-	}
-	
 	public void setRest( boolean inheritsExtra ) {
 		this.rest = inheritsExtra;
 	}

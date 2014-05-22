@@ -87,8 +87,8 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		
 		long h;
 		
-		h = Hash.add( getPrototype().getPrototypeId(), lang );
-		h = Hash.add( h, body );
+		h = HashHelper.add( getPrototype().getPrototypeId(), lang );
+		h = HashHelper.add( h, body );
 		
 		return h;
 	}

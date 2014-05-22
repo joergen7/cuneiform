@@ -34,18 +34,48 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class CondExpr implements SingleExpr {
 
-	private Prototype prototype;
-	private CompoundExpr ifExpr;
-	private Block thenBlock;
-	private Block elseBlock;
-	private int channel;
+	private final Prototype prototype;
+	private final CompoundExpr ifExpr;
+	private final Block thenBlock;
+	private final Block elseBlock;
+	private final int channel;
 	
 	public CondExpr( int channel, Prototype prototype, CompoundExpr ifExpr, Block thenBlock, Block elseBlock ) {
-		setIfExpr( ifExpr );
-		setPrototype( prototype );
-		setThenBlock( thenBlock );
-		setElseBlock( elseBlock );
-		setChannel( channel );
+
+		if( prototype == null )
+			throw new NullPointerException( "Prototype must not be null." );
+		
+		if( !prototype.getParamSet().isEmpty() )
+			throw new SemanticModelException(
+				prototype.toString(),
+				"Prototype "+prototype+" is expected to not have any inputs." );
+		
+		if( ifExpr == null )
+			throw new NullPointerException( "Condition expression must not be null." );
+		
+		if( thenBlock == null )
+			throw new NullPointerException( "Then-block must not be null." );
+		
+		if( !thenBlock.hasParent() )
+			throw new RuntimeException( "Then-block is expected to have a parent scope." );
+		
+		if( elseBlock == null )
+			throw new NullPointerException( "Block must not be null." );
+		
+		if( !elseBlock.hasParent() )
+			throw new RuntimeException( "Block is expected to have a parent scope." );
+		
+		if( channel < 1 )
+			throw new SemanticModelException(
+				String.valueOf( channel ),
+				"Invalid channel "+channel+". Channel must be a positive integer." );
+		
+		this.channel = channel;
+		this.elseBlock = elseBlock;
+		this.thenBlock = thenBlock;
+		this.ifExpr = ifExpr;
+		this.prototype = prototype;
+
 	}
 	
 	public int getChannel() {
@@ -70,58 +100,6 @@ public class CondExpr implements SingleExpr {
 	
 	public Block getThenBlock() {
 		return thenBlock;
-	}
-	
-	public void setChannel( int channel ) {
-		
-		if( channel < 1 )
-			throw new SemanticModelException(
-				String.valueOf( channel ),
-				"Invalid channel "+channel+". Channel must be a positive integer." );
-		
-		this.channel = channel;
-	}
-	
-	public void setElseBlock( Block block ) {
-		
-		if( block == null )
-			throw new NullPointerException( "Block must not be null." );
-		
-		if( !block.hasParent() )
-			throw new RuntimeException( "Block is expected to have a parent scope." );
-		
-		elseBlock = block;
-	}
-	public void setIfExpr( CompoundExpr ifExpr ) {
-		
-		if( ifExpr == null )
-			throw new NullPointerException( "Condition expression must not be null." );
-		
-		this.ifExpr = ifExpr;
-	}
-	
-	public void setPrototype( Prototype prototype ) {
-		
-		if( prototype == null )
-			throw new NullPointerException( "Prototype must not be null." );
-		
-		if( !prototype.getParamSet().isEmpty() )
-			throw new SemanticModelException(
-				prototype.toString(),
-				"Prototype "+prototype+" is expected to not have any inputs." );
-		
-		this.prototype = prototype;
-	}
-	
-	public void setThenBlock( Block block ) {
-		
-		if( block == null )
-			throw new NullPointerException( "Block must not be null." );
-		
-		if( !block.hasParent() )
-			throw new RuntimeException( "Block is expected to have a parent scope." );
-		
-		thenBlock = block;
 	}
 	
 	@Override

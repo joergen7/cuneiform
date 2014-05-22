@@ -32,7 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.actormodel;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -46,7 +46,7 @@ public abstract class Actor implements Runnable {
 	private final List<Message> inbox;
 	
 	public Actor() {
-		inbox = new LinkedList<>();
+		inbox = new ArrayList<>();
 		log = LogFactory.getLog( Actor.class );
 	}
 	
