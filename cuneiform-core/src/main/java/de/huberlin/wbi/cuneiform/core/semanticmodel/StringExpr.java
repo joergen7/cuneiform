@@ -59,6 +59,16 @@ public class StringExpr implements SingleExpr {
 	}
 	
 	@Override
+	public StringExpr getStringExprValue( int i ) {
+		
+		if( i != 0 )
+			throw new IndexOutOfBoundsException(
+				"String expression has only one value with index 0. Queried index "+i );
+		
+		return this;
+	}
+	
+	@Override
 	public int getNumAtom() throws NotDerivableException {		
 		return 1;
 	}

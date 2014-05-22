@@ -65,7 +65,7 @@ public class QualifiedTicket implements SingleExpr {
 		try {
 			return ticket.getOutputValue( channel );
 		} catch( NotBoundException e ) {
-			throw new NotDerivableException( e.getMessage() );
+			throw new NotDerivableException( e );
 		}
 	}
 	
@@ -107,5 +107,10 @@ public class QualifiedTicket implements SingleExpr {
 	@Override
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );
+	}
+
+	@Override
+	public StringExpr getStringExprValue( int i ) throws NotDerivableException {
+		return getOutputValue().getStringExprValue( i );
 	}
 }

@@ -37,8 +37,6 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
-
 public class JsonReportEntry {
 	
 	public static final String KEY_INVOC_TIME = "invoc-time";
@@ -160,7 +158,7 @@ public class JsonReportEntry {
 		}
 	}
 	
-	public JsonReportEntry( Invocation invoc, String file, String key, String value ) throws NotDerivableException {		
+	public JsonReportEntry( Invocation invoc, String file, String key, String value ) {		
 		this(
 			invoc.getRunId(),
 			invoc.getTaskId(), // Integer taskId

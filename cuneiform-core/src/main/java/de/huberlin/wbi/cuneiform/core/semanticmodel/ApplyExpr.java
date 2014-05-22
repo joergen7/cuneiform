@@ -109,6 +109,11 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	}
 	
 	@Override
+	public StringExpr getStringExprValue( int i ) throws NotDerivableException {
+		throw new NotDerivableException( "Cannot derive value in application." );
+	}
+
+	@Override
 	public int hashCode() {
 		
 		String s;
@@ -259,8 +264,17 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 
 	@Override
 	public int getNumAtom() throws NotDerivableException {
-		throw new NotDerivableException(
-			"Apply expressions have to be reduced before deriving the cardinality." );
+		
+		Prototype prototype;
+		NameExpr name;
+		
+		prototype = getPrototype();
+		name = prototype.getOutput( channel-1 );
+		
+		if( name instanceof ReduceVar )
+			throw new NotDerivableException( "Cannot derive cardinality of reduce output variable." );
+		
+		return 1;
 	}
 	
 	@Override

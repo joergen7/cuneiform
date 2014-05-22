@@ -137,5 +137,4 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );
 	}
-
 }

@@ -142,7 +142,15 @@ public class CondExpr implements SingleExpr {
 
 	@Override
 	public int getNumAtom() throws NotDerivableException {
-		throw new NotDerivableException( "Conditional expression cannot hold size information." );
+		
+		NameExpr name;
+		
+		name = prototype.getOutput( channel-1 );
+		
+		if( name instanceof ReduceVar )
+			throw new NotDerivableException( "Cannot derive cardinality of reduce output variable." );
+		
+		return 1;
 	}
 	
 	public CompoundExpr getThenExpr() {
@@ -166,5 +174,10 @@ public class CondExpr implements SingleExpr {
 	@Override
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );
+	}
+
+	@Override
+	public StringExpr getStringExprValue( int i ) throws NotDerivableException {
+		throw new NotDerivableException( "Cannot derive value for conditional expression." );
 	}
 }

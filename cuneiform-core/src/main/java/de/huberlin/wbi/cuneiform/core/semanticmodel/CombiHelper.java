@@ -136,7 +136,7 @@ public class CombiHelper {
 						continue;
 					
 					// TODO: Will this still work when output variable is reduce?
-					ce = new CompoundExpr( bindingBlock.getExpr( name ).getSingleExpr( j ) );
+					ce = new CompoundExpr( bindingBlock.getExpr( name ).getStringExprValue( j ) );
 										
 					if( ce.getNumAtom() != 1 )
 						throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce );

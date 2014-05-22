@@ -100,6 +100,34 @@ public class CompoundExpr implements Node, Cloneable {
 		return Collections.unmodifiableList( singleExprList );
 	}
 	
+	public StringExpr getStringExprValue( int idx ) throws NotDerivableException {
+		
+		int i, j, k;
+		
+		if( idx < 0 )
+			throw new IndexOutOfBoundsException(
+				"Queried entry "+idx+". Negative indexes are not allowed." );
+		
+		if( idx >= getNumAtom() )
+			throw new IndexOutOfBoundsException(
+				"Queried entry "+idx+" but the compound expression has only "
+				+getNumAtom()+" elements." );
+		
+		j = 0;
+		i = idx;
+		
+		while( true ) {
+			
+			k = i-getSingleExpr( j ).getNumAtom();
+			
+			if( k < 0 )
+				return getSingleExpr( j ).getStringExprValue( i );
+			
+			j++;
+			i = k;
+		}
+	}
+	
 	public boolean isNormal() {
 		
 		QualifiedTicket qt;

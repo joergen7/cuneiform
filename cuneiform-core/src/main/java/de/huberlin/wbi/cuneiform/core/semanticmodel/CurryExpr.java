@@ -90,4 +90,9 @@ public class CurryExpr extends BaseBlock implements SingleExpr {
 	public <T> T visit(NodeVisitor<? extends T> visitor) {
 		return visitor.accept( this );
 	}
+
+	@Override
+	public StringExpr getStringExprValue(int i) throws NotDerivableException {
+		throw new NotDerivableException( "Cannot derive value of curry expression." );
+	}
 }

@@ -142,4 +142,9 @@ public class NameExpr implements SingleExpr, Param, Comparable<NameExpr> {
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );
 	}
+
+	@Override
+	public StringExpr getStringExprValue( int i ) throws NotDerivableException {
+		throw new NotDerivableException( "Cannot derive value from name expression." );
+	}
 }

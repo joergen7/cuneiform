@@ -39,5 +39,9 @@ public class NotDerivableException extends Exception {
 	public NotDerivableException( String msg ) {
 		super( msg );
 	}
+	
+	public NotDerivableException( Exception e ) {
+		super( e );
+	}
 
 }

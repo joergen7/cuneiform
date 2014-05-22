@@ -40,14 +40,20 @@ public abstract class LambdaExpr implements SingleExpr {
 		setPrototype( prototype );
 	}
 
+	@Override
+	public int getNumAtom() throws NotDerivableException {
+		return 1;
+	}
+	
 	public Prototype getPrototype() {
 		return prototype;
 	}
 	
 	@Override
-	public int getNumAtom() throws NotDerivableException {
-		return 1;
+	public StringExpr getStringExprValue( int i ) throws NotDerivableException {
+		throw new RuntimeException( "Trying to convert lambda expression value to string expression value." );
 	}
+
 	
 	public void setPrototype( Prototype prototype ) {
 		

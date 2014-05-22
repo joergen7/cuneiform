@@ -114,6 +114,10 @@ public class RInvocation extends Invocation {
 		return varname+" <- "+value+"\n";
 	}
 	
+	/**
+	 * @param outputName  
+	 */
+	@SuppressWarnings( "static-method" )
 	private String defFunction( String funName, String outputName, String[] inputNameList, String body ) {
 		
 		StringBuffer buf;
