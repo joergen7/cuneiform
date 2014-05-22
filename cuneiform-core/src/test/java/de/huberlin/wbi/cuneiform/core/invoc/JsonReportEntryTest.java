@@ -6,7 +6,7 @@ import org.json.JSONException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import de.huberlin.wbi.cuneiform.core.invoc.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 
 public class JsonReportEntryTest {
 

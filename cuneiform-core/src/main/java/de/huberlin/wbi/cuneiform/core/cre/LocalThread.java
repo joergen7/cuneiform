@@ -49,7 +49,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
-import de.huberlin.wbi.cuneiform.core.invoc.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFailedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
@@ -135,6 +135,7 @@ public class LocalThread implements Runnable {
 			
 			if( !successMarker.exists() ) {
 				
+
 				if( location.exists() )
 					FileUtils.deleteDirectory( location );
 				
@@ -149,11 +150,18 @@ public class LocalThread implements Runnable {
 					
 					// write away script
 					writer.write( invoc.toScript() );
-					
-					
 				}
 				
 				scriptFile.setExecutable( true );
+				
+				
+				// write executable log entry
+				
+				ticket = invoc.getTicket();
+				try( BufferedWriter writer = new BufferedWriter( new FileWriter( reportFile, false ) ) ) {
+					
+					writer.write( ticket.getExecutableLogEntry().toString() );
+				}
 				
 				for( String filename : invoc.getStageInList() ) {
 					
@@ -273,7 +281,6 @@ public class LocalThread implements Runnable {
 						}
 						stdErr = buf.toString();
 						
-						ticket = invoc.getTicket();
 						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, script, stdOut, stdErr ) );
 

@@ -13,12 +13,12 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import de.huberlin.wbi.cuneiform.core.invoc.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser;
 import de.huberlin.wbi.cuneiform.core.preprocess.ChannelListener;
 import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SingleExpr;

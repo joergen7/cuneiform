@@ -40,7 +40,7 @@ import java.util.Set;
 
 import de.huberlin.wbi.cuneiform.core.actormodel.Message;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
-import de.huberlin.wbi.cuneiform.core.invoc.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class TicketFinishedMsg extends Message {

@@ -33,6 +33,7 @@
 package de.huberlin.wbi.cuneiform.core.invoc;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 

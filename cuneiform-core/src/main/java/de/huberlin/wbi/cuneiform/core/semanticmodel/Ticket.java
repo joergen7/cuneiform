@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class Ticket extends Block {
 
@@ -47,8 +50,9 @@ public class Ticket extends Block {
 	private final UUID runId;
 	
 	public Ticket( ForeignLambdaExpr lambdaExpr, BaseBlock bindingBlock, UUID runId ) {
-				
-		setParamBindMap( bindingBlock.getParamBindMap() );
+		
+		if( bindingBlock == null )
+			throw new NullPointerException( "Binding block must not be null." );
 
 		if( runId == null )
 			throw new NullPointerException( "Run ID must not be null." );
@@ -57,6 +61,8 @@ public class Ticket extends Block {
 			throw new NullPointerException(
 				"Foreign lambda expression must not be null." );
 		
+		setParamBindMap( bindingBlock.getParamBindMap() );
+
 		this.lambdaExpr = lambdaExpr;		
 		this.runId = runId;
 
@@ -87,6 +93,30 @@ public class Ticket extends Block {
 	
 	public String getBody() {
 		return lambdaExpr.getBody();
+	}
+	
+	public JsonReportEntry getExecutableLogEntry() {
+		
+		JsonReportEntry entry;
+		JSONObject obj;
+		
+		try {
+		
+			obj = new JSONObject();
+			obj.put( "lambda", lambdaExpr );
+			obj.put( "bind", getParamBindMap() );
+			
+			entry = new JsonReportEntry(
+					runId, lambdaExpr.getLambdaId(), lambdaExpr.getTaskName(),
+					lambdaExpr.getLangLabel(), getTicketId(), null,
+					JsonReportEntry.KEY_INVOC_EXEC, obj );
+			
+			return entry;
+		
+		}
+		catch( JSONException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 	
 	public long getLambdaId() {

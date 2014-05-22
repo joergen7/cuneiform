@@ -30,12 +30,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.huberlin.wbi.cuneiform.core.invoc;
+package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 
 public class JsonReportEntry {
 	
@@ -46,6 +48,7 @@ public class JsonReportEntry {
 	public static final String KEY_INVOC_STDOUT = "invoc-stdout";
 	public static final String KEY_INVOC_STDERR = "invoc-stderr";
 	public static final String KEY_INVOC_USER = "invoc-user";
+	public static final String KEY_INVOC_EXEC = "invoc-exec";
 	
 	public static final String ATT_INVOCID = "invocId";
 	public static final String ATT_KEY = "key";
