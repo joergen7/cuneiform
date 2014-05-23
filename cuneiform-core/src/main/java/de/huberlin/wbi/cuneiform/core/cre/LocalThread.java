@@ -161,6 +161,7 @@ public class LocalThread implements Runnable {
 				try( BufferedWriter writer = new BufferedWriter( new FileWriter( reportFile, false ) ) ) {
 					
 					writer.write( ticket.getExecutableLogEntry().toString() );
+					writer.write( '\n' );
 				}
 				
 				for( String filename : invoc.getStageInList() ) {
