@@ -42,7 +42,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class LocalCreActor extends BaseCreActor {
 
-	private static final int NTHREADS = 2;
+	private static final int NTHREADS = 1;
 	
 	private final ExecutorService executor;
 	private final File buildDir;
