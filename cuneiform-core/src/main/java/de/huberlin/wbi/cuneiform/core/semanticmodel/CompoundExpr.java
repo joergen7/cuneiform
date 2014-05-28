@@ -208,23 +208,49 @@ public class CompoundExpr implements Node, Cloneable {
 		StringBuffer buf;
 		boolean comma;
 		
-		if( singleExprList.isEmpty() )
-			return "nil";
-		
-		buf = new StringBuffer();
-		
-		comma = false;
-		for( SingleExpr singleExpr : singleExprList ) {
+		try {
 			
-			if( comma )
-				buf.append( ' ' );
+			if( this.getNumAtom() == 0 )
+				return "nil";
 			
-			comma = true;
+			buf = new StringBuffer();
 			
-			buf.append( singleExpr );
+			comma = false;
+			for( SingleExpr singleExpr : singleExprList ) {
+				
+				if( singleExpr.getNumAtom() == 0 )
+					continue;
+				
+				if( comma )
+					buf.append( ' ' );
+				
+				comma = true;
+				
+				buf.append( singleExpr );
+			}
+			
+			return buf.toString();
 		}
+		catch( NotDerivableException e ) {
 		
-		return buf.toString();
+			if( singleExprList.isEmpty() )
+				return "nil";
+			
+			buf = new StringBuffer();
+			
+			comma = false;
+			for( SingleExpr singleExpr : singleExprList ) {
+				
+				if( comma )
+					buf.append( ' ' );
+				
+				comma = true;
+				
+				buf.append( singleExpr );
+			}
+			
+			return buf.toString();
+		}
 	}
 	
 	@Override
