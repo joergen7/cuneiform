@@ -36,18 +36,20 @@ import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class LocalCreActor extends BaseCreActor {
 
-	private static final int NTHREADS = 1;
-	
 	private final ExecutorService executor;
 	private final File buildDir;
+	private Log log;
 	
-	public LocalCreActor( File buildDir ) {
+	public LocalCreActor( File buildDir, int nthread ) {
 		
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
@@ -58,8 +60,19 @@ public class LocalCreActor extends BaseCreActor {
 		if( !buildDir.isDirectory() )
 			throw new RuntimeException( "Directory expected." );
 		
+		if( nthread < 1 )
+			throw new RuntimeException( "Number of threads must at least be 1. It was "+nthread+"." );
+		
+		log = LogFactory.getLog( LocalCreActor.class );
 		this.buildDir = buildDir;
-		executor = Executors.newFixedThreadPool( NTHREADS );
+		executor = Executors.newFixedThreadPool( nthread );
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Local CRE actor created with "+nthread+" threads." );
+	}
+	
+	public LocalCreActor( File buildDir ) {
+		this( buildDir, Runtime.getRuntime().availableProcessors() );
 	}
 	
 	@Override

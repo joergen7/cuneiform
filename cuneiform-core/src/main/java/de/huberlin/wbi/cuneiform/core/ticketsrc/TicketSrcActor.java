@@ -114,6 +114,7 @@ public class TicketSrcActor extends Actor {
 		Set<UUID> queryIdSet;
 		String script, stdOut, stdErr;
 		long ticketId;
+		Exception e;
 		
 		if( msg instanceof TicketFinishedMsg ) {
 			
@@ -148,12 +149,13 @@ public class TicketSrcActor extends Actor {
 			script = ticketFailedMsg.getScript();
 			stdOut = ticketFailedMsg.getStdOut();
 			stdErr = ticketFailedMsg.getStdErr();
+			e = ticketFailedMsg.getException();
 			
 			queryIdSet = ticketQueryMap.get( ticket );
 			for( UUID queryId : queryIdSet )
 				for( BaseRepl repl : replSet )
 					if( repl.isRunning( queryId ) )
-						repl.queryFailed( queryId, ticketId, script, stdOut, stdErr );
+						repl.queryFailed( queryId, ticketId, e, script, stdOut, stdErr );
 			
 			for( UUID queryId : queryIdSet )
 				queryTicketMap.remove( queryId );

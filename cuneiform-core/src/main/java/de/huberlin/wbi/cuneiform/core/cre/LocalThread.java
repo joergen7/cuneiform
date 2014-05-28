@@ -119,6 +119,9 @@ public class LocalThread implements Runnable {
 		process = null;
 		lockMarker = null;
 		successMarker = null;
+		script = null;
+		stdOut = null;
+		stdErr = null;
 		try {
 					
 			if( invoc == null )
@@ -283,7 +286,7 @@ public class LocalThread implements Runnable {
 						stdErr = buf.toString();
 						
 						
-						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, script, stdOut, stdErr ) );
+						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
 
 						lockMarker.delete();
 						return;
@@ -319,13 +322,14 @@ public class LocalThread implements Runnable {
 			ticketSrc.sendMsg( new TicketFinishedMsg( cre, invoc.getTicket(), report ) );
 			
 		}
+		catch( InterruptedException e ) {}
 		catch( Exception e ) {
 			
 			if( successMarker != null )
 				if( successMarker.exists() )
 					successMarker.delete();
 			
-			e.printStackTrace();
+			ticketSrc.sendMsg( new TicketFailedMsg( cre, invoc.getTicket(), e, script, stdOut, stdErr ) );
 		}
 		finally {
 			
@@ -333,14 +337,11 @@ public class LocalThread implements Runnable {
 				if( lockMarker.exists() )
 					lockMarker.delete();
 			
-			if( process != null )
-				process.destroy();
-			
 			if( log.isDebugEnabled() )
 				log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
 
+			if( process != null )
+				process.destroy();
 		}
-
-		
 	}		
 }

@@ -10,10 +10,12 @@ public class TicketFailedMsg extends Message {
 	private final String stdErr;
 	private final String stdOut;
 	private final Ticket ticket;
+	private final Exception e;
 	
 	public TicketFailedMsg(
 		BaseCreActor sender,
 		Ticket ticket,
+		Exception e,
 		String script,
 		String stdOut,
 		String stdErr ) {
@@ -47,6 +49,7 @@ public class TicketFailedMsg extends Message {
 				
 		this.ticket = ticket;
 		this.script = script;
+		this.e = e;
 	}
 	
 	public String getStdErr() {
@@ -55,6 +58,10 @@ public class TicketFailedMsg extends Message {
 	
 	public String getStdOut() {
 		return stdOut;
+	}
+	
+	public Exception getException() {
+		return e;
 	}
 	
 	public String getScript() {
@@ -75,6 +82,10 @@ public class TicketFailedMsg extends Message {
 	
 	public boolean hasStdOut() {
 		return stdOut != null;
+	}
+	
+	public boolean hasException() {
+		return e != null;
 	}
 	
 	@Override

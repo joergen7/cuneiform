@@ -53,7 +53,7 @@ public class CmdlineRepl extends BaseRepl {
 	public synchronized void queryStartedPost( UUID runId ) {}
 	
 	@Override
-	public synchronized void queryFailedPost( UUID queryId, long ticketId, String script, String stdOut, String stdErr ) {
+	public synchronized void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 
 		String line;
 		int i;
@@ -77,9 +77,14 @@ public class CmdlineRepl extends BaseRepl {
 				System.out.println( "[err]" );
 				System.out.println( stdErr );
 			}
+			
+			if( e != null ) {
+				System.out.println( "[trace]" );
+				e.printStackTrace();
+			}
 		}
-		catch( IOException e ) {
-			throw new RuntimeException( e );
+		catch( IOException e1 ) {
+			throw new RuntimeException( e1 );
 		}
 		
 	}	

@@ -162,7 +162,7 @@ public abstract class BaseRepl {
 		return runningMap.containsKey( queryId );
 	}
 	
-	public synchronized void queryFailed( UUID queryId, long ticketId, String script, String stdOut, String stdErr ) {
+	public synchronized void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -173,12 +173,12 @@ public abstract class BaseRepl {
 		runningMap.remove( queryId );
 		
 		if( log.isErrorEnabled() )
-			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+": "+stdErr.replace( '\n', ' ' ) );
+			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Message: "+e.getMessage()+" Error channel: "+stdErr.replace( '\n', ' ' ) );
 		
-		queryFailedPost( queryId, ticketId, script, stdOut, stdErr );
+		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}
 
-	public abstract void queryFailedPost( UUID queryId, long ticketId, String script, String stdOut, String stdErr );
+	public abstract void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr );
 
 	public synchronized void queryFinished( UUID queryId, CompoundExpr result ) {
 		
