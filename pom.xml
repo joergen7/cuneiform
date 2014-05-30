@@ -13,6 +13,7 @@
 	<modules>
 		<module>cuneiform-core</module>
 		<module>cuneiform-addons</module>
+		<module>cuneiform-dist</module>
 	</modules>
 
 	<dependencyManagement>
@@ -34,6 +35,20 @@
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.2.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
