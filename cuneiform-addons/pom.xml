@@ -11,5 +11,6 @@
   	<module>cuneiform-starlinger</module>
   	<module>cuneiform-dax</module>
   	<module>cuneiform-cfide</module>
+  	<module>cuneiform-logview</module>
   </modules>
 </project>
