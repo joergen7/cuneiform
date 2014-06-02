@@ -34,22 +34,24 @@ jobProp        : ID EQ STRING                      # JobPropId
                | DVVERSION EQ STRING               # JobPropDvVersion
                ;
 
-jobEl          : argument
-               | LTAG USES jobUsesProp* SLASH RTAG
+jobEl          : LARGUMENT argumentEl* RARGUMENT   # JobElArgument
+               | LTAG USES jobUsesProp* SLASH RTAG # JobElUses
                ;
-
-argument       : LARGUMENT argumentEl* RARGUMENT ;
 
 argumentEl     : ARG                               # ArgumentElPlain
                | filename                          # ArgumentElFilename
                ;
 
-jobUsesProp    : FILE EQ STRING
-               | LINK EQ( INPUT | OUTPUT )
-               | REGISTER EQ( TRUE | FALSE )
-               | TRANSFER EQ( TRUE | FALSE )
-               | TYPE EQ EXECUTABLE
-               | OPTIONAL EQ( TRUE | FALSE )
+jobUsesProp    : FILE EQ STRING                    # JobUsesPropFile
+               | LINK EQ INPUT                     # JobUsesPropLinkInput
+               | LINK EQ OUTPUT                    # JobUsesPropLinkOutput
+               | REGISTER EQ TRUE                  # JobUsesPropRegisterTrue
+               | REGISTER EQ FALSE                 # JobUsesPropRegisterFalse
+               | TRANSFER EQ TRUE                  # JobUsesPropTransferTrue
+               | TRANSFER EQ FALSE                 # JobUsesPropTransferFalse
+               | TYPE EQ EXECUTABLE                # JobUsesPropExecutable
+               | OPTIONAL EQ TRUE                  # JobUsesPropOptionalTrue
+               | OPTIONAL EQ FALSE                 # JobUsesPropOptionalFalse
                ;
 
 child          : LTAG CHILD REF EQ STRING RTAG parent+ LTAG SLASH CHILD RTAG ;

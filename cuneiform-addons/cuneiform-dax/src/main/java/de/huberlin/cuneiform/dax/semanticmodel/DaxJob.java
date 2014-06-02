@@ -1,8 +1,8 @@
 package de.huberlin.cuneiform.dax.semanticmodel;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,16 +14,22 @@ public class DaxJob {
 	private Integer level;
 	private String dvName;
 	private String dvVersion;
-	private final Set<DaxJob> parentSet;
-	private final Set<DaxJob> childSet;
-	private final Set<String> inputVarSet;
+	private final List<DaxJob> parentSet;
+	private final List<DaxJob> childSet;
+	private final List<String> inputVarSet;
 	private final List<String> outputVarList;
+	private final List<String> plainArgList;
+	private final List<DaxFilename> filenameArgList;
+	private final List<DaxJobUses> jobUsesList;
 	
 	public DaxJob() {
-		parentSet = new HashSet<>();
-		childSet = new HashSet<>();
-		inputVarSet = new HashSet<>();
-		outputVarList = new LinkedList<>();
+		parentSet = new ArrayList<>();
+		childSet = new ArrayList<>();
+		inputVarSet = new ArrayList<>();
+		outputVarList = new ArrayList<>();
+		plainArgList = new ArrayList<>();
+		filenameArgList = new ArrayList<>();
+		jobUsesList = new ArrayList<>();
 	}
 	
 	public void addChild( DaxJob child ) {
@@ -32,6 +38,14 @@ public class DaxJob {
 			throw new NullPointerException( "Child DAX job must not be null." );
 		
 		childSet.add( child );
+	}
+	
+	public void addFilenameArg( DaxFilename filename ) {
+		
+		if( filename == null )
+			throw new NullPointerException( "Filename must not be null." );
+		
+		filenameArgList.add( filename );
 	}
 	
 	public void addInputVar( String inputVar ) {
@@ -43,6 +57,14 @@ public class DaxJob {
 			throw new RuntimeException( "Input variable name must not be empty." );
 		
 		inputVarSet.add( inputVar );
+	}
+	
+	public void addJobUses( DaxJobUses jobUses ) {
+		
+		if( jobUses == null )
+			throw new NullPointerException( "Job-Uses element object must not be null." );
+		
+		jobUsesList.add( jobUses );
 	}
 	
 	public void addOutputVar( String outputVar ) {
@@ -64,7 +86,18 @@ public class DaxJob {
 		parentSet.add( parent );
 	}
 	
-	public String getDvNam() {
+	public void addPlainArg( String arg ) {
+		
+		if( arg == null )
+			throw new NullPointerException( "Argument string must not be null." );
+		
+		if( arg.isEmpty() )
+			throw new RuntimeException( "Argument string must not be empty." );
+		
+		plainArgList.add( arg );
+	}
+	
+	public String getDvName() {
 		return dvName;
 	}
 	
