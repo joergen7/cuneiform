@@ -57,7 +57,7 @@ import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.ParamContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.SingleExprContext;
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 
-public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements ANTLRErrorListener {
+public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> implements ANTLRErrorListener {
 
 	public static final String LABEL_TASK = "task";
 	public static final String LABEL_FILE = "File";
@@ -65,7 +65,7 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	private BaseBlock currentBlock;
 	private final  LinkedList<BaseBlock> blockStack;
 	
-	public SemanticModelVisitor() {
+	public CfSemanticModelVisitor() {
 		
 		currentBlock = new TopLevelContext();
 		blockStack = new LinkedList<>();
@@ -73,12 +73,12 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitApplyExpr( @NotNull CuneiformParser.ApplyExprContext ctx ) {
+	public CfNode visitApplyExpr( @NotNull CuneiformParser.ApplyExprContext ctx ) {
 		
 		ApplyExpr applyExpr;
 		int channel;
 		NameExpr name;
-		Node compoundExpr;
+		CfNode compoundExpr;
 		String id;
 		boolean rest;
 		
@@ -120,9 +120,9 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 
 	
 	@Override
-	public Node visitAssign( @NotNull CuneiformParser.AssignContext ctx ) {
+	public CfNode visitAssign( @NotNull CuneiformParser.AssignContext ctx ) {
 		
-		Node nameExpr, compoundExpr;
+		CfNode nameExpr, compoundExpr;
 		CompoundExpr ce;
 		SingleExpr se;
 		ForeignLambdaExpr lambda;
@@ -168,7 +168,7 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitBlock( @NotNull CuneiformParser.BlockContext ctx ) {
+	public CfNode visitBlock( @NotNull CuneiformParser.BlockContext ctx ) {
 		
 		Block block;
 		
@@ -182,23 +182,23 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitCallExpr( @NotNull CuneiformParser.CallExprContext ctx ) {
+	public CfNode visitCallExpr( @NotNull CuneiformParser.CallExprContext ctx ) {
 		// sorted out in the pre-phase
 		throw new RuntimeException( "Illegal call expression encountered." );
 	}
 	
 	@Override
-	public Node visitIdExpr( @NotNull CuneiformParser.IdExprContext ctx ) { 
+	public CfNode visitIdExpr( @NotNull CuneiformParser.IdExprContext ctx ) { 
 		
 		return new NameExpr( ctx.ID().getText() );
 	}
 
 
 	@Override
-	public Node visitCompoundExpr( @NotNull CuneiformParser.CompoundExprContext ctx ) {
+	public CfNode visitCompoundExpr( @NotNull CuneiformParser.CompoundExprContext ctx ) {
 		
 		CompoundExpr compoundExpr;
-		Node singleExpr;
+		CfNode singleExpr;
 		
 		compoundExpr = new CompoundExpr();
 				
@@ -220,12 +220,12 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitCondExpr( @NotNull CuneiformParser.CondExprContext ctx ) {
+	public CfNode visitCondExpr( @NotNull CuneiformParser.CondExprContext ctx ) {
 		
-		Node ifExpr;
-		Node thenBlock;
-		Node elseBlock;
-		Node prototype;
+		CfNode ifExpr;
+		CfNode thenBlock;
+		CfNode elseBlock;
+		CfNode prototype;
 		int channel;
 		
 		if( ctx.channel() == null )
@@ -283,10 +283,10 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 
 	
 	@Override
-	public Node visitCorrelParam( @NotNull CuneiformParser.CorrelParamContext ctx ) {
+	public CfNode visitCorrelParam( @NotNull CuneiformParser.CorrelParamContext ctx ) {
 
 		CorrelParam correlParam;
-		Node nameExpr;
+		CfNode nameExpr;
 		
 		correlParam = new CorrelParam();
 		
@@ -306,12 +306,12 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 		return correlParam;
 	}
 	@Override
-	public Node visitCurryExpr( @NotNull CuneiformParser.CurryExprContext ctx ) {
+	public CfNode visitCurryExpr( @NotNull CuneiformParser.CurryExprContext ctx ) {
 		
 		CurryExpr curryExpr;
 		String id;
 		NameExpr name;
-		Node compoundExpr;
+		CfNode compoundExpr;
 		
 		curryExpr = new CurryExpr();
 		
@@ -343,21 +343,21 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitDanglingExpr( @NotNull CuneiformParser.DanglingExprContext ctx ) {
+	public CfNode visitDanglingExpr( @NotNull CuneiformParser.DanglingExprContext ctx ) {
 		// sorted out in the pre-phase
 		throw new RuntimeException( "Illegal dangling expression encountered." );
 	}
 	
 	@Override
-	public Node visitForeignDefTask( @NotNull CuneiformParser.ForeignDefTaskContext ctx ) {
+	public CfNode visitForeignDefTask( @NotNull CuneiformParser.ForeignDefTaskContext ctx ) {
 		// sorted out in the pre-phase
 		throw new RuntimeException( "Illegal foreign task definition encountered." );
 	}
 	
 	@Override
-	public Node visitForeignLambdaExpr( @NotNull CuneiformParser.ForeignLambdaExprContext ctx ) {
+	public CfNode visitForeignLambdaExpr( @NotNull CuneiformParser.ForeignLambdaExprContext ctx ) {
 
-		Node prototype;
+		CfNode prototype;
 		String langString;
 		String body;
 		
@@ -387,31 +387,31 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 
 	
-	@Override public Node visitFromStackExpr( @NotNull CuneiformParser.FromStackExprContext ctx ) {
+	@Override public CfNode visitFromStackExpr( @NotNull CuneiformParser.FromStackExprContext ctx ) {
 		// sorted out in the pre-phase
 		throw new RuntimeException( "Illegal from-stack expression encountered." );
 	}
 	
 	@Override
-	public Node visitImportFile( @NotNull CuneiformParser.ImportFileContext ctx ) {
+	public CfNode visitImportFile( @NotNull CuneiformParser.ImportFileContext ctx ) {
 		throw new RuntimeException( "Illegal import statement encountered." );
 	}
 	
 	@Override
-	public Node visitIntExpr( @NotNull CuneiformParser.IntExprContext ctx ) {
+	public CfNode visitIntExpr( @NotNull CuneiformParser.IntExprContext ctx ) {
 		return new StringExpr( ctx.getText() );
 	}
 
 	
 	@Override
-	public Node visitNameDataType( @NotNull CuneiformParser.NameDataTypeContext ctx ) {		
+	public CfNode visitNameDataType( @NotNull CuneiformParser.NameDataTypeContext ctx ) {		
 		return new NameExpr( ctx.ID( 0 ).getText(), new DataType( ctx.ID( 1 ).getText() ) );
 	}
 	
 	@Override
-	public Node visitNameDeepFnType( @NotNull CuneiformParser.NameDeepFnTypeContext ctx ) {
+	public CfNode visitNameDeepFnType( @NotNull CuneiformParser.NameDeepFnTypeContext ctx ) {
 		
-		Node prototype;
+		CfNode prototype;
 		
 		prototype = visit( ctx.prototype() );
 		
@@ -426,26 +426,26 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitNameInferredType( @NotNull CuneiformParser.NameInferredTypeContext ctx ) {
+	public CfNode visitNameInferredType( @NotNull CuneiformParser.NameInferredTypeContext ctx ) {
 		return new NameExpr( ctx.ID().getText(), null );
 	}
 	
 	@Override
-	public Node visitNamePlainFnType( @NotNull CuneiformParser.NamePlainFnTypeContext ctx ) {
+	public CfNode visitNamePlainFnType( @NotNull CuneiformParser.NamePlainFnTypeContext ctx ) {
 		return new NameExpr( ctx.ID().getText(), new LambdaType() );
 	}
 	
 	@Override
-	public Node visitNativeDefTask( @NotNull CuneiformParser.NativeDefTaskContext ctx ) {
+	public CfNode visitNativeDefTask( @NotNull CuneiformParser.NativeDefTaskContext ctx ) {
 		// sorted out in the pre-phase
 		throw new RuntimeException( "Illegal native task definition exncountered." );
 	}
 	
 	@Override
-	public Node visitNativeLambdaExpr( @NotNull CuneiformParser.NativeLambdaExprContext ctx ) {
+	public CfNode visitNativeLambdaExpr( @NotNull CuneiformParser.NativeLambdaExprContext ctx ) {
 
-		Node prototype;
-		Node block;
+		CfNode prototype;
+		CfNode block;
 		
 		prototype = visit( ctx.prototype() );
 		
@@ -468,14 +468,14 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 
 	
 	@Override
-	public Node visitNilExpr( @NotNull CuneiformParser.NilExprContext ctx ) {
+	public CfNode visitNilExpr( @NotNull CuneiformParser.NilExprContext ctx ) {
 		return new CompoundExpr();
 	}
 
 	@Override
-	public Node visitPrototype( @NotNull CuneiformParser.PrototypeContext ctx ) {
+	public CfNode visitPrototype( @NotNull CuneiformParser.PrototypeContext ctx ) {
 		
-		Node node;
+		CfNode node;
 		Prototype prototype;
 		
 		prototype = new Prototype();
@@ -510,9 +510,9 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 
 	@Override
-	public Node visitReduceVar( @NotNull CuneiformParser.ReduceVarContext ctx ) {
+	public CfNode visitReduceVar( @NotNull CuneiformParser.ReduceVarContext ctx ) {
 		
-		Node nameExpr;
+		CfNode nameExpr;
 		
 		nameExpr = visit( ctx.name() );
 		
@@ -526,7 +526,7 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 
 	@Override
-	public Node visitScript( @NotNull CuneiformParser.ScriptContext ctx ) {
+	public CfNode visitScript( @NotNull CuneiformParser.ScriptContext ctx ) {
 		
 		getTopLevelContext().clearTargetList();
 		
@@ -535,7 +535,7 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 	}
 	
 	@Override
-	public Node visitStringExpr( @NotNull CuneiformParser.StringExprContext ctx ) {
+	public CfNode visitStringExpr( @NotNull CuneiformParser.StringExprContext ctx ) {
 		
 		String content;
 		
@@ -554,9 +554,9 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 
 	
 	@Override
-	public Node visitTarget( @NotNull CuneiformParser.TargetContext ctx ) {
+	public CfNode visitTarget( @NotNull CuneiformParser.TargetContext ctx ) {
 		
-		Node node;
+		CfNode node;
 		
 		node = visit( ctx.expr() );
 		
@@ -602,8 +602,8 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 		CommonTokenStream tokenStream;
 		CuneiformParser parser;
 		ParseTree tree;
-		Node node;
-		SemanticModelVisitor calculusVisitor;
+		CfNode node;
+		CfSemanticModelVisitor calculusVisitor;
 		
 		// parse original content
 		instream = new ANTLRInputStream( input );
@@ -616,7 +616,7 @@ public class SemanticModelVisitor extends CuneiformBaseVisitor<Node> implements 
 		parser = new CuneiformParser( tokenStream );
 		parser.removeErrorListeners();
 		
-		calculusVisitor = new SemanticModelVisitor();
+		calculusVisitor = new CfSemanticModelVisitor();
 		lexer.addErrorListener( calculusVisitor );
 		parser.addErrorListener( calculusVisitor );
 		

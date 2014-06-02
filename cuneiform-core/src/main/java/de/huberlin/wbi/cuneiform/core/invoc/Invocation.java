@@ -51,7 +51,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Param;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ReduceVar;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelVisitor;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Type;
@@ -239,7 +239,7 @@ public abstract class Invocation {
 		buf.append( comment( "bind input parameters" ) );
 		for( String paramName : getSingleParamNameSet() ) {
 			
-			if( paramName.equals( SemanticModelVisitor.LABEL_TASK ) )
+			if( paramName.equals( CfSemanticModelVisitor.LABEL_TASK ) )
 				continue;
 			
 			buf.append( varDef( paramName, quote( getResolveableBoundToSingleParam( paramName ) ) ) );
@@ -322,7 +322,7 @@ public abstract class Invocation {
 				
 				dataType = ( DataType )type;
 				
-				return dataType.getId().equals( SemanticModelVisitor.LABEL_FILE );
+				return dataType.getId().equals( CfSemanticModelVisitor.LABEL_FILE );
 			}
 		
 		throw new RuntimeException( "Output not found." );
@@ -349,7 +349,7 @@ public abstract class Invocation {
 				
 				dataType = ( DataType )type;
 				
-				return dataType.getId().equals( SemanticModelVisitor.LABEL_FILE );
+				return dataType.getId().equals( CfSemanticModelVisitor.LABEL_FILE );
 			}
 		
 		throw new RuntimeException( "Output not found." );

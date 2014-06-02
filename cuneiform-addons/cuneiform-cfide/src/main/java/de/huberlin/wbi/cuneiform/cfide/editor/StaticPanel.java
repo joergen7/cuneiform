@@ -21,7 +21,7 @@ import de.huberlin.wbi.cuneiform.core.preprocess.ChannelListener;
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelVisitor;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.DotNodeVisitor;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
@@ -132,7 +132,7 @@ public class StaticPanel extends JPanel implements Runnable {
 					afterChannel = ChannelListener.process( afterPre );
 					channelPanel.setText( afterChannel );
 					
-					tlc = SemanticModelVisitor.process( afterChannel );
+					tlc = CfSemanticModelVisitor.process( afterChannel );
 					modelPanel.setText( tlc.toString() );
 					
 					if( tlc.isTargetListEmpty() ) {

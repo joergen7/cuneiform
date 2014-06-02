@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class CompoundExpr implements Node, Cloneable {
+public class CompoundExpr implements CfNode, Cloneable {
 
 	private final List<SingleExpr> singleExprList;
 	

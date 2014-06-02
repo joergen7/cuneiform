@@ -94,7 +94,7 @@ public class CombiHelper {
 		SingleExpr se;
 		
 		i = idx;
-		taskNameExpr = new NameExpr( SemanticModelVisitor.LABEL_TASK );
+		taskNameExpr = new NameExpr( CfSemanticModelVisitor.LABEL_TASK );
 		
 		
 		for( k = 0; k < paramArray.length; k++ ) {
@@ -152,7 +152,7 @@ public class CombiHelper {
 				
 				for( NameExpr name : param.getNameExprSet() ) {
 					
-					if( name.getId().equals( SemanticModelVisitor.LABEL_TASK ) )
+					if( name.getId().equals( CfSemanticModelVisitor.LABEL_TASK ) )
 						continue;
 					
 					// TODO: Will this still work when output variable is reduce?
@@ -190,7 +190,7 @@ public class CombiHelper {
 			for( NameExpr name : param.getNameExprSet() ) {
 				
 
-				if( name.getId().equals( SemanticModelVisitor.LABEL_TASK ) )
+				if( name.getId().equals( CfSemanticModelVisitor.LABEL_TASK ) )
 					return taskExpr.getNumAtom();
 				
 				ce = bindingBlock.getExpr( name );

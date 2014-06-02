@@ -2,13 +2,13 @@ grammar Dax;
 
 adag           : LTAG ADAG adagProp* RTAG adagEl* LTAG SLASH ADAG RTAG ;
 
-adagProp       : XMLNS EQ STRING
-               | XSI EQ STRING
-               | SCHEMALOCATION EQ STRING
-               | VERSION EQ STRING
-               | COUNT EQ STRING
-               | INDEX EQ STRING
-               | NAME EQ STRING
+adagProp       : XMLNS EQ STRING                   # AdagPropXmlns
+               | XSI EQ STRING                     # AdagPropXsi
+               | SCHEMALOCATION EQ STRING          # AdagPropSchemaLocation
+               | VERSION EQ STRING                 # AdagPropVersion
+               | COUNT EQ STRING                   # AdagPropCount
+               | INDEX EQ STRING                   # AdagPropIndex
+               | NAME EQ STRING                    # AdagPropName
                ;
 
 adagEl         : filename
@@ -19,7 +19,9 @@ adagEl         : filename
 filename       : LTAG FILENAME filenameProp* SLASH RTAG ;
 
 filenameProp   : FILE EQ STRING                    # FilenamePropFile
-               | LINK EQ( INPUT | OUTPUT | INOUT ) # FilenamePropLink
+               | LINK EQ INPUT                     # FilenamePropLinkInput
+               | LINK EQ OUTPUT                    # FilenamePropLinkOutput
+               | LINK EQ INOUT                     # FilenamePropLinkInout
                ;
 
 job            : LTAG JOB jobProp* RTAG jobEl* LTAG SLASH JOB RTAG ;
@@ -28,8 +30,8 @@ jobProp        : ID EQ STRING                      # JobPropId
                | NAME EQ STRING                    # JobPropName
                | VERSION EQ STRING                 # JobPropVersion
                | LEVEL EQ STRING                   # JobPropLevel
-               | DVNAME EQ STRING                  # JobPropDvname
-               | DVVERSION EQ STRING               # JobPropDvversion
+               | DVNAME EQ STRING                  # JobPropDvName
+               | DVVERSION EQ STRING               # JobPropDvVersion
                ;
 
 jobEl          : argument

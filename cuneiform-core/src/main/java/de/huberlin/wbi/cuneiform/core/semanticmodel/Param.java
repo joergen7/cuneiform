@@ -34,7 +34,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 import java.util.Set;
 
-public interface Param extends Node {
+public interface Param extends CfNode {
 
 	public int getNumParam();
 	public Set<NameExpr> getNameExprSet();

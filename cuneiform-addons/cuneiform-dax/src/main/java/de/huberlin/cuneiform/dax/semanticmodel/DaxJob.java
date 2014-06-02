@@ -1,4 +1,4 @@
-package de.huberlin.cuneiform.dax.compiler;
+package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -6,22 +6,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class DaxJob implements CfConvertable {
+public class DaxJob {
 
 	private String id;
 	private String name;
-	private String body;
-	private Set<DaxJob> parentSet;
-	private Set<DaxJob> childSet;
-	private Set<String> inputVarSet;
-	private List<String> outputVarList;
+	private String version;
+	private Integer level;
+	private String dvName;
+	private String dvVersion;
+	private final Set<DaxJob> parentSet;
+	private final Set<DaxJob> childSet;
+	private final Set<String> inputVarSet;
+	private final List<String> outputVarList;
 	
-	public DaxJob( String id ) {
+	public DaxJob() {
 		parentSet = new HashSet<>();
 		childSet = new HashSet<>();
 		inputVarSet = new HashSet<>();
 		outputVarList = new LinkedList<>();
-		setId( id );
 	}
 	
 	public void addChild( DaxJob child ) {
@@ -62,16 +64,20 @@ public class DaxJob implements CfConvertable {
 		parentSet.add( parent );
 	}
 	
-	public String getBody() {
-		
-		if( body == null )
-			throw new NullPointerException( "DAX job body string has never been set." );
-		
-		return body;
+	public String getDvNam() {
+		return dvName;
+	}
+	
+	public String getDvVersion() {
+		return dvVersion;
 	}
 	
 	public String getId() {
 		return id;
+	}
+	
+	public Integer getLevel() {
+		return level;
 	}
 	
 	public String getName() {
@@ -86,40 +92,92 @@ public class DaxJob implements CfConvertable {
 		return Collections.unmodifiableList( outputVarList );
 	}
 	
-	public boolean hasBody() {
-		return body != null;
+	public String getVersion() {
+		return version;
+	}
+	
+	public boolean hasDvName() {
+		return dvName != null;
+	}
+	
+	public boolean hasDvVersion() {
+		return dvVersion != null;
+	}
+	
+	public boolean hasId() {
+		return id != null;
+	}
+	
+	public boolean hasLevel() {
+		return level != null;
 	}
 	
 	public boolean hasName() {
 		return name != null;
 	}
 	
+	public boolean hasVersion() {
+		return version != null;
+	}
+	
 	public boolean isLeaf() {
 		return childSet.isEmpty();
 	}
 	
-	public void setBody( String body ) {
+	public boolean isRoot() {
+		return parentSet.isEmpty();
+	}
+	
+	public void setDvName( String dvName ) {
 		
-		if( body == null ) {
-			this.body = null;
+		if( dvName == null ) {
+			this.dvName = null;
 			return;
 		}
-
-		if( body.isEmpty() )
-			throw new RuntimeException( "Body string must not be empty." );
 		
-		this.body = body;		
+		if( dvName.isEmpty() )
+			throw new RuntimeException( "DV name must not be empty." );
+		
+		this.dvName = dvName;
+	}
+	
+	public void setDvVersion( String dvVersion ) {
+		
+		if( dvVersion == null ) {
+			this.dvVersion = null;
+			return;
+		}
+		
+		if( dvVersion.isEmpty() )
+			throw new RuntimeException( "DV version must not be empty." );
+		
+		this.dvVersion = dvVersion;		
 	}
 	
 	public void setId( String id ) {
 		
-		if( id == null )
-			throw new NullPointerException( "Id string must not be null." );
-
+		if( id == null ) {
+			id = null;
+			return;
+		}
+		
 		if( id.isEmpty() )
 			throw new RuntimeException( "Id string must not be empty." );
 		
 		this.id = id;
+	}
+	
+	public void setLevel( Integer level ) {
+		
+		if( level == null ) {
+			this.level = null;
+			return;
+		}
+		
+		if( level < 1 )
+			throw new RuntimeException( "Level must be a postive integer." );
+		
+		this.level = level;
 	}
 	
 	public void setName( String name ) {
@@ -135,38 +193,17 @@ public class DaxJob implements CfConvertable {
 		this.name = name;		
 	}
 	
-	@Override
-	public String toCuneiform() {
+	public void setVersion( String version ) {
 		
-		StringBuffer buf;
+		if( version == null ) {
+			this.version = null;
+			return;
+		}
 		
-		if( outputVarList.isEmpty() )
-			throw new RuntimeException( "Job has no output variables." );
+		if( version.isEmpty() )
+			throw new RuntimeException( "Version string must not be empty." );
 		
-		buf = new StringBuffer();
-		
-		for( String outputVar : outputVarList )			
-			buf.append( outputVar ).append( ' ' );
-		
-		buf.append( "= apply(\n    task: \\( " );
-		
-		for( String outputVar : outputVarList )			
-			buf.append( outputVar ).append( ' ' );
-		
-		buf.append( ": " );
-		
-		for( String inputVar : inputVarSet )			
-			buf.append( inputVar ).append( ' ' );
-		
-		buf.append( ")in bash *{\n        " );
-		buf.append( body );
-		buf.append( "\n    }*\n" );
-		
-		for( String inputVar : inputVarSet )			
-			buf.append( inputVar ).append( ": " ).append( inputVar ).append( '\n' );
-		
-		buf.append( ");\n" );
-		
-		return buf.toString();
+		this.version = version;
+			
 	}
 }

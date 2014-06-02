@@ -32,6 +32,6 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-public interface Node {
+public interface CfNode {
 	public <T> T visit(NodeVisitor<? extends T> visitor);
 }

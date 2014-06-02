@@ -32,6 +32,6 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-public interface Type extends Node {
+public interface Type extends CfNode {
 
 }

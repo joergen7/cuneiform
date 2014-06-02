@@ -132,7 +132,7 @@ public class Prototype extends LambdaType implements Cloneable {
 		for( Param param : paramSet )
 			if( param instanceof CorrelParam )
 				if( param.getNameExprSet().contains(
-					SemanticModelVisitor.LABEL_TASK ) )
+					CfSemanticModelVisitor.LABEL_TASK ) )
 				
 					return true;
 		

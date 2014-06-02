@@ -44,7 +44,7 @@ public class SemanticModelException extends ParseException {
 		super( null, null, near, msg );
 	}
 	
-	public SemanticModelException( Node node,
+	public SemanticModelException( CfNode node,
 			String msg ) {
 		this( node.toString(), msg );
 	}

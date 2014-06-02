@@ -52,7 +52,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ReduceVar;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelVisitor;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class TicketSrcActor extends Actor {
@@ -213,7 +213,7 @@ public class TicketSrcActor extends Actor {
 			if( name instanceof ReduceVar )
 				continue;
 			
-			if( name.getId().equals( SemanticModelVisitor.LABEL_TASK ) )
+			if( name.getId().equals( CfSemanticModelVisitor.LABEL_TASK ) )
 				continue;
 			
 			try {

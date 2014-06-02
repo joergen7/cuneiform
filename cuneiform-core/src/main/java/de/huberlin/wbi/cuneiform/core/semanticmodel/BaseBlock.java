@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class BaseBlock implements Node, Cloneable {
+public abstract class BaseBlock implements CfNode, Cloneable {
 
 	private Map<NameExpr,CompoundExpr> assignMap;
 	private BaseBlock parent;

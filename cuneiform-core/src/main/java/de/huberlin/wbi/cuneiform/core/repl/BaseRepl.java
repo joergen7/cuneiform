@@ -20,7 +20,7 @@ import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelVisitor;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SingleExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
@@ -37,7 +37,7 @@ public abstract class BaseRepl {
 	public static final String LABEL_VERSION = "2.0";
 	public static final String LABEL_BUILD = "2014-05-26";
 
-	private final SemanticModelVisitor state;
+	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
 	private final TicketSrcActor ticketSrc;
 	private final Log log;
@@ -53,7 +53,7 @@ public abstract class BaseRepl {
 		this.ticketSrc = ticketSrc;
 		
 		runningMap = new HashMap<>();
-		state = new SemanticModelVisitor();
+		state = new CfSemanticModelVisitor();
 		log = LogFactory.getLog( BaseRepl.class );
 		statLog = LogFactory.getLog( "statLogger" );
 	}

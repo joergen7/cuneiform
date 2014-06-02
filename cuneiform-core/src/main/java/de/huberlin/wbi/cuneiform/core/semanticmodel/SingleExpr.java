@@ -32,7 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-public interface SingleExpr extends Node {
+public interface SingleExpr extends CfNode {
 
 	public int getNumAtom()throws NotDerivableException;
 	public StringExpr getStringExprValue( int i )throws NotDerivableException;

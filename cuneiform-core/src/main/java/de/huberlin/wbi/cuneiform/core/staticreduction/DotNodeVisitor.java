@@ -15,7 +15,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.Node;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfNode;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
@@ -35,7 +35,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 	private static final String LABEL_CURRY = "curry";
 
 	private final StringBuffer buf;
-	private final Map<Node,String> exprMap;
+	private final Map<CfNode,String> exprMap;
 	private int nextNodeId;
 
 

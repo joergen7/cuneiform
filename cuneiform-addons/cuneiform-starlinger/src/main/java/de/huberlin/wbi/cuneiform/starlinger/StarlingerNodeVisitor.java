@@ -15,7 +15,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.Node;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfNode;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
@@ -27,7 +27,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 
 public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVisitor<String> {
 
-	private Map<Node,String> exprMap;
+	private Map<CfNode,String> exprMap;
 	private int nextNodeId;
 
 	public StarlingerNodeVisitor() {
