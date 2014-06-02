@@ -66,7 +66,7 @@ public class Main {
 		
 		System.out.println( BaseRepl.getLogo() );
 		
-		sandbox = new File( "/tmp/cuneiform" );
+		sandbox = new File( System.getProperty( "user.home" )+"/.cuneiform" );
 		sandbox.mkdir();
 		
 		executor = Executors.newCachedThreadPool();

@@ -174,7 +174,10 @@ public abstract class BaseRepl {
 		runningMap.remove( queryId );
 		
 		if( log.isErrorEnabled() )
-			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Message: "+e.getMessage()+" Error channel: "+stdErr.replace( '\n', ' ' ) );
+			if( e == null )
+				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Error channel: "+stdErr.replace( '\n', ' ' ) );
+			else
+				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Message: "+e.getMessage()+" Error channel: "+stdErr.replace( '\n', ' ' ) );
 		
 		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}
