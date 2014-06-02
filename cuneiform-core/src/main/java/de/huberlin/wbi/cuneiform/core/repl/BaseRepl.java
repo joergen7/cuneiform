@@ -28,6 +28,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public abstract class BaseRepl {
 
+	public static final int CTL_NIL = 0;
 	public static final int CTL_QUIT = 1;
 	public static final int CTL_STATE = 2;
 	public static final int CTL_QUERYSET = 4;
@@ -255,7 +256,7 @@ public abstract class BaseRepl {
 			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJörgen Brandt    Marc Bux    Ulf Leser\n";
 	}
 
-	private static int fetchCtl( TopLevelContext tlc ) {
+	public static int fetchCtl( TopLevelContext tlc ) {
 		
 		int ctl;
 		List<CompoundExpr> removeCandidateList;
