@@ -9,6 +9,10 @@ public class DaxFilename {
 	private String file;
 	private Integer link;
 	
+	public String getFile() {
+		return file;
+	}
+	
 	public boolean isLinkOutput() {
 		
 		if( link == null )

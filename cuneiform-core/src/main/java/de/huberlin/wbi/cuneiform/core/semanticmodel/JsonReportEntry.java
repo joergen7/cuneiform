@@ -118,7 +118,8 @@ public class JsonReportEntry {
 		String valueString;
 		
 		try {
-			obj = new JSONObject( raw );
+			obj = new JSONObject( raw.replace( "\0", "" ) );
+			
 			
 			setTimestamp( obj.getLong( ATT_TIMESTAMP ) );
 			setRunId( UUID.fromString( obj.getString( ATT_RUNID ) ) );

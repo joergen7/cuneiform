@@ -1,11 +1,12 @@
 package de.huberlin.wbi.cuneiform.logview.main;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-
 
 import org.json.JSONException;
 
@@ -16,7 +17,7 @@ public class Main {
 
 	public static void main( String[] args ) throws FileNotFoundException, IOException, JSONException {
 
-		String filename = "/home/jorgen/statlog.txt";
+		String filename = "/home/jorgen/data/14-05-28_DBIS_Experimente/logs/e11_23_2048_variant-call-09";
 		String line;
 		JsonReportEntry reportEntry;
 		GanttOp op;
@@ -36,7 +37,9 @@ public class Main {
 			reader.close();
 			
 			
-			System.out.println( op.getChart() );
+			try( BufferedWriter writer = new BufferedWriter( new FileWriter( new File( "/home/jorgen/main.m" ) ) ) ) {
+				writer.write( op.getChart() );
+			}
 			
 		}
 		

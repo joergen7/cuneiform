@@ -2,19 +2,30 @@ package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import de.huberlin.cuneiform.libdax.parser.DaxBaseListener;
 import de.huberlin.cuneiform.libdax.parser.DaxParser;
+import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 
-public class DaxSemanticModelListener extends DaxBaseListener {
+public class DaxSemanticModelListener extends DaxBaseListener implements ANTLRErrorListener {
 
 	private URL xmlns;
 	private URL xsi;
@@ -23,11 +34,18 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 	private int count;
 	private int index;
 	private String name;
-	private List<DaxFilename> filenameList;
-	private Map<String,DaxJob> jobMap;
+	private final List<DaxFilename> filenameList;
+	private final Map<String,DaxJob> idJobMap;
+	private final Map<String,DaxJob> fileJobMap;
 	private DaxFilename filename;
 	private DaxJob job;
 	private DaxJobUses jobUses;
+	
+	public DaxSemanticModelListener() {
+		filenameList = new ArrayList<>();
+		idJobMap = new HashMap<>();
+		fileJobMap = new HashMap<>();
+	}
 	
 	@Override
 	public void enterAdagPropXmlns( @NotNull DaxParser.AdagPropXmlnsContext ctx ) {
@@ -75,6 +93,10 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 	
 	@Override
 	public void exitFilename( @NotNull DaxParser.FilenameContext ctx ) {
+
+		if( job != null )
+			job.addFilenameArg( filename );
+
 		filename = null;
 	}
 	
@@ -116,7 +138,7 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		id = getString( ctx.STRING() );
 		
 		job.setId( id );
-		jobMap.put( id, job );
+		idJobMap.put( id, job );
 	}
 
 	@Override
@@ -150,18 +172,17 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 	}
 	
 	@Override
-	public void exitArgumentElFilename( @NotNull DaxParser.ArgumentElFilenameContext ctx ) {
-		job.addFilenameArg( filename );
-	}
-
-	@Override
 	public void enterJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
 		jobUses = new DaxJobUses();
 		job.addJobUses( jobUses );
 	}
 	
 	@Override
-	public void exitJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {		
+	public void exitJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
+		
+		if( jobUses.isLinkOutput() )
+			fileJobMap.put( jobUses.getFile(), job );
+		
 		jobUses = null;
 	}
 	
@@ -222,7 +243,7 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		
 		id = getString( ctx.STRING() );
 		
-		job = jobMap.get( id );
+		job = idJobMap.get( id );
 		if( job == null )
 			throw new NullPointerException( "Could not retrieve referenced child job." );
 	}
@@ -240,7 +261,7 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		
 		id = getString( ctx.STRING() );
 		
-		parent = jobMap.get( id );
+		parent = idJobMap.get( id );
 		if( job == null )
 			throw new NullPointerException( "Could not retrieve referenced parent job." );
 		
@@ -252,13 +273,21 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		
 		TopLevelContext tlc;
 		CompoundExpr ce;
+		String file;
+		DaxJob j;
 		
 		tlc = new TopLevelContext();
 		ce = new CompoundExpr();
 		tlc.addTarget( ce );
 		
-		/* for( DaxFilename filename : filenameList )
-			if( filename.isLinkOutput() ) */
+		for( DaxFilename filename : filenameList )
+			if( filename.isLinkOutput() ) {
+				
+				file = filename.getFile();
+				j = fileJobMap.get( file );
+				
+				// TODO
+			}
 				
 		
 		
@@ -287,6 +316,31 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		catch( MalformedURLException e ) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	@Override
+	public void reportAmbiguity( Parser arg0, DFA arg1, int arg2, int arg3,
+			boolean arg4, BitSet arg5, ATNConfigSet arg6 ) {}
+
+	@Override
+	public void reportAttemptingFullContext( Parser arg0, DFA arg1, int arg2,
+			int arg3, BitSet arg4, ATNConfigSet arg5 ) {}
+
+	@Override
+	public void reportContextSensitivity( Parser arg0, DFA arg1, int arg2,
+			int arg3, int arg4, ATNConfigSet arg5) {}
+
+	@Override
+	public void syntaxError( Recognizer<?, ?> arg0, Object offendingSymbol, int line,
+			int charPositionInLine, String msg, RecognitionException arg5 ) {
+		
+		String near;
+		
+		near = null;
+		if( offendingSymbol != null )
+			near = ( ( Token )offendingSymbol ).getText();
+		
+		throw new ParseException( line, charPositionInLine, near, msg );
 	}
 
 }

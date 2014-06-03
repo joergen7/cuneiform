@@ -2,6 +2,17 @@ package de.huberlin.cuneiform.dax.repl;
 
 import java.util.UUID;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+
+import de.huberlin.cuneiform.dax.semanticmodel.DaxSemanticModelListener;
+import de.huberlin.cuneiform.libdax.parser.DaxLexer;
+import de.huberlin.cuneiform.libdax.parser.DaxParser;
+import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
+import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser;
+import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
@@ -10,6 +21,16 @@ public class DaxRepl extends BaseRepl {
 
 	public DaxRepl( TicketSrcActor ticketSrc ) {
 		super( ticketSrc );
+	}
+	
+	@Override
+	public int interpret( String input ) {
+		
+		DaxSemanticModelListener adag;
+		
+		adag = process( input );
+		
+		return BaseRepl.CTL_NIL;
 	}
 
 	@Override
@@ -21,5 +42,41 @@ public class DaxRepl extends BaseRepl {
 
 	@Override
 	public void queryStartedPost( UUID runId ) {}
+
+	public static DaxSemanticModelListener process( String input ) {
+		
+		ANTLRInputStream instream;
+		DaxLexer lexer;
+		CommonTokenStream tokenStream;
+		DaxParser parser;
+		ParseTree tree;
+		ParseTreeWalker walker;
+		DaxSemanticModelListener adag;
+		
+		walker = new ParseTreeWalker();
+		
+		// parse original content
+		instream = new ANTLRInputStream( input );
+		
+		lexer = new DaxLexer( instream );
+		lexer.removeErrorListeners();
+
+		tokenStream = new CommonTokenStream( lexer );
+		
+		parser = new DaxParser( tokenStream );
+		parser.removeErrorListeners();
+		
+		adag = new DaxSemanticModelListener();
+		lexer.addErrorListener( adag );
+		parser.addErrorListener( adag );
+
+		
+		tree = parser.adag();
+		
+		walker.walk( adag, tree );
+		
+		return adag;
+	}
+	
 
 }
