@@ -34,6 +34,8 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class DataType implements Type {
 
+	public static final String LABEL_FILE = "File";
+	
 	private final String id;
 	
 	public DataType( String id ) {

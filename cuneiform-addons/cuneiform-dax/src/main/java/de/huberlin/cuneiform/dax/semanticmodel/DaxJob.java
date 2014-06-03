@@ -1,10 +1,20 @@
 package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.DataType;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.Type;
+
 public class DaxJob {
+	
+	private static final String PREFIX_OUT = "out";
+	private static final String PREFIX_IN = "in";
 
 	private String id;
 	private String name;
@@ -14,19 +24,13 @@ public class DaxJob {
 	private String dvVersion;
 	private final List<DaxJob> parentSet;
 	private final List<DaxJob> childSet;
-	private final List<String> inputVarSet;
-	private final List<String> outputVarList;
-	private final List<String> plainArgList;
-	private final List<DaxFilename> filenameArgList;
+	private final List<Object> argList;
 	private final List<DaxJobUses> jobUsesList;
 	
 	public DaxJob() {
 		parentSet = new ArrayList<>();
 		childSet = new ArrayList<>();
-		inputVarSet = new ArrayList<>();
-		outputVarList = new ArrayList<>();
-		plainArgList = new ArrayList<>();
-		filenameArgList = new ArrayList<>();
+		argList = new ArrayList<>();
 		jobUsesList = new ArrayList<>();
 	}
 	
@@ -43,18 +47,7 @@ public class DaxJob {
 		if( filename == null )
 			throw new NullPointerException( "Filename must not be null." );
 		
-		filenameArgList.add( filename );
-	}
-	
-	public void addInputVar( String inputVar ) {
-		
-		if( inputVar == null )
-			throw new NullPointerException( "Input variable name must not be null." );
-
-		if( inputVar.isEmpty() )
-			throw new RuntimeException( "Input variable name must not be empty." );
-		
-		inputVarSet.add( inputVar );
+		argList.add( filename );
 	}
 	
 	public void addJobUses( DaxJobUses jobUses ) {
@@ -63,17 +56,6 @@ public class DaxJob {
 			throw new NullPointerException( "Job-Uses element object must not be null." );
 		
 		jobUsesList.add( jobUses );
-	}
-	
-	public void addOutputVar( String outputVar ) {
-		
-		if( outputVar == null )
-			throw new NullPointerException( "Output variable name must not be null." );
-
-		if( outputVar.isEmpty() )
-			throw new RuntimeException( "Output variable name must not be empty." );
-		
-		outputVarList.add( outputVar );
 	}
 	
 	public void addParent( DaxJob parent ) {
@@ -92,7 +74,7 @@ public class DaxJob {
 		if( arg.isEmpty() )
 			throw new RuntimeException( "Argument string must not be empty." );
 		
-		plainArgList.add( arg );
+		argList.add( arg );
 	}
 	
 	public String getDvName() {
@@ -117,10 +99,6 @@ public class DaxJob {
 			throw new NullPointerException( "DAX job name string has never been set." );
 		
 		return name;
-	}
-	
-	public List<String> getOutputVarList() {
-		return Collections.unmodifiableList( outputVarList );
 	}
 	
 	public String getVersion() {
@@ -188,7 +166,7 @@ public class DaxJob {
 	public void setId( String id ) {
 		
 		if( id == null ) {
-			id = null;
+			this.id = null;
 			return;
 		}
 		
@@ -236,5 +214,98 @@ public class DaxJob {
 		
 		this.version = version;
 			
+	}
+	
+	public Prototype getPrototype() {
+		
+		Prototype prototype;
+		Type type;
+		int n, m;
+		
+		prototype = new Prototype();
+		n = 1;
+		m = 1;
+		type = new DataType( DataType.LABEL_FILE );
+		
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( jobUses.isLinkOutput() )	
+				prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
+			else
+				prototype.addParam( new NameExpr( PREFIX_IN+( m++ ), type ) );
+			
+		}
+		
+		return prototype;
+	}
+	
+	public ForeignLambdaExpr getLambda() {
+		
+		ForeignLambdaExpr lambda;
+		StringBuffer buf;
+		
+		buf = new StringBuffer();
+		
+		buf.append( name );
+		for( Object arg : argList )
+			buf.append( ' ' ).append( arg );
+		
+		lambda = new ForeignLambdaExpr(
+			getPrototype(),
+			ForeignLambdaExpr.LANGID_BASH,
+			buf.toString() );
+		
+		return lambda;
+	}
+	
+	public int getChannel( DaxFilename filename ) {
+		
+		int channel;
+		
+		if( filename == null )
+			throw new NullPointerException( "DAX filename must not be null." );
+		
+		channel = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( !jobUses.isLinkOutput() )
+				continue;
+			
+			if( jobUses.equals( filename ) )
+				return channel;
+			
+			channel++;
+		}
+		
+		throw new RuntimeException( "DAX filename not registered." );
+	}
+	
+	public ApplyExpr getApplyExpr( DaxFilename filename ) {
+		
+		ApplyExpr applyExpr;
+		int channel, i;
+		
+		// find out channel
+		channel = getChannel( filename );
+		
+		// create new apply expression
+		applyExpr = new ApplyExpr( channel, false );
+		
+		// set task expression
+		applyExpr.setTaskExpr( new CompoundExpr( getLambda() ) );
+		
+		// bind parameters
+		i = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( jobUses.isLinkOutput() )
+				continue;
+			
+			applyExpr.putAssign(
+				new NameExpr( PREFIX_IN+( i++ ) ),
+				new CompoundExpr( jobUses.getNameExpr() ) );
+		}
+		
+		return applyExpr;
 	}
 }

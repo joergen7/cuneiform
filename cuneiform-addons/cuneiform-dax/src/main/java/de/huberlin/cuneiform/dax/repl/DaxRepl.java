@@ -10,11 +10,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import de.huberlin.cuneiform.dax.semanticmodel.DaxSemanticModelListener;
 import de.huberlin.cuneiform.libdax.parser.DaxLexer;
 import de.huberlin.cuneiform.libdax.parser.DaxParser;
-import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
-import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser;
-import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class DaxRepl extends BaseRepl {
@@ -24,13 +22,16 @@ public class DaxRepl extends BaseRepl {
 	}
 	
 	@Override
-	public int interpret( String input ) {
+	public synchronized int interpret( String input ) {
 		
 		DaxSemanticModelListener adag;
+		TopLevelContext tlc;
 		
 		adag = process( input );
+		tlc = adag.toTopLevelContext();
 		
-		return BaseRepl.CTL_NIL;
+		return interpret( tlc );
+		
 	}
 
 	@Override

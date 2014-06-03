@@ -110,9 +110,6 @@ public abstract class BaseRepl {
 		CuneiformLexer lexer;
 		CuneiformParser parser;
 		TopLevelContext tlc;
-		DynamicNodeVisitor reducer;
-		UUID runId;
-		int ctl;
 		
 		if( input == null )
 			throw new NullPointerException( "Input string must not be null." );
@@ -136,6 +133,15 @@ public abstract class BaseRepl {
 		// visit parsed script
 		tlc = ( TopLevelContext )state.visit( parser.script() );
 		
+		return interpret( tlc );
+	}
+	
+	public int interpret( TopLevelContext tlc ) {
+		
+		int ctl;
+		DynamicNodeVisitor reducer;
+		UUID runId;
+
 		// remove control targets
 		ctl = fetchCtl( tlc );
 		
@@ -152,6 +158,7 @@ public abstract class BaseRepl {
 			// trigger reduction
 			reducer.step();
 		}
+		
 		return ctl;
 	}
 	

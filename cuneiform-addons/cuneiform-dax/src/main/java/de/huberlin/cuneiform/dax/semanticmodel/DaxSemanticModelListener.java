@@ -23,6 +23,8 @@ import de.huberlin.cuneiform.libdax.parser.DaxParser;
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 
 public class DaxSemanticModelListener extends DaxBaseListener implements ANTLRErrorListener {
@@ -31,8 +33,8 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	private URL xsi;
 	private URL schemaLocation;
 	private String version;
-	private int count;
-	private int index;
+	private Integer count;
+	private Integer index;
 	private String name;
 	private final List<DaxFilename> filenameList;
 	private final Map<String,DaxJob> idJobMap;
@@ -273,23 +275,39 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		
 		TopLevelContext tlc;
 		CompoundExpr ce;
-		String file;
 		DaxJob j;
+		ApplyExpr applyExpr;
+		NameExpr n;
 		
 		tlc = new TopLevelContext();
 		ce = new CompoundExpr();
 		tlc.addTarget( ce );
 		
-		for( DaxFilename filename : filenameList )
-			if( filename.isLinkOutput() ) {
+		for( DaxFilename f : filenameList ) {
+			
+			if( f.isLinkInput() ) {
 				
-				file = filename.getFile();
-				j = fileJobMap.get( file );
+				tlc.putAssign(
+					f.getNameExpr(),
+					new CompoundExpr( new StringExpr( f.getFile() ) ) );
 				
-				// TODO
+				continue;
 			}
-				
-		
+			
+			j = fileJobMap.get( f.getFile() );
+			
+			if( j == null )
+				throw new NullPointerException( "DAX filename not registered." );
+			
+			applyExpr = j.getApplyExpr( f );
+			n = f.getNameExpr();
+			
+			tlc.putAssign( n, new CompoundExpr( applyExpr ) );
+			
+			if( f.isLinkOutput() )
+				ce.addSingleExpr( n );
+			
+		}
 		
 		return tlc;
 	}

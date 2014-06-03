@@ -194,10 +194,6 @@ public class JsonReportEntry {
 		return runId;
 	}
 	
-	public 	String getValue() {
-		return value;
-	}
-	
 	public JSONObject getValueJsonObj() throws JSONException {
 		
 		if( !isValueJson() )
