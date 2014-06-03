@@ -205,15 +205,13 @@ public class LocalThread implements Runnable {
 	
 				arg = new String[] {
 						"/usr/bin/time",
-						// "--quiet",
+						"--quiet",
 						"-a",
-						// "-o",
-						// location.getAbsolutePath()+"/"+Invocation.REPORT_FILENAME,
+						"-o",
+						location.getAbsolutePath()+"/"+Invocation.REPORT_FILENAME,
 						"-f",
 						buf.toString(),
-						scriptFile.getAbsolutePath(),
-						">",
-						location.getAbsolutePath()+"/"+Invocation.REPORT_FILENAME };
+						scriptFile.getAbsolutePath() };
 				
 				
 				

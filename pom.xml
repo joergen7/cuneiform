@@ -14,6 +14,7 @@
 		<module>cuneiform-core</module>
 		<module>cuneiform-addons</module>
 		<module>cuneiform-dist</module>
+		<module>cuneiform-cmdline</module>
 	</modules>
 
 	<dependencyManagement>

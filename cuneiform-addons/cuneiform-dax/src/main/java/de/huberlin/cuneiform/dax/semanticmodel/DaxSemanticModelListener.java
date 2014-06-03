@@ -10,6 +10,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import de.huberlin.cuneiform.libdax.parser.DaxBaseListener;
 import de.huberlin.cuneiform.libdax.parser.DaxParser;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 
 public class DaxSemanticModelListener extends DaxBaseListener {
 
@@ -245,7 +248,27 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		job.addParent( parent );
 	}
 
-
+	public TopLevelContext toTopLevelContext() {
+		
+		TopLevelContext tlc;
+		CompoundExpr ce;
+		
+		tlc = new TopLevelContext();
+		ce = new CompoundExpr();
+		
+		for( DaxJob job : jobMap.values() ) {
+			
+			if( job.isLeaf() )
+				ce.addSingleExpr( toApplyExpr( job, tlc ) );
+		}
+		
+		return tlc;
+	}
+	
+	private ApplyExpr toApplyExpr( DaxJob job, TopLevelContext tlc ) {
+		// TODO
+		return null;
+	}
 	
 	
 	public static int getInt( TerminalNode node ) {

@@ -17,7 +17,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>de.huberlin.wbi.cuneiform</groupId>
-			<artifactId>cuneiform-core</artifactId>
+			<artifactId>cuneiform-cmdline</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

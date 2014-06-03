@@ -34,9 +34,13 @@ package de.huberlin.wbi.cuneiform.core.repl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.UUID;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+
+import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
@@ -87,5 +91,58 @@ public class CmdlineRepl extends BaseRepl {
 			throw new RuntimeException( e1 );
 		}
 		
+	}
+
+	public static void run( BaseRepl repl ) throws IOException {
+		
+		StringBuffer buf;
+		String line;
+		QueryParseCtlLexer lexer;
+		int ctl;
+		
+		System.out.println( BaseRepl.getLogo() );
+		
+		buf = new StringBuffer();
+		System.out.print( "> " );
+		
+		try( BufferedReader reader = new BufferedReader( new InputStreamReader( System.in ) ) ) {
+			
+			while( ( line = reader.readLine() ) != null ) {
+				
+				buf.append( line ).append( '\n' );
+				
+				lexer = new QueryParseCtlLexer( new ANTLRInputStream( buf.toString() ) );
+				
+				
+				if( lexer.isReady() ) {
+					
+					try {
+						
+						ctl = repl.interpret( buf.toString() );
+						
+						if( ( ctl & BaseRepl.CTL_STATE ) > 0 )
+							System.out.print( repl.getState() );
+						
+						if( ( ctl & BaseRepl.CTL_QUERYSET ) > 0 )
+							System.out.print( repl.getRunningSet() );
+						
+						if( ( ctl & BaseRepl.CTL_TICKETSET ) > 0 )
+							System.out.print( repl.getTicketSet() );
+
+						if( ( ctl & BaseRepl.CTL_QUIT ) > 0 )
+							break;
+					}
+					catch( ParseException e ) {
+						System.out.println( e );
+					}
+					
+					buf = new StringBuffer();	
+					System.out.print( "> " );
+				}
+				
+			}
+			
+		}
+		System.out.println( "Bye." );
 	}	
 }
