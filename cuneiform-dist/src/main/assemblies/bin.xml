@@ -21,7 +21,7 @@
 			<useProjectArtifact>false</useProjectArtifact>
 			<useProjectAttachments>false</useProjectAttachments>
 			<excludes>
-				<exclude>de.huberlin.wbi.cuneiform:cuneiform-core</exclude>
+				<exclude>de.huberlin.wbi.cuneiform:cuneiform-cmdline</exclude>
 			</excludes>
 		</dependencySet>
 
@@ -32,7 +32,7 @@
 			<useProjectArtifact>false</useProjectArtifact>
 			<useProjectAttachments>false</useProjectAttachments>
 			<includes>
-				<include>de.huberlin.wbi.cuneiform:cuneiform-core</include>
+				<include>de.huberlin.wbi.cuneiform:cuneiform-cmdline</include>
 			</includes>
 
 			<!-- <excludes> -->
