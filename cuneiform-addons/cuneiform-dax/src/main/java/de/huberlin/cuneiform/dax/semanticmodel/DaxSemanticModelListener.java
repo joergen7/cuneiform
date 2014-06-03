@@ -255,21 +255,15 @@ public class DaxSemanticModelListener extends DaxBaseListener {
 		
 		tlc = new TopLevelContext();
 		ce = new CompoundExpr();
+		tlc.addTarget( ce );
 		
-		for( DaxJob job : jobMap.values() ) {
-			
-			if( job.isLeaf() )
-				ce.addSingleExpr( toApplyExpr( job, tlc ) );
-		}
+		/* for( DaxFilename filename : filenameList )
+			if( filename.isLinkOutput() ) */
+				
+		
 		
 		return tlc;
 	}
-	
-	private ApplyExpr toApplyExpr( DaxJob job, TopLevelContext tlc ) {
-		// TODO
-		return null;
-	}
-	
 	
 	public static int getInt( TerminalNode node ) {
 		return Integer.valueOf( getString( node ) );
