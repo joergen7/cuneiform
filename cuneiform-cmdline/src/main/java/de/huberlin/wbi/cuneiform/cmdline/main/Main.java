@@ -147,7 +147,7 @@ public class Main {
 
 	}
 	
-	public static void config( CommandLine cmd ) throws IOException {
+	public static void config( CommandLine cmd ) {
 		
 		String[] fileVector;
 		File f;

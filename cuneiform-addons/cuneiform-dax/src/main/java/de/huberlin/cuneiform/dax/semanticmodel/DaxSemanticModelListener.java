@@ -151,6 +151,12 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	public void enterJobPropName( @NotNull DaxParser.JobPropNameContext ctx ) {
 		job.setName( getString( ctx.STRING() ) );
 	}
+	
+	@Override
+	public void enterJobPropNamespace( @NotNull DaxParser.JobPropNamespaceContext ctx ) {
+		job.setNamespace( getString( ctx.STRING() ) );
+	}
+
 
 	@Override
 	public void enterJobPropVersion( @NotNull DaxParser.JobPropVersionContext ctx ) {
@@ -279,39 +285,38 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		
 		TopLevelContext tlc;
 		CompoundExpr ce;
-		DaxJob j;
 		ApplyExpr applyExpr;
-		NameExpr n;
 		
 		tlc = new TopLevelContext();
 		ce = new CompoundExpr();
 		tlc.addTarget( ce );
 		
-		for( DaxFilename f : filenameList ) {
+		
+		for( DaxJob j : idJobMap.values() ) {
 			
-			if( f.isLinkInput() ) {
+			if( j.isRoot() )
+
+				for( DaxJobUses f : j.getInputJobUsesSet() )
+					
+					tlc.putAssign(
+						f.getNameExpr(),
+						new CompoundExpr( new StringExpr( f.getFile() ) ) );
 				
-				tlc.putAssign(
-					f.getNameExpr(),
-					new CompoundExpr( new StringExpr( f.getFile() ) ) );
+			
+			
+			if( j.isLeaf() )
 				
-				continue;
+				for( DaxJobUses f : j.getOutputJobUsesSet() )
+					
+					ce.addSingleExpr( f.getNameExpr() );
+			
+			for( DaxJobUses f : j.getOutputJobUsesSet() ) {
+				
+				applyExpr = j.getApplyExpr( f );
+				tlc.putAssign( f.getNameExpr(), new CompoundExpr( applyExpr ) );
 			}
-			
-			j = fileJobMap.get( f.getFile() );
-			
-			if( j == null )
-				throw new NullPointerException( "DAX filename not registered." );
-			
-			applyExpr = j.getApplyExpr( f );
-			n = f.getNameExpr();
-			
-			tlc.putAssign( n, new CompoundExpr( applyExpr ) );
-			
-			if( f.isLinkOutput() )
-				ce.addSingleExpr( n );
-			
 		}
+			
 		
 		return tlc;
 	}

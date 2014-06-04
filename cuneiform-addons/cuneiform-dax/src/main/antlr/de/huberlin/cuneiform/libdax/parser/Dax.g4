@@ -16,9 +16,9 @@ adagEl         : filename
                | child
                ;
 
-filename       : LTAG FILENAME filenameProp* SLASH RTAG ;
+filename       : LTAG( FILE | FILENAME )filenameProp* SLASH RTAG ;
 
-filenameProp   : FILE EQ STRING                    # FilenamePropFile
+filenameProp   : ( FILE | NAME )EQ STRING          # FilenamePropFile
                | LINK EQ INPUT                     # FilenamePropLinkInput
                | LINK EQ OUTPUT                    # FilenamePropLinkOutput
                | LINK EQ INOUT                     # FilenamePropLinkInout
@@ -32,6 +32,7 @@ jobProp        : ID EQ STRING                      # JobPropId
                | LEVEL EQ STRING                   # JobPropLevel
                | DVNAME EQ STRING                  # JobPropDvName
                | DVVERSION EQ STRING               # JobPropDvVersion
+               | NAMESPACE EQ STRING               # JobPropNamespace
                ;
 
 jobEl          : LARGUMENT argumentEl* RARGUMENT   # JobElArgument
@@ -42,7 +43,7 @@ argumentEl     : ARG                               # ArgumentElPlain
                | filename                          # ArgumentElFilename
                ;
 
-jobUsesProp    : FILE EQ STRING                    # JobUsesPropFile
+jobUsesProp    : ( FILE | NAME )EQ STRING          # JobUsesPropFile
                | LINK EQ INPUT                     # JobUsesPropLinkInput
                | LINK EQ OUTPUT                    # JobUsesPropLinkOutput
                | REGISTER EQ TRUE                  # JobUsesPropRegisterTrue
@@ -79,6 +80,7 @@ LEVEL          : 'level' ;
 LINK           : 'link' ;
 LTAG           : '<' ;
 NAME           : 'name' ;
+NAMESPACE      : 'namespace' ;
 OPTIONAL       : 'optional' ;
 OUTPUT         : '"output"' ;
 PARENT         : 'parent' ;

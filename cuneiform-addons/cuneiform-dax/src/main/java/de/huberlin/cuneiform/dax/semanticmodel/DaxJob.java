@@ -1,7 +1,9 @@
 package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
@@ -23,6 +25,7 @@ public class DaxJob {
 	private Integer level;
 	private String dvName;
 	private String dvVersion;
+	private String namespace;
 	private final List<DaxJob> parentSet;
 	private final List<DaxJob> childSet;
 	private final List<Object> argList;
@@ -94,12 +97,12 @@ public class DaxJob {
 		return level;
 	}
 	
-	public String getName() {
-		
-		if( name == null )
-			throw new NullPointerException( "DAX job name string has never been set." );
-		
+	public String getName() {		
 		return name;
+	}
+	
+	public String getNamespace() {
+		return namespace;
 	}
 	
 	public String getVersion() {
@@ -124,6 +127,10 @@ public class DaxJob {
 	
 	public boolean hasName() {
 		return name != null;
+	}
+	
+	public boolean hasNamespace() {
+		return namespace != null;
 	}
 	
 	public boolean hasVersion() {
@@ -203,6 +210,19 @@ public class DaxJob {
 		this.name = name;		
 	}
 	
+	public void setNamespace( String namespace ) {
+		
+		if( namespace == null ) {
+			this.namespace = null;
+			return;
+		}
+
+		if( namespace.isEmpty() )
+			throw new RuntimeException( "Namespace string must not be empty." );
+		
+		this.namespace = namespace;	
+	}
+	
 	public void setVersion( String version ) {
 		
 		if( version == null ) {
@@ -215,6 +235,30 @@ public class DaxJob {
 		
 		this.version = version;
 			
+	}
+	
+	public Set<DaxJobUses> getInputJobUsesSet() {
+		
+		HashSet<DaxJobUses> set;
+		
+		set = new HashSet<>();
+		for( DaxJobUses jobUses : jobUsesList )
+			if( jobUses.isLinkInput() )
+				set.add( jobUses );
+		
+		return set;
+	}
+	
+	public Set<DaxJobUses>getOutputJobUsesSet() {
+		
+		HashSet<DaxJobUses> set;
+		
+		set = new HashSet<>();
+		for( DaxJobUses jobUses : jobUsesList )
+			if( jobUses.isLinkOutput() )
+				set.add( jobUses );
+		
+		return set;
 	}
 	
 	public Prototype getPrototype() {
@@ -242,6 +286,38 @@ public class DaxJob {
 		return prototype;
 	}
 	
+	public String getReference( DaxFilename filename ) {
+		
+		int i, j;
+		
+		i = 1;
+		j = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( jobUses.isLinkOutput() ) {
+			
+				if( jobUses.equals( filename ) )
+					return PREFIX_OUT+j;
+				
+				j++;
+				continue;
+			}
+			
+			
+			if( jobUses.isLinkInput() ) {
+				if( jobUses.equals( filename ) )
+					return PREFIX_IN+i;
+				
+				i++;
+				continue;
+			}
+			
+			throw new RuntimeException( "Invalid link direction." );
+		}
+		
+		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered." );
+	}
+	
 	public ForeignLambdaExpr getLambda() {
 		
 		ForeignLambdaExpr lambda;
@@ -250,8 +326,24 @@ public class DaxJob {
 		buf = new StringBuffer();
 		
 		buf.append( name );
-		for( Object arg : argList )
-			buf.append( ' ' ).append( arg );
+		for( Object arg : argList ) {
+			
+			buf.append( ' ' );
+			
+			if( arg instanceof String ) {
+				buf.append( arg );
+				continue;
+			}
+			
+			if( arg instanceof DaxFilename ) {
+				
+				buf.append( '$' );
+				buf.append( getReference( ( DaxFilename )arg ) );
+				continue;
+			}
+			
+			throw new RuntimeException( "Argument type not recognized." );
+		}
 		
 		lambda = new ForeignLambdaExpr(
 			getPrototype(),
@@ -311,4 +403,6 @@ public class DaxJob {
 		
 		return applyExpr;
 	}
+
+
 }

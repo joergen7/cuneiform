@@ -1,6 +1,5 @@
 package de.huberlin.cuneiform.dax.semanticmodel;
 
-import de.huberlin.wbi.cuneiform.core.semanticmodel.DataType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 
 public class DaxFilename {
@@ -79,13 +78,13 @@ public class DaxFilename {
 		link = LINK_INOUT;
 	}
 	
+	public NameExpr getNameExpr() {
+		return new NameExpr( PREFIX_LINK+file.hashCode() );
+	}
+	
 	@Override
 	public String toString() {
 		return file;
-	}
-	
-	public NameExpr getNameExpr() {
-		return new NameExpr( PREFIX_LINK+file.hashCode(), new DataType( DataType.LABEL_FILE ) );
 	}
 
 }
