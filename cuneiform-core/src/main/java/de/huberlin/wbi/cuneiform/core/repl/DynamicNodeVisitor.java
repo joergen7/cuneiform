@@ -442,7 +442,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	}
 	
-	public UUID getRunId() {
+	public UUID getQueryId() {
 		return queryId;
 	}
 			

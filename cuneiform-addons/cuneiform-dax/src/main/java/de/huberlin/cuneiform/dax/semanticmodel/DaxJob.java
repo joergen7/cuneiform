@@ -286,36 +286,90 @@ public class DaxJob {
 		return prototype;
 	}
 	
-	public String getReference( DaxFilename filename ) {
+	public boolean isBidirectional( DaxFilename filename ) {
 		
-		int i, j;
+		int i;
 		
-		i = 1;
-		j = 1;
+		i = 0;
 		for( DaxJobUses jobUses : jobUsesList ) {
 			
-			if( jobUses.isLinkOutput() ) {
-			
-				if( jobUses.equals( filename ) )
-					return PREFIX_OUT+j;
-				
-				j++;
+			if( !jobUses.equals( filename ) )
 				continue;
-			}
 			
-			
-			if( jobUses.isLinkInput() ) {
-				if( jobUses.equals( filename ) )
-					return PREFIX_IN+i;
-				
-				i++;
-				continue;
-			}
-			
-			throw new RuntimeException( "Invalid link direction." );
+			i++;
 		}
 		
-		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered." );
+		return i > 1;
+	}
+	
+	public String getReference( DaxFilename filename ) {
+		
+		int i;
+		
+		i = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( !jobUses.isLinkInput() )
+				continue;
+			
+			if( jobUses.equals( filename ) )
+				return PREFIX_IN+i;
+			
+			i++;
+		}
+
+		i = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+						
+			if( !jobUses.isLinkOutput() )
+				continue;
+			
+			if( jobUses.equals( filename ) )
+				return PREFIX_OUT+i;
+			
+			i++;
+		}
+		
+		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered in any direction." );
+	}
+	
+	public String getInputReference( DaxFilename filename ) {
+		
+		int i;
+		
+		i = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( !jobUses.isLinkInput() )
+				continue;
+			
+			if( jobUses.equals( filename ) )
+				return PREFIX_IN+i;
+			
+			i++;
+		}
+		
+		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered as input." );
+	}
+	
+	public String getOutputReference( DaxFilename filename ) {
+		
+		int i;
+		
+		i = 1;
+		for( DaxJobUses jobUses : jobUsesList ) {
+						
+			if( !jobUses.isLinkOutput() )
+				continue;
+			
+			if( jobUses.equals( filename ) )
+				return PREFIX_OUT+i;
+			
+			i++;
+		}
+		
+		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered as output." );
+
 	}
 	
 	public ForeignLambdaExpr getLambda() {
@@ -324,6 +378,23 @@ public class DaxJob {
 		StringBuffer buf;
 		
 		buf = new StringBuffer();
+		
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( jobUses.isLinkInput() )
+				continue;
+			
+			if( isBidirectional( jobUses ) ) {
+				
+				buf.append( getOutputReference( jobUses ) ).append( "=$" );
+				buf.append( getInputReference( jobUses ) ).append( '\n' );
+				
+				continue;
+			}
+			
+			buf.append( getReference( jobUses ) ).append( "=\"" );
+			buf.append( jobUses.getFile() ).append( "\"\n" );
+		}
 		
 		buf.append( name );
 		for( Object arg : argList ) {
@@ -394,6 +465,9 @@ public class DaxJob {
 		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkOutput() )
+				continue;
+			
+			if( isBidirectional( jobUses ) )
 				continue;
 			
 			applyExpr.putAssign(

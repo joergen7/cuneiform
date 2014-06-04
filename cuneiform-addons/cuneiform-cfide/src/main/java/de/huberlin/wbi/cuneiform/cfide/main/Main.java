@@ -27,6 +27,7 @@ public class Main implements Runnable {
 				
 		frame = new JFrame( "Cuneiform Editor" );
 		frame.setSize( 1000, 750 );
+		frame.setLocation( 0, 50 );
 		frame.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
 		
 		editRunPanel = new MainPanel( frame );

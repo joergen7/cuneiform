@@ -58,15 +58,15 @@ public abstract class BaseRepl {
 		statLog = LogFactory.getLog( "statLogger" );
 	}
 	
-	public synchronized CompoundExpr getAns() {
+	public CompoundExpr getAns() {
 		return ans;
 	}
 	
-	public synchronized Set<UUID> getRunningSet() {
+	public Set<UUID> getRunningSet() {
 		return runningMap.keySet();
 	}
 	
-	public synchronized Set<Ticket> getTicketSet() {
+	public Set<Ticket> getTicketSet() {
 		
 		Set<Ticket> set;
 		
@@ -78,7 +78,7 @@ public abstract class BaseRepl {
 		return set;
 	}
 	
-	public synchronized String getRunStr() {
+	public String getRunStr() {
 		
 		StringBuffer buf;
 		
@@ -96,15 +96,15 @@ public abstract class BaseRepl {
 		return buf.toString();
 	}
 	
-	public synchronized TopLevelContext getState() {
+	public TopLevelContext getState() {
 		return state.getTopLevelContext();
 	}
 	
-	public synchronized boolean hasAns() {
+	public boolean hasAns() {
 		return ans != null;
 	}
 	
-	public synchronized int interpret( String input ) {
+	public int interpret( String input ) {
 		
 		String afterPre, afterChannel;
 		CuneiformLexer lexer;
@@ -140,7 +140,7 @@ public abstract class BaseRepl {
 		
 		int ctl;
 		DynamicNodeVisitor reducer;
-		UUID runId;
+		UUID queryId;
 
 		// remove control targets
 		ctl = fetchCtl( tlc );
@@ -150,10 +150,10 @@ public abstract class BaseRepl {
 			
 			reducer = new DynamicNodeVisitor( ticketSrc, this, tlc );
 			
-			runId = reducer.getRunId();
+			queryId = reducer.getQueryId();
 			
-			runningMap.put( runId, reducer );
-			queryStarted( runId );
+			runningMap.put( queryId, reducer );
+			queryStarted( queryId );
 			
 			// trigger reduction
 			reducer.step();
@@ -162,7 +162,11 @@ public abstract class BaseRepl {
 		return ctl;
 	}
 	
-	public synchronized boolean isRunning( UUID queryId ) {
+	public boolean isBusy() {
+		return !runningMap.isEmpty();
+	}
+	
+	public boolean isRunning( UUID queryId ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -170,7 +174,7 @@ public abstract class BaseRepl {
 		return runningMap.containsKey( queryId );
 	}
 	
-	public synchronized void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+	public void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -191,7 +195,7 @@ public abstract class BaseRepl {
 
 	public abstract void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr );
 
-	public synchronized void queryFinished( UUID queryId, CompoundExpr result ) {
+	public void queryFinished( UUID queryId, CompoundExpr result ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -210,7 +214,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryFinishedPost( UUID queryId, CompoundExpr result );
 	
-	public synchronized void queryStarted( UUID runId ) {
+	public void queryStarted( UUID runId ) {
 
 		if( log.isInfoEnabled() )
 			log.info( "Query "+runId+" started." );
@@ -220,7 +224,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryStartedPost( UUID runId );
 	
-	public synchronized void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+	public void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query ID must not be null." );

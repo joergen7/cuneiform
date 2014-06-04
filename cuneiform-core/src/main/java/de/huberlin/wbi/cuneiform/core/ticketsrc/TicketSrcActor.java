@@ -152,6 +152,7 @@ public class TicketSrcActor extends Actor {
 			e = ticketFailedMsg.getException();
 			
 			queryIdSet = ticketQueryMap.get( ticket );
+			
 			for( UUID queryId : queryIdSet )
 				for( BaseRepl repl : replSet )
 					if( repl.isRunning( queryId ) )

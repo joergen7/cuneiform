@@ -47,6 +47,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import de.huberlin.cuneiform.dax.repl.DaxRepl;
+import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
@@ -65,7 +66,7 @@ public class Main {
 	private static File[] inputFileVector;
 	
 
-	public static void main( String[] args ) throws IOException, ParseException {
+	public static void main( String[] args ) throws IOException, ParseException, InterruptedException {
 		
 		CommandLine cmd;
 		Options opt;
@@ -125,6 +126,12 @@ public class Main {
 				for( File f : inputFileVector )
 					repl.interpret( readFile( f ) );
 				
+				Thread.sleep( 3*Actor.DELAY );
+				while( repl.isBusy() ) {
+					
+					System.out.println( repl.getRunningSet() );
+					Thread.sleep( Actor.DELAY );
+				}				
 				return;
 			}
 			

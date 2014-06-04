@@ -30,8 +30,6 @@ public class DaxRepl extends BaseRepl {
 		adag = process( input );
 		tlc = adag.toTopLevelContext();
 		
-		System.out.println( tlc );
-		
 		return interpret( tlc );
 		
 	}

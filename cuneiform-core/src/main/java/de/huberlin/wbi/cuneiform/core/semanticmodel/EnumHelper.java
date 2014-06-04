@@ -201,7 +201,7 @@ public class EnumHelper {
 			}
 		}
 		catch( NotBoundException e ) {
-			throw new RuntimeException( e.getMessage() );
+			throw new RuntimeException( e );
 		}
 		
 		throw new RuntimeException( "Parameter must at least contain one parameter name." );
