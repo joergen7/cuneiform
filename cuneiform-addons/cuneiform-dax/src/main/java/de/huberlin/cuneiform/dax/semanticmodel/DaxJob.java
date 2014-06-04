@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.DataType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
@@ -223,6 +224,8 @@ public class DaxJob {
 		int n, m;
 		
 		prototype = new Prototype();
+		prototype.addParam( new NameExpr( CfSemanticModelVisitor.LABEL_TASK ) );
+		
 		n = 1;
 		m = 1;
 		type = new DataType( DataType.LABEL_FILE );

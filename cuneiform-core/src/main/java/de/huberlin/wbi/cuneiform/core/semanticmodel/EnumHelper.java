@@ -34,18 +34,18 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 import java.util.Set;
 
-public class CombiHelper {
+public class EnumHelper {
 
 	private final Prototype prototype;
 	private final BaseBlock bindingBlock;
 	private final CompoundExpr taskExpr;
 	private final Param[] paramArray;
 	
-	public CombiHelper( ApplyExpr applyExpr ) {
+	public EnumHelper( ApplyExpr applyExpr ) {
 		this( applyExpr.getTaskExpr(), applyExpr );
 	}
 	
-	public CombiHelper( CompoundExpr taskExpr, BaseBlock bindingBlock ) {
+	public EnumHelper( CompoundExpr taskExpr, BaseBlock bindingBlock ) {
 		
 		if( bindingBlock == null )
 			throw new NullPointerException( "Binding block must not be null." );

@@ -47,6 +47,7 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONObject;
 
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
@@ -95,9 +96,8 @@ public class LocalThread implements Runnable {
 		Process process;
 		int exitValue;
 		Set<JsonReportEntry> report;
+		JsonReportEntry entry;
 		String line;
-		String[] arg;
-		String value;
 		StringBuffer buf;
 		File location;
 		File reportFile;
@@ -110,6 +110,8 @@ public class LocalThread implements Runnable {
 		ProcessBuilder processBuilder;
 		Ticket ticket;
 		String script, stdOut, stdErr;
+		long tic, toc;
+		JSONObject obj;
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
@@ -181,42 +183,8 @@ public class LocalThread implements Runnable {
 					}
 				}
 				
-				buf = new StringBuffer();
-				
-				buf.append( "{" )
-				.append( JsonReportEntry.ATT_TIMESTAMP ).append( ":" ).append( System.currentTimeMillis() ).append( "," )
-				.append( JsonReportEntry.ATT_RUNID ).append( ":\"" ).append( invoc.getRunId() ).append( "\"," )
-				.append( JsonReportEntry.ATT_TASKID ).append( ":" ).append( invoc.getTaskId() ).append( "," );
-				
-				if( invoc.hasTaskName() )
-					buf.append( JsonReportEntry.ATT_TASKNAME ).append( ":\"" ).append( invoc.getTaskName() ).append( "\"," );
-				
-				buf.append( JsonReportEntry.ATT_LANG ).append( ":\"" ).append( invoc.getLangLabel() ).append( "\"," )
-				.append( JsonReportEntry.ATT_INVOCID ).append( ":" ).append( invoc.getTicketId() ).append( "," )
-				.append( JsonReportEntry.ATT_KEY ).append( ":\"" ).append( JsonReportEntry.KEY_INVOC_TIME ).append( "\"," )
-				.append( JsonReportEntry.ATT_VALUE ).append( ":" )
-				.append( "{\"realTime\":%e,\"userTime\":%U,\"sysTime\":%S," )
-				.append( "\"maxResidentSetSize\":%M,\"avgResidentSetSize\":%t," )
-				.append( "\"avgDataSize\":%D,\"avgStackSize\":%p,\"avgTextSize\":%X," )
-				.append( "\"nMajPageFault\":%F,\"nMinPageFault\":%R," )
-				.append( "\"nSwapOutMainMem\":%W,\"nForcedContextSwitch\":%c," )
-				.append( "\"nWaitContextSwitch\":%w,\"nIoRead\":%I,\"nIoWrite\":%O," )
-				.append( "\"nSocketRead\":%r,\"nSocketWrite\":%s,\"nSignal\":%k}}" );
-	
-				arg = new String[] {
-						"/usr/bin/time",
-						"--quiet",
-						"-a",
-						"-o",
-						location.getAbsolutePath()+"/"+Invocation.REPORT_FILENAME,
-						"-f",
-						buf.toString(),
-						scriptFile.getAbsolutePath() };
-				
-				
-				
 				// run script
-				processBuilder = new ProcessBuilder( arg );
+				processBuilder = new ProcessBuilder( scriptFile.getAbsolutePath() );
 				processBuilder.directory( location );
 				
 				stdOutFile = new File( location.getAbsolutePath()+"/"+Invocation.STDOUT_FILENAME );
@@ -225,37 +193,49 @@ public class LocalThread implements Runnable {
 				processBuilder.redirectOutput( stdOutFile );
 				processBuilder.redirectError( stdErrFile );
 				
-				
+				tic = System.currentTimeMillis();
 				process = processBuilder.start();
-								
 				exitValue = process.waitFor();
-
+				toc = System.currentTimeMillis();
 				
 				
 				try( BufferedWriter reportWriter = new BufferedWriter( new FileWriter( reportFile, true ) ) ) {
-							
+					
+					obj = new JSONObject();
+					obj.put( JsonReportEntry.LABEL_REALTIME, toc-tic );
+					entry = new JsonReportEntry( tic, invoc, null, JsonReportEntry.KEY_INVOC_TIME, obj );
+					
+					reportWriter.write( entry.toString() );
+					reportWriter.write( '\n' );
+					
 					try( BufferedReader reader = new BufferedReader( new FileReader( stdOutFile ) ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
-							buf.append( line.replaceAll( "\\\\", "\\\\\\\\" ).replaceAll( "\"", "\\\"" ) ).append( '\n' );
+							buf.append( line ).append( '\n' );
 						
 						
-						value = buf.toString();
-						if( !value.isEmpty() )
+						stdOut = buf.toString();
 						
-						reportWriter.write( new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDOUT, value ).toString() );
+						if( !stdOut.isEmpty() ) {
+							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDOUT, stdOut );
+							reportWriter.write( entry.toString() );
+							reportWriter.write( '\n' );
+						}
 					}
 					try( BufferedReader reader = new BufferedReader( new FileReader( stdErrFile ) ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
-							buf.append( line.replaceAll( "\\\\", "\\\\\\\\" ).replaceAll( "\"", "\\\"" ) ).append( '\n' );
+							buf.append( line ).append( '\n' );
 						
-						value = buf.toString();
-						if( !value.isEmpty() )
+						stdErr = buf.toString();
+						if( !stdErr.isEmpty() ) {
 						
-						reportWriter.write( new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDERR, value ).toString() );
+							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDERR, stdErr );
+							reportWriter.write( entry.toString() );
+							reportWriter.write( '\n' );
+						}
 					}
 					
 					if( exitValue == 0 ) {
@@ -268,34 +248,13 @@ public class LocalThread implements Runnable {
 						
 						script = invoc.toScript();
 						
-						buf = new StringBuffer();
-						try( BufferedReader reader = new BufferedReader( new FileReader( stdOutFile ) ) ) {
-							
-							while( ( line = reader.readLine() ) != null )
-								buf.append( line ).append( '\n' );
-						}
-						stdOut = buf.toString();
-
-					
-						buf = new StringBuffer();
-						try( BufferedReader reader = new BufferedReader( new FileReader( stdErrFile ) ) ) {
-							
-							while( ( line = reader.readLine() ) != null )
-								buf.append( line ).append( '\n' );
-						}
-						stdErr = buf.toString();
-						
-						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
 
 						lockMarker.delete();
 						return;
 						
 					}
-
-			
 				}
-				
 			}
 			
 			// gather report

@@ -100,8 +100,9 @@ public class Ticket extends Block {
 		JsonReportEntry entry;
 		JSONObject obj;
 		
-		try {
 		
+		try {
+			
 			obj = new JSONObject();
 			obj.put( "lambda", lambdaExpr );
 			obj.put( "bind", getParamBindMap() );

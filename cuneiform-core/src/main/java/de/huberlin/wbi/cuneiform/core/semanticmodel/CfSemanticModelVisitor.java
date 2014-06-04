@@ -46,6 +46,8 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformBaseVisitor;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
@@ -63,13 +65,14 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 	public static final String LABEL_FILE = "File";
 	
 	private BaseBlock currentBlock;
-	private final  LinkedList<BaseBlock> blockStack;
+	private final LinkedList<BaseBlock> blockStack;
+	private final Log log;
 	
 	public CfSemanticModelVisitor() {
 		
 		currentBlock = new TopLevelContext();
 		blockStack = new LinkedList<>();
-		
+		log = LogFactory.getLog( CfSemanticModelVisitor.class );
 	}
 	
 	@Override
@@ -642,21 +645,29 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 	}
 
 	@Override
-	public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex,
-			int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-		// throw new RuntimeException( "Ambiguity detected." );
+	public void reportAmbiguity( Parser arg0, DFA arg1, int arg2, int arg3,
+			boolean arg4, BitSet arg5, ATNConfigSet arg6 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Ambiguity detected." );
+
 	}
 
 	@Override
-	public void reportAttemptingFullContext(Parser recognizer, DFA dfa,
-			int startIndex, int stopIndex, BitSet conflictingAlts,
-			ATNConfigSet configs) {
-		// throw new RuntimeException( "Attempting full context." );
+	public void reportAttemptingFullContext( Parser arg0, DFA arg1, int arg2,
+			int arg3, BitSet arg4, ATNConfigSet arg5 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Attempting full context." );
+
 	}
 
 	@Override
-	public void reportContextSensitivity(Parser recognizer, DFA dfa,
-			int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-		// throw new RuntimeException( "Context sensitivity detected." );
+	public void reportContextSensitivity( Parser arg0, DFA arg1, int arg2,
+			int arg3, int arg4, ATNConfigSet arg5) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Context sensitivity detected." );
 	}
+
 }

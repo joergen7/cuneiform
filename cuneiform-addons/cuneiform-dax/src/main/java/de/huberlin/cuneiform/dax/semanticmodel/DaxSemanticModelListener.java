@@ -17,6 +17,8 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.cuneiform.libdax.parser.DaxBaseListener;
 import de.huberlin.cuneiform.libdax.parser.DaxParser;
@@ -42,11 +44,13 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	private DaxFilename filename;
 	private DaxJob job;
 	private DaxJobUses jobUses;
+	private final Log log;
 	
 	public DaxSemanticModelListener() {
 		filenameList = new ArrayList<>();
 		idJobMap = new HashMap<>();
 		fileJobMap = new HashMap<>();
+		log = LogFactory.getLog( DaxSemanticModelListener.class );
 	}
 	
 	@Override
@@ -338,15 +342,29 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 
 	@Override
 	public void reportAmbiguity( Parser arg0, DFA arg1, int arg2, int arg3,
-			boolean arg4, BitSet arg5, ATNConfigSet arg6 ) {}
+			boolean arg4, BitSet arg5, ATNConfigSet arg6 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Ambiguity detected." );
+
+	}
 
 	@Override
 	public void reportAttemptingFullContext( Parser arg0, DFA arg1, int arg2,
-			int arg3, BitSet arg4, ATNConfigSet arg5 ) {}
+			int arg3, BitSet arg4, ATNConfigSet arg5 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Attempting full context." );
+
+	}
 
 	@Override
 	public void reportContextSensitivity( Parser arg0, DFA arg1, int arg2,
-			int arg3, int arg4, ATNConfigSet arg5) {}
+			int arg3, int arg4, ATNConfigSet arg5) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Context sensitivity detected." );
+	}
 
 	@Override
 	public void syntaxError( Recognizer<?, ?> arg0, Object offendingSymbol, int line,

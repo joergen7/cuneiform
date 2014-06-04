@@ -49,6 +49,8 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformBaseListener;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
@@ -81,6 +83,7 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 
 	private final TokenStreamRewriter rewriter;
 	private final LinkedList<String> exprStack;
+	private final Log log;
 	
 	public PreListener( CommonTokenStream tokenStream ) {
 		
@@ -88,7 +91,8 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 			throw new NullPointerException( "Token stream must not be empty." );
 				
 		rewriter = new TokenStreamRewriter( tokenStream );
-		exprStack = new LinkedList<>();		
+		exprStack = new LinkedList<>();
+		log = LogFactory.getLog( PreListener.class );
 	}
 	
 	public static String process( String input ) {
@@ -301,17 +305,31 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 	}
 
 	@Override
-	public void reportAmbiguity( Parser recognizer, DFA dfa, int startIndex,
-			int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs ) {}
+	public void reportAmbiguity( Parser arg0, DFA arg1, int arg2, int arg3,
+			boolean arg4, BitSet arg5, ATNConfigSet arg6 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Ambiguity detected." );
+
+	}
 
 	@Override
-	public void reportAttemptingFullContext( Parser recognizer, DFA dfa,
-			int startIndex, int stopIndex, BitSet conflictingAlts,
-			ATNConfigSet configs ) {}
+	public void reportAttemptingFullContext( Parser arg0, DFA arg1, int arg2,
+			int arg3, BitSet arg4, ATNConfigSet arg5 ) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Attempting full context." );
+
+	}
 
 	@Override
-	public void reportContextSensitivity( Parser recognizer, DFA dfa,
-			int startIndex, int stopIndex, int prediction, ATNConfigSet configs ) {}
+	public void reportContextSensitivity( Parser arg0, DFA arg1, int arg2,
+			int arg3, int arg4, ATNConfigSet arg5) {
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Context sensitivity detected." );
+	}
+
 	
 
 	

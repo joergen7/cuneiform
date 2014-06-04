@@ -91,10 +91,10 @@ param            : name
                  | draw
                  ;
 
-draw             : LBRACE COMB INT COLON( name | correlParam )RBRACE  # DrawComb
-                 | LBRACE COMBR INT COLON( name | correlParam )RBRACE # DrawCombr
-                 | LBRACE VAR INT COLON( name | correlParam )RBRACE   # DrawVar
-                 | LBRACE PERM INT COLON( name | correlParam )RBRACE  # DrawPerm
+draw             : LBRACE COMB INT COLON( name )RBRACE  # DrawComb
+                 | LBRACE COMBR INT COLON( name )RBRACE # DrawCombr
+                 | LBRACE VAR INT COLON( name )RBRACE   # DrawVar
+                 | LBRACE PERM INT COLON( name )RBRACE  # DrawPerm
                  ;
 
 output           : name

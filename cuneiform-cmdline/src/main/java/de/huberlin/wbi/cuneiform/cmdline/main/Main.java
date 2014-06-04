@@ -30,7 +30,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package de.huberlin.wbi.cuneiform.core.main;
+package de.huberlin.wbi.cuneiform.cmdline.main;
 
 import java.io.BufferedReader;
 import java.io.File;

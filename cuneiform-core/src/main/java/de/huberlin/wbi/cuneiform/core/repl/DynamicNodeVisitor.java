@@ -43,7 +43,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseBlock;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseNodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Block;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.CombiHelper;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.EnumHelper;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
@@ -489,7 +489,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	private CompoundExpr combineParam( ApplyExpr applyExpr ) {
 		
-		CombiHelper helper;
+		EnumHelper helper;
 		int i, n;
 		CompoundExpr ce, ce0;
 		Block bindingBlock;
@@ -502,7 +502,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 			if( log.isTraceEnabled() )
 				log.trace( "DynamicNodeVisitor combineParam ApplyExpr: "+applyExpr.toString().replace( '\n', ' ') );
 		
-			helper = new CombiHelper( applyExpr );
+			helper = new EnumHelper( applyExpr );
 			n = helper.getCardinality();
 			
 			if( log.isTraceEnabled() )

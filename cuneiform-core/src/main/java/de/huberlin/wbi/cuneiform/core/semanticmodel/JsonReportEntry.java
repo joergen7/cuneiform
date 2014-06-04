@@ -59,6 +59,8 @@ public class JsonReportEntry {
 	public static final String ATT_TIMESTAMP = "timestamp";
 	public static final String ATT_LANG = "lang";
 	public static final String ATT_FILE = "file";
+	
+	public static final String LABEL_REALTIME = "realTime";
 
 	private UUID runId;
 	private Long invocId;
@@ -165,7 +167,33 @@ public class JsonReportEntry {
 	public JsonReportEntry( Invocation invoc, String file, String key, String value ) {		
 		this(
 			invoc.getRunId(),
-			invoc.getTaskId(), // Integer taskId
+			invoc.getTaskId(),
+			invoc.getTaskName(),
+			invoc.getLangLabel(),
+			invoc.getTicketId(),
+			file,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry( long timestamp, Invocation invoc, String file, String key, String value ) {		
+		this(
+			timestamp,
+			invoc.getRunId(),
+			invoc.getTaskId(),
+			invoc.getTaskName(),
+			invoc.getLangLabel(),
+			invoc.getTicketId(),
+			file,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry( long timestamp, Invocation invoc, String file, String key, JSONObject value ) {		
+		this(
+			timestamp,
+			invoc.getRunId(),
+			invoc.getTaskId(),
 			invoc.getTaskName(),
 			invoc.getLangLabel(),
 			invoc.getTicketId(),
