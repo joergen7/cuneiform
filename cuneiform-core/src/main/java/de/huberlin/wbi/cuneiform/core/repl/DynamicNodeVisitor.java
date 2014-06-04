@@ -458,8 +458,14 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	public synchronized void step() {
 		
 		CompoundExpr ce;
+		long tic, toc;
 		
+		tic = System.currentTimeMillis();
 		ce = currentBlock.visit( this );
+		toc = System.currentTimeMillis();
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Completed reduction step in "+( toc-tic )+" ms." );
 		
 		if( ticketSrc.isQueueClear( queryId ) ) {
 			repl.queryFinished( queryId, ce );
