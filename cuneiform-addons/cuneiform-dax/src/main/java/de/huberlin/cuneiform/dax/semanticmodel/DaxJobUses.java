@@ -2,27 +2,31 @@ package de.huberlin.cuneiform.dax.semanticmodel;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 
-public class DaxFilename {
+public class DaxJobUses {
 	
 	public static final int LINK_INPUT = 1;
 	public static final int LINK_OUTPUT = 2;
-	public static final int LINK_INOUT = 3;
 	
 	private static final String PREFIX_LINK = "link";
-
+	private static int nextId;
 	
 	private String file;
 	private Integer link;
+	private final int id;
+	
+	public DaxJobUses() {
+		id = popId();
+	}
 	
 	@Override
 	public boolean equals( Object obj ) {
 		
-		DaxFilename other;
+		DaxJobUses other;
 		
-		if( !( obj instanceof DaxFilename ) )
+		if( !( obj instanceof DaxJobUses ) )
 			return false;
 		
-		other = ( DaxFilename )obj;
+		other = ( DaxJobUses )obj;
 		if( file == null )
 			throw new NullPointerException(
 				"Trying to compare filenames when file member is not set." );
@@ -74,12 +78,8 @@ public class DaxFilename {
 		link = LINK_OUTPUT;
 	}
 	
-	public void setLinkInout() {
-		link = LINK_INOUT;
-	}
-	
 	public NameExpr getNameExpr() {
-		return new NameExpr( PREFIX_LINK+file.hashCode() );
+		return new NameExpr( PREFIX_LINK+id );
 	}
 	
 	@Override
@@ -87,4 +87,7 @@ public class DaxFilename {
 		return file;
 	}
 
+	private static synchronized int popId() {
+		return nextId++;
+	}
 }

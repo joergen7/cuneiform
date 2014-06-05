@@ -360,7 +360,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 		result = new CompoundExpr();
 		
 		for( SingleExpr singleExpr : ce.getSingleExprList() ) {
-			intermediate = singleExpr.visit( this  );
+			intermediate = singleExpr.visit( this );
 			result.addCompoundExpr( intermediate );
 		}
 

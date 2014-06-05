@@ -256,7 +256,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 			return buf.toString();
 		}
 		catch( NotBoundException e ) {
-			throw new RuntimeException( e.getMessage() );
+			throw new RuntimeException( e );
 		}
 	}
 

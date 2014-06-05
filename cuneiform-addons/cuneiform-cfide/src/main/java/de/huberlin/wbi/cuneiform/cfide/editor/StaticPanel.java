@@ -153,6 +153,7 @@ public class StaticPanel extends JPanel implements Runnable {
 						starlinger = starlingerVisitor.toString();
 						
 						dotVisitor = new DotNodeVisitor();
+						
 						ce1.visit( dotVisitor );
 						dot = dotVisitor.toString();
 						

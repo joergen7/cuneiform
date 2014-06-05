@@ -201,7 +201,13 @@ public class EnumHelper {
 			}
 		}
 		catch( NotBoundException e ) {
-			throw new RuntimeException( e );
+			
+			System.err.println( "[task]" );
+			System.err.println( taskExpr );
+			System.err.println( "[binding]" );
+			System.err.println( bindingBlock );
+			System.err.println( "[end]" );
+			throw new RuntimeException( e.getMessage() );
 		}
 		
 		throw new RuntimeException( "Parameter must at least contain one parameter name." );

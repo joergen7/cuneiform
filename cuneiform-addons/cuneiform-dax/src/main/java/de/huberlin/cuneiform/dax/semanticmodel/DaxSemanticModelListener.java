@@ -30,7 +30,7 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 
 	private final Map<String,DaxJob> idJobMap;
 	private final Map<String,DaxJob> fileJobMap;
-	private DaxFilename filename;
+	private DaxJobUses filename;
 	private DaxJob job;
 	private final Log log;
 	
@@ -42,7 +42,7 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	
 	@Override
 	public void enterFilename( @NotNull DaxParser.FilenameContext ctx ) {
-		filename = new DaxFilename();		
+		filename = new DaxJobUses();		
 	}
 	
 	@Override
@@ -59,21 +59,6 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		filename.setFile( getString( ctx.STRING() ) );
 	}
 	
-	@Override
-	public void enterFilenamePropLinkInput( @NotNull DaxParser.FilenamePropLinkInputContext ctx ) {
-		filename.setLinkInput();
-	}
-	
-	@Override
-	public void enterFilenamePropLinkOutput( @NotNull DaxParser.FilenamePropLinkOutputContext ctx ) {
-		filename.setLinkOutput();
-	}
-
-	@Override
-	public void enterFilenamePropLinkInout( @NotNull DaxParser.FilenamePropLinkInoutContext ctx ) {
-		filename.setLinkInout();
-	}
-
 	@Override
 	public void enterJob( @NotNull DaxParser.JobContext ctx ) {
 		job = new DaxJob();
@@ -106,7 +91,7 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	
 	@Override
 	public void enterJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
-		filename = new DaxFilename();
+		filename = new DaxJobUses();
 		job.addJobUses( filename );
 	}
 	
@@ -182,7 +167,7 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 			
 			if( j.isRoot() )
 
-				for( DaxFilename f : j.getInputJobUsesSet() )
+				for( DaxJobUses f : j.getInputJobUsesSet() )
 					
 					tlc.putAssign(
 						f.getNameExpr(),
@@ -192,11 +177,11 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 			
 			if( j.isLeaf() )
 				
-				for( DaxFilename f : j.getOutputJobUsesSet() )
+				for( DaxJobUses f : j.getOutputJobUsesSet() )
 					
 					ce.addSingleExpr( f.getNameExpr() );
 			
-			for( DaxFilename f : j.getOutputJobUsesSet() ) {
+			for( DaxJobUses f : j.getOutputJobUsesSet() ) {
 				
 				applyExpr = j.getApplyExpr( f );
 				tlc.putAssign( f.getNameExpr(), new CompoundExpr( applyExpr ) );
