@@ -2,10 +2,8 @@ package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -25,76 +23,26 @@ import de.huberlin.cuneiform.libdax.parser.DaxParser;
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 
 public class DaxSemanticModelListener extends DaxBaseListener implements ANTLRErrorListener {
 
-	private URL xmlns;
-	private URL xsi;
-	private URL schemaLocation;
-	private String version;
-	private Integer count;
-	private Integer index;
-	private String name;
-	private final List<DaxFilename> filenameList;
 	private final Map<String,DaxJob> idJobMap;
 	private final Map<String,DaxJob> fileJobMap;
 	private DaxFilename filename;
 	private DaxJob job;
-	private DaxJobUses jobUses;
 	private final Log log;
 	
 	public DaxSemanticModelListener() {
-		filenameList = new ArrayList<>();
 		idJobMap = new HashMap<>();
 		fileJobMap = new HashMap<>();
 		log = LogFactory.getLog( DaxSemanticModelListener.class );
 	}
 	
 	@Override
-	public void enterAdagPropXmlns( @NotNull DaxParser.AdagPropXmlnsContext ctx ) {
-		xmlns = getUrl( ctx.STRING() );
-	}
-	
-	@Override
-	public void enterAdagPropXsi( @NotNull DaxParser.AdagPropXsiContext ctx ) {
-		xsi = getUrl( ctx.STRING() );
-	}
-	
-	@Override
-	public void enterAdagPropSchemaLocation( @NotNull DaxParser.AdagPropSchemaLocationContext ctx ) {
-		schemaLocation = getUrl( ctx.STRING() );
-	}
-	
-	@Override
-	public void enterAdagPropVersion( @NotNull DaxParser.AdagPropVersionContext ctx ) {
-		version = getString( ctx.STRING() );
-	}
-	
-	@Override
-	public void enterAdagPropCount( @NotNull DaxParser.AdagPropCountContext ctx ) {
-		count = getInt( ctx.STRING() );
-	}
-	
-	@Override
-	public void enterAdagPropIndex( @NotNull DaxParser.AdagPropIndexContext ctx ) {
-		index = getInt( ctx.STRING() );
-	}
-
-	@Override
-	public void enterAdagPropName( @NotNull DaxParser.AdagPropNameContext ctx ) {
-		name = getString( ctx.STRING() );
-	}
-	
-	@Override
 	public void enterFilename( @NotNull DaxParser.FilenameContext ctx ) {
-		
-		filename = new DaxFilename();
-		
-		if( job == null )
-			filenameList.add( filename );
+		filename = new DaxFilename();		
 	}
 	
 	@Override
@@ -143,7 +91,6 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		
 		id = getString( ctx.STRING() );
 		
-		job.setId( id );
 		idJobMap.put( id, job );
 	}
 
@@ -153,99 +100,38 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	}
 	
 	@Override
-	public void enterJobPropNamespace( @NotNull DaxParser.JobPropNamespaceContext ctx ) {
-		job.setNamespace( getString( ctx.STRING() ) );
-	}
-
-
-	@Override
-	public void enterJobPropVersion( @NotNull DaxParser.JobPropVersionContext ctx ) {
-		job.setVersion( getString( ctx.STRING() ) );
-	}
-	
-	@Override
-	public void enterJobPropLevel( @NotNull DaxParser.JobPropLevelContext ctx ) {
-		job.setLevel( getInt( ctx.STRING() ) );
-	}
-
-	@Override
-	public void exitJobPropDvName( @NotNull DaxParser.JobPropDvNameContext ctx ) {
-		job.setDvName( getString( ctx.STRING() ) );
-	}
-	
-	@Override
-	public void enterJobPropDvVersion( @NotNull DaxParser.JobPropDvVersionContext ctx ) {
-		job.setDvVersion( getString( ctx.STRING() ) );
-	}
-
-	@Override
 	public void enterArgumentElPlain( @NotNull DaxParser.ArgumentElPlainContext ctx ) {
 		job.addPlainArg( ctx.ARG().getText() );
 	}
 	
 	@Override
 	public void enterJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
-		jobUses = new DaxJobUses();
-		job.addJobUses( jobUses );
+		filename = new DaxFilename();
+		job.addJobUses( filename );
 	}
 	
 	@Override
 	public void exitJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
 		
-		if( jobUses.isLinkOutput() )
-			fileJobMap.put( jobUses.getFile(), job );
+		if( filename.isLinkOutput() )
+			fileJobMap.put( filename.getFile(), job );
 		
-		jobUses = null;
+		filename = null;
 	}
 	
 	@Override
 	public void enterJobUsesPropFile( @NotNull DaxParser.JobUsesPropFileContext ctx ) {
-		jobUses.setFile( getString( ctx.STRING() ) );
+		filename.setFile( getString( ctx.STRING() ) );
 	}
 	
 	@Override
 	public void enterJobUsesPropLinkInput( @NotNull DaxParser.JobUsesPropLinkInputContext ctx ) {
-		jobUses.setLinkInput();
+		filename.setLinkInput();
 	}
 
 	@Override
 	public void enterJobUsesPropLinkOutput( @NotNull DaxParser.JobUsesPropLinkOutputContext ctx ) {
-		jobUses.setLinkOutput();
-	}
-	
-	@Override
-	public void enterJobUsesPropRegisterFalse( @NotNull DaxParser.JobUsesPropRegisterFalseContext ctx ) {
-		jobUses.setRegister( false );
-	}
-
-	@Override
-	public void enterJobUsesPropRegisterTrue( @NotNull DaxParser.JobUsesPropRegisterTrueContext ctx ) {
-		jobUses.setRegister( true );
-	}
-
-	@Override
-	public void enterJobUsesPropTransferFalse( @NotNull DaxParser.JobUsesPropTransferFalseContext ctx ) {
-		jobUses.setTransfer( false );
-	}
-
-	@Override
-	public void enterJobUsesPropTransferTrue( @NotNull DaxParser.JobUsesPropTransferTrueContext ctx ) {
-		jobUses.setTransfer( true );
-	}
-	
-	@Override
-	public void enterJobUsesPropExecutable( @NotNull DaxParser.JobUsesPropExecutableContext ctx ) {
-		jobUses.setTypeExecutable();
-	}
-	
-	@Override
-	public void enterJobUsesPropOptionalFalse( @NotNull DaxParser.JobUsesPropOptionalFalseContext ctx ) {
-		jobUses.setOptional( false );
-	}
-
-	@Override
-	public void enterJobUsesPropOptionalTrue( @NotNull DaxParser.JobUsesPropOptionalTrueContext ctx ) {
-		jobUses.setOptional( true );
+		filename.setLinkOutput();
 	}
 	
 	@Override
@@ -296,7 +182,7 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 			
 			if( j.isRoot() )
 
-				for( DaxJobUses f : j.getInputJobUsesSet() )
+				for( DaxFilename f : j.getInputJobUsesSet() )
 					
 					tlc.putAssign(
 						f.getNameExpr(),
@@ -306,11 +192,11 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 			
 			if( j.isLeaf() )
 				
-				for( DaxJobUses f : j.getOutputJobUsesSet() )
+				for( DaxFilename f : j.getOutputJobUsesSet() )
 					
 					ce.addSingleExpr( f.getNameExpr() );
 			
-			for( DaxJobUses f : j.getOutputJobUsesSet() ) {
+			for( DaxFilename f : j.getOutputJobUsesSet() ) {
 				
 				applyExpr = j.getApplyExpr( f );
 				tlc.putAssign( f.getNameExpr(), new CompoundExpr( applyExpr ) );

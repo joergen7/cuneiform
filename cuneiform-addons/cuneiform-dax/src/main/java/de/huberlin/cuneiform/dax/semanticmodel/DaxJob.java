@@ -19,17 +19,11 @@ public class DaxJob {
 	private static final String PREFIX_OUT = "out";
 	private static final String PREFIX_IN = "in";
 
-	private String id;
 	private String name;
-	private String version;
-	private Integer level;
-	private String dvName;
-	private String dvVersion;
-	private String namespace;
 	private final List<DaxJob> parentSet;
 	private final List<DaxJob> childSet;
 	private final List<Object> argList;
-	private final List<DaxJobUses> jobUsesList;
+	private final List<DaxFilename> jobUsesList;
 	
 	public DaxJob() {
 		parentSet = new ArrayList<>();
@@ -54,7 +48,7 @@ public class DaxJob {
 		argList.add( filename );
 	}
 	
-	public void addJobUses( DaxJobUses jobUses ) {
+	public void addJobUses( DaxFilename jobUses ) {
 		
 		if( jobUses == null )
 			throw new NullPointerException( "Job-Uses element object must not be null." );
@@ -81,60 +75,12 @@ public class DaxJob {
 		argList.add( arg );
 	}
 	
-	public String getDvName() {
-		return dvName;
-	}
-	
-	public String getDvVersion() {
-		return dvVersion;
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public Integer getLevel() {
-		return level;
-	}
-	
 	public String getName() {		
 		return name;
 	}
 	
-	public String getNamespace() {
-		return namespace;
-	}
-	
-	public String getVersion() {
-		return version;
-	}
-	
-	public boolean hasDvName() {
-		return dvName != null;
-	}
-	
-	public boolean hasDvVersion() {
-		return dvVersion != null;
-	}
-	
-	public boolean hasId() {
-		return id != null;
-	}
-	
-	public boolean hasLevel() {
-		return level != null;
-	}
-	
 	public boolean hasName() {
 		return name != null;
-	}
-	
-	public boolean hasNamespace() {
-		return namespace != null;
-	}
-	
-	public boolean hasVersion() {
-		return version != null;
 	}
 	
 	public boolean isLeaf() {
@@ -143,58 +89,6 @@ public class DaxJob {
 	
 	public boolean isRoot() {
 		return parentSet.isEmpty();
-	}
-	
-	public void setDvName( String dvName ) {
-		
-		if( dvName == null ) {
-			this.dvName = null;
-			return;
-		}
-		
-		if( dvName.isEmpty() )
-			throw new RuntimeException( "DV name must not be empty." );
-		
-		this.dvName = dvName;
-	}
-	
-	public void setDvVersion( String dvVersion ) {
-		
-		if( dvVersion == null ) {
-			this.dvVersion = null;
-			return;
-		}
-		
-		if( dvVersion.isEmpty() )
-			throw new RuntimeException( "DV version must not be empty." );
-		
-		this.dvVersion = dvVersion;		
-	}
-	
-	public void setId( String id ) {
-		
-		if( id == null ) {
-			this.id = null;
-			return;
-		}
-		
-		if( id.isEmpty() )
-			throw new RuntimeException( "Id string must not be empty." );
-		
-		this.id = id;
-	}
-	
-	public void setLevel( Integer level ) {
-		
-		if( level == null ) {
-			this.level = null;
-			return;
-		}
-		
-		if( level < 1 )
-			throw new RuntimeException( "Level must be a postive integer." );
-		
-		this.level = level;
 	}
 	
 	public void setName( String name ) {
@@ -210,51 +104,24 @@ public class DaxJob {
 		this.name = name;		
 	}
 	
-	public void setNamespace( String namespace ) {
+	public Set<DaxFilename> getInputJobUsesSet() {
 		
-		if( namespace == null ) {
-			this.namespace = null;
-			return;
-		}
-
-		if( namespace.isEmpty() )
-			throw new RuntimeException( "Namespace string must not be empty." );
-		
-		this.namespace = namespace;	
-	}
-	
-	public void setVersion( String version ) {
-		
-		if( version == null ) {
-			this.version = null;
-			return;
-		}
-		
-		if( version.isEmpty() )
-			throw new RuntimeException( "Version string must not be empty." );
-		
-		this.version = version;
-			
-	}
-	
-	public Set<DaxJobUses> getInputJobUsesSet() {
-		
-		HashSet<DaxJobUses> set;
+		HashSet<DaxFilename> set;
 		
 		set = new HashSet<>();
-		for( DaxJobUses jobUses : jobUsesList )
+		for( DaxFilename jobUses : jobUsesList )
 			if( jobUses.isLinkInput() )
 				set.add( jobUses );
 		
 		return set;
 	}
 	
-	public Set<DaxJobUses>getOutputJobUsesSet() {
+	public Set<DaxFilename>getOutputJobUsesSet() {
 		
-		HashSet<DaxJobUses> set;
+		HashSet<DaxFilename> set;
 		
 		set = new HashSet<>();
-		for( DaxJobUses jobUses : jobUsesList )
+		for( DaxFilename jobUses : jobUsesList )
 			if( jobUses.isLinkOutput() )
 				set.add( jobUses );
 		
@@ -274,7 +141,7 @@ public class DaxJob {
 		m = 1;
 		type = new DataType( DataType.LABEL_FILE );
 		
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkOutput() )	
 				prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
@@ -291,7 +158,7 @@ public class DaxJob {
 		int i;
 		
 		i = 0;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( !jobUses.equals( filename ) )
 				continue;
@@ -307,7 +174,7 @@ public class DaxJob {
 		int i;
 		
 		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkInput() )
 				continue;
@@ -319,7 +186,7 @@ public class DaxJob {
 		}
 
 		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 						
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -338,7 +205,7 @@ public class DaxJob {
 		int i;
 		
 		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkInput() )
 				continue;
@@ -357,7 +224,7 @@ public class DaxJob {
 		int i;
 		
 		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 						
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -379,7 +246,7 @@ public class DaxJob {
 		
 		buf = new StringBuffer();
 		
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkInput() )
 				continue;
@@ -432,7 +299,7 @@ public class DaxJob {
 			throw new NullPointerException( "DAX filename must not be null." );
 		
 		channel = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -462,7 +329,7 @@ public class DaxJob {
 		
 		// bind parameters
 		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
+		for( DaxFilename jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkOutput() )
 				continue;

@@ -35,7 +35,7 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0";
-	public static final String LABEL_BUILD = "2014-05-26";
+	public static final String LABEL_BUILD = "2014-06-04";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -58,15 +58,15 @@ public abstract class BaseRepl {
 		statLog = LogFactory.getLog( "statLogger" );
 	}
 	
-	public CompoundExpr getAns() {
+	public synchronized CompoundExpr getAns() {
 		return ans;
 	}
 	
-	public Set<UUID> getRunningSet() {
+	public synchronized Set<UUID> getRunningSet() {
 		return runningMap.keySet();
 	}
 	
-	public Set<Ticket> getTicketSet() {
+	public synchronized Set<Ticket> getTicketSet() {
 		
 		Set<Ticket> set;
 		
@@ -78,33 +78,15 @@ public abstract class BaseRepl {
 		return set;
 	}
 	
-	public String getRunStr() {
-		
-		StringBuffer buf;
-		
-		buf = new StringBuffer();
-		
-		for( UUID queryId : runningMap.keySet() ) {
-			
-			buf.append( "Query id:\n  " ).append( queryId ).append( '\n' );
-			buf.append( "Current expression:\n  " ).append( runningMap.get( queryId ).getCurrentExpr() ).append( '\n' );
-			
-			
-			
-		}
-		
-		return buf.toString();
-	}
-	
-	public TopLevelContext getState() {
+	public synchronized TopLevelContext getState() {
 		return state.getTopLevelContext();
 	}
 	
-	public boolean hasAns() {
+	public synchronized boolean hasAns() {
 		return ans != null;
 	}
 	
-	public int interpret( String input ) {
+	public synchronized int interpret( String input ) {
 		
 		String afterPre, afterChannel;
 		CuneiformLexer lexer;
@@ -136,7 +118,7 @@ public abstract class BaseRepl {
 		return interpret( tlc );
 	}
 	
-	public int interpret( TopLevelContext tlc ) {
+	public synchronized int interpret( TopLevelContext tlc ) {
 		
 		int ctl;
 		DynamicNodeVisitor reducer;
@@ -162,11 +144,11 @@ public abstract class BaseRepl {
 		return ctl;
 	}
 	
-	public boolean isBusy() {
+	public synchronized boolean isBusy() {
 		return !runningMap.isEmpty();
 	}
 	
-	public boolean isRunning( UUID queryId ) {
+	public synchronized boolean isRunning( UUID queryId ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -174,7 +156,7 @@ public abstract class BaseRepl {
 		return runningMap.containsKey( queryId );
 	}
 	
-	public void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+	public synchronized void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -195,7 +177,7 @@ public abstract class BaseRepl {
 
 	public abstract void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr );
 
-	public void queryFinished( UUID queryId, CompoundExpr result ) {
+	public synchronized void queryFinished( UUID queryId, CompoundExpr result ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -214,7 +196,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryFinishedPost( UUID queryId, CompoundExpr result );
 	
-	public void queryStarted( UUID runId ) {
+	public synchronized void queryStarted( UUID runId ) {
 
 		if( log.isInfoEnabled() )
 			log.info( "Query "+runId+" started." );
@@ -224,7 +206,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryStartedPost( UUID runId );
 	
-	public void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+	public synchronized void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query ID must not be null." );
@@ -327,7 +309,4 @@ public abstract class BaseRepl {
 		
 		return ctl;
 	}
-
-	
-
 }
