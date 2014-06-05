@@ -8,15 +8,9 @@ public class DaxJobUses {
 	public static final int LINK_OUTPUT = 2;
 	
 	private static final String PREFIX_LINK = "link";
-	private static int nextId;
 	
 	private String file;
 	private Integer link;
-	private final int id;
-	
-	public DaxJobUses() {
-		id = popId();
-	}
 	
 	@Override
 	public boolean equals( Object obj ) {
@@ -79,15 +73,11 @@ public class DaxJobUses {
 	}
 	
 	public NameExpr getNameExpr() {
-		return new NameExpr( PREFIX_LINK+id );
+		return new NameExpr( PREFIX_LINK+file.hashCode() );
 	}
 	
 	@Override
 	public String toString() {
 		return file;
-	}
-
-	private static synchronized int popId() {
-		return nextId++;
 	}
 }

@@ -121,9 +121,14 @@ public class DaxJob {
 		HashSet<DaxJobUses> set;
 		
 		set = new HashSet<>();
-		for( DaxJobUses jobUses : jobUsesList )
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( isBidirectional( jobUses ) )
+				continue;
+			
 			if( jobUses.isLinkOutput() )
 				set.add( jobUses );
+		}
 		
 		return set;
 	}
@@ -142,6 +147,9 @@ public class DaxJob {
 		type = new DataType( DataType.LABEL_FILE );
 		
 		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( isBidirectional( jobUses ) )
+				continue;
 			
 			if( jobUses.isLinkOutput() )	
 				prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
@@ -251,13 +259,8 @@ public class DaxJob {
 			if( jobUses.isLinkInput() )
 				continue;
 			
-			if( isBidirectional( jobUses ) ) {
-				
-				buf.append( getOutputReference( jobUses ) ).append( "=$" );
-				buf.append( getInputReference( jobUses ) ).append( '\n' );
-				
+			if( isBidirectional( jobUses ) )				
 				continue;
-			}
 			
 			buf.append( getReference( jobUses ) ).append( "=\"" );
 			buf.append( jobUses.getFile() ).append( "\"\n" );
@@ -332,6 +335,9 @@ public class DaxJob {
 		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkOutput() )
+				continue;
+			
+			if( isBidirectional( jobUses ) )
 				continue;
 			
 			applyExpr.putAssign(
