@@ -1,9 +1,5 @@
 package de.huberlin.cuneiform.dax.repl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
