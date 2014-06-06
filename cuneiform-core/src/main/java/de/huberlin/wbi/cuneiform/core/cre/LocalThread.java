@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,6 +49,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
 
+import de.huberlin.wbi.cuneiform.core.actormodel.Message;
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
@@ -114,12 +114,13 @@ public class LocalThread implements Runnable {
 		String script, stdOut, stdErr;
 		long tic, toc;
 		JSONObject obj;
+		Message msg;
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
 		
 		
-		
+		ticket = invoc.getTicket();
 		process = null;
 		lockMarker = null;
 		successMarker = null;
@@ -164,32 +165,29 @@ public class LocalThread implements Runnable {
 				
 				// write executable log entry
 				
-				ticket = invoc.getTicket();
 				try( BufferedWriter writer = new BufferedWriter( new FileWriter( reportFile, false ) ) ) {
 					
 					writer.write( ticket.getExecutableLogEntry().toString() );
 					writer.write( '\n' );
 				}
 				
-				try( FileSystem fs = FileSystems.getDefault() ) {
 				
 					for( String filename : invoc.getStageInList() ) {
 						
 							
-						destPath = fs.getPath( buildDir.getAbsolutePath()+"/"+invoc.getTicketId()+"/"+filename );
+						destPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+invoc.getTicketId()+"/"+filename );
 	
 						if( filename.matches( "([^/].+/)?\\d+_\\d+_[^/]+$" ) ) {
 							
 							signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
-							srcPath = fs.getPath( buildDir.getAbsolutePath()+"/"+signature+"/"+filename );				
+							srcPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+signature+"/"+filename );				
 						}
 						else
 							
-							srcPath = fs.getPath( callLocation.getAbsolutePath()+"/"+filename );
+							srcPath = FileSystems.getDefault().getPath( callLocation.getAbsolutePath()+"/"+filename );
 						
 						Files.createSymbolicLink( destPath, srcPath );
 					}
-				}
 				
 				// run script
 				processBuilder = new ProcessBuilder( scriptFile.getAbsolutePath() );
@@ -288,15 +286,28 @@ public class LocalThread implements Runnable {
 	
 			ticketSrc.sendMsg( new TicketFinishedMsg( cre, invoc.getTicket(), report ) );
 			
+			if( log.isTraceEnabled() )
+				log.trace( "Local thread ran through without exception." );
+			
 		}
-		catch( InterruptedException e ) {}
+		catch( InterruptedException e ) {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "Local thread has been interrupted." );
+		}
 		catch( Exception e ) {
+			
+			if( log.isTraceEnabled() )
+				log.trace( "Something went wrong. Deleting success marker if present." );
 			
 			if( successMarker != null )
 				if( successMarker.exists() )
 					successMarker.delete();
 			
-			ticketSrc.sendMsg( new TicketFailedMsg( cre, invoc.getTicket(), e, script, stdOut, stdErr ) );
+			msg = new TicketFailedMsg( cre, ticket, e, script, stdOut, stdErr );
+			
+			ticketSrc.sendMsg( msg );
+			
 		}
 		finally {
 			

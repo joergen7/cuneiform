@@ -62,35 +62,36 @@ public class CmdlineRepl extends BaseRepl {
 		String line;
 		int i;
 		
+		if( script != null )
+			try( BufferedReader reader = new BufferedReader( new StringReader( script ) ) ) {
+				
+				System.out.println( "[script]" );
+				
+				i = 0;
+	
+				while( ( line = reader.readLine() ) != null )
+					System.out.println( String.format( "%3d  %s", ++i, line ) );
+	
+			}
+			catch( IOException e1 ) {
+				throw new RuntimeException( e1 );
+			}
 		
-		try( BufferedReader reader = new BufferedReader( new StringReader( script ) ) ) {
-			
-			System.out.println( "[script]" );
-			
-			i = 0;
-
-			while( ( line = reader.readLine() ) != null )
-				System.out.println( String.format( "%3d  %s", ++i, line ) );
-
-			if( stdOut != null ) {
-				System.out.println( "[out]" );
-				System.out.println( stdOut );
-			}
-			
-			if( stdErr != null ) {
-				System.out.println( "[err]" );
-				System.out.println( stdErr );
-			}
-			
-			if( e != null ) {
-				System.out.println( "[trace]" );
-				e.printStackTrace();
-			}
-		}
-		catch( IOException e1 ) {
-			throw new RuntimeException( e1 );
+		if( stdOut != null ) {
+			System.out.println( "[out]" );
+			System.out.println( stdOut );
 		}
 		
+		if( stdErr != null ) {
+			System.out.println( "[err]" );
+			System.out.println( stdErr );
+		}
+		
+		if( e != null ) {
+			System.out.println( "[trace]" );
+			e.printStackTrace();
+		}
+	
 	}
 
 	public static void run( BaseRepl repl ) throws IOException {

@@ -23,10 +23,12 @@ public class TicketFailedMsg extends Message {
 		super( sender );
 		
 		if( script == null )
-			throw new NullPointerException( "Script must not be null." );
-		
-		if( script.isEmpty() )
-			throw new RuntimeException( "Script must not be empty." );
+			this.script = null;
+		else
+			if( script.isEmpty() )
+				this.script = null;
+			else
+				this.script = script;
 		
 		if( ticket == null )
 			throw new NullPointerException( "Ticket must not be null." );
@@ -48,7 +50,6 @@ public class TicketFailedMsg extends Message {
 				this.stdErr = stdErr;
 				
 		this.ticket = ticket;
-		this.script = script;
 		this.e = e;
 	}
 	
@@ -76,6 +77,10 @@ public class TicketFailedMsg extends Message {
 		return ticket.getTicketId();
 	}
 	
+	public boolean hasScript() {
+		return script != null;
+	}
+	
 	public boolean hasStdErr() {
 		return stdErr != null;
 	}
@@ -90,6 +95,21 @@ public class TicketFailedMsg extends Message {
 	
 	@Override
 	public String toString() {
-		return "{ ticketFailed, \""+stdErr.replace( '\n', ' ' )+"\" }";
+		
+		String s;
+
+		s = "";
+		
+		if( e != null ) {
+			s += " Exception: \""+e.getClass().getName();
+			if( e.getMessage() != null )
+				s += " "+e.getMessage();
+			s += "\"";
+		}
+		
+		if( stdErr != null )
+			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\"";
+		
+		return "{ ticketFailed, "+ticket.getTicketId()+","+s+" }";
 	}
 }

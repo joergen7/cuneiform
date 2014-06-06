@@ -58,15 +58,15 @@ public abstract class BaseRepl {
 		statLog = LogFactory.getLog( "statLogger" );
 	}
 	
-	public synchronized CompoundExpr getAns() {
+	public CompoundExpr getAns() {
 		return ans;
 	}
 	
-	public synchronized Set<UUID> getRunningSet() {
+	public Set<UUID> getRunningSet() {
 		return runningMap.keySet();
 	}
 	
-	public synchronized Set<Ticket> getTicketSet() {
+	public Set<Ticket> getTicketSet() {
 		
 		Set<Ticket> set;
 		
@@ -78,15 +78,15 @@ public abstract class BaseRepl {
 		return set;
 	}
 	
-	public synchronized TopLevelContext getState() {
+	public TopLevelContext getState() {
 		return state.getTopLevelContext();
 	}
 	
-	public synchronized boolean hasAns() {
+	public boolean hasAns() {
 		return ans != null;
 	}
 	
-	public synchronized int interpret( String input ) {
+	public int interpret( String input ) {
 		
 		String afterPre, afterChannel;
 		CuneiformLexer lexer;
@@ -118,7 +118,7 @@ public abstract class BaseRepl {
 		return interpret( tlc );
 	}
 	
-	public synchronized int interpret( TopLevelContext tlc ) {
+	public int interpret( TopLevelContext tlc ) {
 		
 		int ctl;
 		DynamicNodeVisitor reducer;
@@ -144,11 +144,11 @@ public abstract class BaseRepl {
 		return ctl;
 	}
 	
-	public synchronized boolean isBusy() {
+	public boolean isBusy() {
 		return !runningMap.isEmpty();
 	}
 	
-	public synchronized boolean isRunning( UUID queryId ) {
+	public boolean isRunning( UUID queryId ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -156,28 +156,32 @@ public abstract class BaseRepl {
 		return runningMap.containsKey( queryId );
 	}
 	
-	public synchronized void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+	public void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+		
+		String s;
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
 		
-		if( script == null )
-			throw new NullPointerException( "Script string must not be null." );		
-
 		runningMap.remove( queryId );
 		
+		s = "";
+		
+		if( e != null )
+			s += " Exception: "+e;
+		
+		if( stdErr != null )
+			s += " Error channel: "+stdErr.replace( '\n', ' ' );
+		
 		if( log.isErrorEnabled() )
-			if( e == null )
-				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Error channel: "+stdErr.replace( '\n', ' ' ) );
-			else
-				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+". Message: "+e.getMessage()+" Error channel: "+stdErr.replace( '\n', ' ' ) );
+			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
 		
 		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}
 
 	public abstract void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr );
 
-	public synchronized void queryFinished( UUID queryId, CompoundExpr result ) {
+	public void queryFinished( UUID queryId, CompoundExpr result ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query id must not be null." );
@@ -196,7 +200,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryFinishedPost( UUID queryId, CompoundExpr result );
 	
-	public synchronized void queryStarted( UUID runId ) {
+	public void queryStarted( UUID runId ) {
 
 		if( log.isInfoEnabled() )
 			log.info( "Query "+runId+" started." );
@@ -206,7 +210,7 @@ public abstract class BaseRepl {
 	
 	public abstract void queryStartedPost( UUID runId );
 	
-	public synchronized void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+	public void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query ID must not be null." );
