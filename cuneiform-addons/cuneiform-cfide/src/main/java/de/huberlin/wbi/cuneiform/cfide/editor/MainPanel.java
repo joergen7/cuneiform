@@ -25,7 +25,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
 
-import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 
 public class MainPanel extends JPanel implements ActionListener, WindowListener {
 
@@ -89,7 +89,7 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 		
 		if( ac.equals( LABEL_ABOUT ) ) {
 			
-			JOptionPane.showMessageDialog( parent, "Cuneiform Editor\nversion "+CmdlineRepl.LABEL_VERSION+" build "+CmdlineRepl.LABEL_BUILD+"\nJörgen Brandt", "About Cuneiform Editor", JOptionPane.INFORMATION_MESSAGE );
+			JOptionPane.showMessageDialog( parent, "Cuneiform Editor\nversion "+BaseRepl.LABEL_VERSION+" build "+BaseRepl.LABEL_BUILD+"\nJörgen Brandt", "About Cuneiform Editor", JOptionPane.INFORMATION_MESSAGE );
 			
 			return;
 		}

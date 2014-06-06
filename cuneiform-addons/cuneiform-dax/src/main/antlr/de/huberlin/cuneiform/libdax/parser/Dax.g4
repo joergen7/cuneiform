@@ -19,9 +19,7 @@ adagEl         : filename
 filename       : LTAG( FILE | FILENAME )filenameProp* SLASH RTAG ;
 
 filenameProp   : ( FILE | NAME )EQ STRING          # FilenamePropFile
-               | LINK EQ INPUT                     # FilenamePropLinkInput
-               | LINK EQ OUTPUT                    # FilenamePropLinkOutput
-               | LINK EQ INOUT                     # FilenamePropLinkInout
+               | LINK EQ( INPUT | OUTPUT | INOUT ) # FilenamePropLink
                ;
 
 job            : LTAG JOB jobProp* RTAG jobEl* LTAG SLASH JOB RTAG ;
@@ -46,13 +44,10 @@ argumentEl     : ARG                               # ArgumentElPlain
 jobUsesProp    : ( FILE | NAME )EQ STRING          # JobUsesPropFile
                | LINK EQ INPUT                     # JobUsesPropLinkInput
                | LINK EQ OUTPUT                    # JobUsesPropLinkOutput
-               | REGISTER EQ TRUE                  # JobUsesPropRegisterTrue
-               | REGISTER EQ FALSE                 # JobUsesPropRegisterFalse
-               | TRANSFER EQ TRUE                  # JobUsesPropTransferTrue
-               | TRANSFER EQ FALSE                 # JobUsesPropTransferFalse
+               | REGISTER EQ( TRUE | FALSE )       # JobUsesPropRegister
+               | TRANSFER EQ( TRUE | FALSE )       # JobUsesPropTransfer
                | TYPE EQ EXECUTABLE                # JobUsesPropExecutable
-               | OPTIONAL EQ TRUE                  # JobUsesPropOptionalTrue
-               | OPTIONAL EQ FALSE                 # JobUsesPropOptionalFalse
+               | OPTIONAL EQ( TRUE | FALSE )       # JobUsesPropOptional
                ;
 
 child          : LTAG CHILD REF EQ STRING RTAG parent+ LTAG SLASH CHILD RTAG ;

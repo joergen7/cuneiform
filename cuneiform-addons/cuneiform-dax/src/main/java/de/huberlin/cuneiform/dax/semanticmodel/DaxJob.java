@@ -23,7 +23,7 @@ public class DaxJob {
 	private final List<DaxJob> parentSet;
 	private final List<DaxJob> childSet;
 	private final List<Object> argList;
-	private final List<DaxFilename> jobUsesList;
+	private final List<DaxJobUses> jobUsesList;
 	
 	public DaxJob() {
 		parentSet = new ArrayList<>();
@@ -40,7 +40,7 @@ public class DaxJob {
 		childSet.add( child );
 	}
 	
-	public void addFilenameArg( DaxFilename filename ) {
+	public void addFilenameArg( DaxJobUses filename ) {
 		
 		if( filename == null )
 			throw new NullPointerException( "Filename must not be null." );
@@ -48,7 +48,7 @@ public class DaxJob {
 		argList.add( filename );
 	}
 	
-	public void addJobUses( DaxFilename jobUses ) {
+	public void addJobUses( DaxJobUses jobUses ) {
 		
 		if( jobUses == null )
 			throw new NullPointerException( "Job-Uses element object must not be null." );
@@ -104,26 +104,31 @@ public class DaxJob {
 		this.name = name;		
 	}
 	
-	public Set<DaxFilename> getInputJobUsesSet() {
+	public Set<DaxJobUses> getInputJobUsesSet() {
 		
-		HashSet<DaxFilename> set;
+		HashSet<DaxJobUses> set;
 		
 		set = new HashSet<>();
-		for( DaxFilename jobUses : jobUsesList )
+		for( DaxJobUses jobUses : jobUsesList )
 			if( jobUses.isLinkInput() )
 				set.add( jobUses );
 		
 		return set;
 	}
 	
-	public Set<DaxFilename>getOutputJobUsesSet() {
+	public Set<DaxJobUses>getOutputJobUsesSet() {
 		
-		HashSet<DaxFilename> set;
+		HashSet<DaxJobUses> set;
 		
 		set = new HashSet<>();
-		for( DaxFilename jobUses : jobUsesList )
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( isBidirectional( jobUses ) )
+				continue;
+			
 			if( jobUses.isLinkOutput() )
 				set.add( jobUses );
+		}
 		
 		return set;
 	}
@@ -141,7 +146,10 @@ public class DaxJob {
 		m = 1;
 		type = new DataType( DataType.LABEL_FILE );
 		
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
+			
+			if( isBidirectional( jobUses ) )
+				continue;
 			
 			if( jobUses.isLinkOutput() )	
 				prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
@@ -153,12 +161,12 @@ public class DaxJob {
 		return prototype;
 	}
 	
-	public boolean isBidirectional( DaxFilename filename ) {
+	public boolean isBidirectional( DaxJobUses filename ) {
 		
 		int i;
 		
 		i = 0;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( !jobUses.equals( filename ) )
 				continue;
@@ -169,12 +177,12 @@ public class DaxJob {
 		return i > 1;
 	}
 	
-	public String getReference( DaxFilename filename ) {
+	public String getReference( DaxJobUses filename ) {
 		
 		int i;
 		
 		i = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkInput() )
 				continue;
@@ -186,7 +194,7 @@ public class DaxJob {
 		}
 
 		i = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 						
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -200,12 +208,12 @@ public class DaxJob {
 		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered in any direction." );
 	}
 	
-	public String getInputReference( DaxFilename filename ) {
+	public String getInputReference( DaxJobUses filename ) {
 		
 		int i;
 		
 		i = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkInput() )
 				continue;
@@ -219,12 +227,12 @@ public class DaxJob {
 		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered as input." );
 	}
 	
-	public String getOutputReference( DaxFilename filename ) {
+	public String getOutputReference( DaxJobUses filename ) {
 		
 		int i;
 		
 		i = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 						
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -246,18 +254,13 @@ public class DaxJob {
 		
 		buf = new StringBuffer();
 		
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkInput() )
 				continue;
 			
-			if( isBidirectional( jobUses ) ) {
-				
-				buf.append( getOutputReference( jobUses ) ).append( "=$" );
-				buf.append( getInputReference( jobUses ) ).append( '\n' );
-				
+			if( isBidirectional( jobUses ) )				
 				continue;
-			}
 			
 			buf.append( getReference( jobUses ) ).append( "=\"" );
 			buf.append( jobUses.getFile() ).append( "\"\n" );
@@ -273,10 +276,10 @@ public class DaxJob {
 				continue;
 			}
 			
-			if( arg instanceof DaxFilename ) {
+			if( arg instanceof DaxJobUses ) {
 				
 				buf.append( '$' );
-				buf.append( getReference( ( DaxFilename )arg ) );
+				buf.append( getReference( ( DaxJobUses )arg ) );
 				continue;
 			}
 			
@@ -291,7 +294,7 @@ public class DaxJob {
 		return lambda;
 	}
 	
-	public int getChannel( DaxFilename filename ) {
+	public int getChannel( DaxJobUses filename ) {
 		
 		int channel;
 		
@@ -299,7 +302,7 @@ public class DaxJob {
 			throw new NullPointerException( "DAX filename must not be null." );
 		
 		channel = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkOutput() )
 				continue;
@@ -313,7 +316,7 @@ public class DaxJob {
 		throw new RuntimeException( "DAX filename not registered." );
 	}
 	
-	public ApplyExpr getApplyExpr( DaxFilename filename ) {
+	public ApplyExpr getApplyExpr( DaxJobUses filename ) {
 		
 		ApplyExpr applyExpr;
 		int channel, i;
@@ -329,7 +332,7 @@ public class DaxJob {
 		
 		// bind parameters
 		i = 1;
-		for( DaxFilename jobUses : jobUsesList ) {
+		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( jobUses.isLinkOutput() )
 				continue;
