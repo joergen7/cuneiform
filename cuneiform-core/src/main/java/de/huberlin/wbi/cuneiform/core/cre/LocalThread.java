@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -100,6 +101,7 @@ public class LocalThread implements Runnable {
 		String line;
 		StringBuffer buf;
 		File location;
+		File callLocation;
 		File reportFile;
 		File stdErrFile;
 		File stdOutFile;
@@ -129,7 +131,7 @@ public class LocalThread implements Runnable {
 			if( invoc == null )
 				throw new NullPointerException( "Invocation must not be null." );
 
-			
+			callLocation = new File( "." );
 			location = new File( buildDir.getAbsolutePath()+"/"+invoc.getTicketId() );
 			lockMarker = new File( location.getAbsolutePath()+"/"+Invocation.LOCK_FILENAME );
 			successMarker = new File( location.getAbsolutePath()+"/"+Invocation.SUCCESS_FILENAME );
@@ -169,16 +171,22 @@ public class LocalThread implements Runnable {
 					writer.write( '\n' );
 				}
 				
-				for( String filename : invoc.getStageInList() ) {
-					
-					
-	
-					if( filename.charAt( 0 ) != '/' && filename.indexOf( '_' ) >= 0 ) {
-	
-						signature = filename.substring( 0, filename.indexOf( '_' ) );
+				try( FileSystem fs = FileSystems.getDefault() ) {
+				
+					for( String filename : invoc.getStageInList() ) {
 						
-						srcPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+signature+"/"+filename );				
-						destPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+invoc.getTicketId()+"/"+filename );
+							
+						destPath = fs.getPath( buildDir.getAbsolutePath()+"/"+invoc.getTicketId()+"/"+filename );
+	
+						if( filename.matches( "([^/].+/)?\\d+_\\d+_[^/]+$" ) ) {
+							
+							signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
+							srcPath = fs.getPath( buildDir.getAbsolutePath()+"/"+signature+"/"+filename );				
+						}
+						else
+							
+							srcPath = fs.getPath( callLocation.getAbsolutePath()+"/"+filename );
+						
 						Files.createSymbolicLink( destPath, srcPath );
 					}
 				}

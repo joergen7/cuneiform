@@ -122,7 +122,6 @@ public abstract class Invocation {
 	
 	public String getFunDef() throws NotDerivableException {
 		return defFunctionLog()
-			// +defFunctionLogUsr()
 			+defFunctionNormalize()
 			+defFunctionLogFile();
 	}
@@ -544,10 +543,8 @@ public abstract class Invocation {
 		return ticket.getExpr( paramName );
 	}
 	
-
-
 	private String getResolveableBoundToSingleParam( String paramName )
-	throws NotBoundException, NotDerivableException {		
+	throws NotBoundException, NotDerivableException {	
 		return ticket.getExpr( paramName ).normalize().get( 0 );
 	}
 	

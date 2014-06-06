@@ -76,7 +76,8 @@ public class SyntaxPanel extends JPanel {
 		editPane.setEditable( editable );
 	}
 	
-	public void addKeyListener( KeyListener listener ) {
+	@Override
+	public synchronized void addKeyListener( KeyListener listener ) {
 		editPane.addKeyListener( listener );
 	}
 	

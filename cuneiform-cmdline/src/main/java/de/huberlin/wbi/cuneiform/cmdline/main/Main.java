@@ -127,11 +127,9 @@ public class Main {
 					repl.interpret( readFile( f ) );
 				
 				Thread.sleep( 3*Actor.DELAY );
-				while( repl.isBusy() ) {
-					
-					System.out.println( repl.getRunningSet() );
+				while( repl.isBusy() )
 					Thread.sleep( Actor.DELAY );
-				}				
+				
 				return;
 			}
 			
