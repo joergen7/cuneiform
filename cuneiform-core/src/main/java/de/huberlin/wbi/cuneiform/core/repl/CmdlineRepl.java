@@ -57,7 +57,7 @@ public class CmdlineRepl extends BaseRepl {
 	public synchronized void queryStartedPost( UUID runId ) {}
 	
 	@Override
-	public synchronized void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+	public synchronized void queryFailedPost( UUID queryId, Long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 
 		String line;
 		int i;

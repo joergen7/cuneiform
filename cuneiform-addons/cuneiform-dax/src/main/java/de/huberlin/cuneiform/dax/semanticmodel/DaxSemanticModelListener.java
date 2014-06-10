@@ -2,8 +2,10 @@ package de.huberlin.cuneiform.dax.semanticmodel;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.ANTLRErrorListener;
@@ -30,25 +32,36 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 
 	private final Map<String,DaxJob> idJobMap;
 	private final Map<String,DaxJob> fileJobMap;
-	private DaxJobUses filename;
+	private final List<DaxFilename> fileList;
+	private final List<DaxFilename> outputList;
+	private DaxFilename filename;
+	private DaxJobUses jobUses;
 	private DaxJob job;
 	private final Log log;
 	
 	public DaxSemanticModelListener() {
 		idJobMap = new HashMap<>();
 		fileJobMap = new HashMap<>();
+		fileList = new ArrayList<>();
+		outputList = new ArrayList<>();
 		log = LogFactory.getLog( DaxSemanticModelListener.class );
 	}
 	
 	@Override
 	public void enterFilename( @NotNull DaxParser.FilenameContext ctx ) {
-		filename = new DaxJobUses();		
+		filename = new DaxFilename();		
 	}
 	
 	@Override
 	public void exitFilename( @NotNull DaxParser.FilenameContext ctx ) {
 
-		if( job != null )
+		if( job == null ) {
+
+			fileList.add( filename );
+			if( filename.isLinkOutput() )
+				outputList.add( filename );
+		}
+		else
 			job.addFilenameArg( filename );
 
 		filename = null;
@@ -59,6 +72,21 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		filename.setFile( getString( ctx.STRING() ) );
 	}
 	
+	@Override
+	public void enterFilenamePropLinkInput( @NotNull DaxParser.FilenamePropLinkInputContext ctx ) {
+		filename.setLinkInput();
+	}
+	
+	@Override
+	public void enterFilenamePropLinkOutput( @NotNull DaxParser.FilenamePropLinkOutputContext ctx ) {
+		filename.setLinkOutput();
+	}
+
+	@Override
+	public void enterFilenamePropLinkInout( @NotNull DaxParser.FilenamePropLinkInoutContext ctx ) {
+		filename.setLinkInout();
+	}
+
 	@Override
 	public void enterJob( @NotNull DaxParser.JobContext ctx ) {
 		job = new DaxJob();
@@ -91,33 +119,44 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 	
 	@Override
 	public void enterJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
-		filename = new DaxJobUses();
-		job.addJobUses( filename );
+		jobUses = new DaxJobUses();
+		job.addJobUses( jobUses );
 	}
 	
 	@Override
 	public void exitJobElUses( @NotNull DaxParser.JobElUsesContext ctx ) {
 		
-		if( filename.isLinkOutput() )
-			fileJobMap.put( filename.getFile(), job );
+		if( jobUses.isLinkOutput() )
+			fileJobMap.put( jobUses.getFile(), job );
 		
-		filename = null;
+		jobUses = null;
 	}
 	
 	@Override
 	public void enterJobUsesPropFile( @NotNull DaxParser.JobUsesPropFileContext ctx ) {
-		filename.setFile( getString( ctx.STRING() ) );
+		jobUses.setFile( getString( ctx.STRING() ) );
 	}
 	
 	@Override
 	public void enterJobUsesPropLinkInput( @NotNull DaxParser.JobUsesPropLinkInputContext ctx ) {
-		filename.setLinkInput();
+		jobUses.setLinkInput();
 	}
 
 	@Override
 	public void enterJobUsesPropLinkOutput( @NotNull DaxParser.JobUsesPropLinkOutputContext ctx ) {
-		filename.setLinkOutput();
+		jobUses.setLinkOutput();
 	}
+	
+	@Override
+	public void enterJobUsesPropExecutable( @NotNull DaxParser.JobUsesPropExecutableContext ctx ) {
+		jobUses.setExecutable( true );
+	}
+
+	@Override
+	public void enterJobUsesPropOptionalTrue( @NotNull DaxParser.JobUsesPropOptionalTrueContext ctx ) {
+		jobUses.setOptional( true );
+	}
+
 	
 	@Override
 	public void enterChild( @NotNull DaxParser.ChildContext ctx ) {
@@ -163,31 +202,23 @@ public class DaxSemanticModelListener extends DaxBaseListener implements ANTLREr
 		tlc.addTarget( ce );
 		
 		
+		// gather input contract
+		for( DaxFilename input : fileList )
+			tlc.putAssign( input.getNameExpr(), new CompoundExpr( new StringExpr( input.getFile() ) ) );
+		
+		// gather jobs
 		for( DaxJob j : idJobMap.values() ) {
 			
-			if( j.isRoot() )
-
-				for( DaxJobUses f : j.getInputJobUsesSet() )
-					
-					tlc.putAssign(
-						f.getNameExpr(),
-						new CompoundExpr( new StringExpr( f.getFile() ) ) );
+			for( DaxFilename f : j.getOutputJobUsesSet() ) {
 				
-			
-			
-			if( j.isLeaf() )
-				
-				for( DaxJobUses f : j.getOutputJobUsesSet() )
-					
-					ce.addSingleExpr( f.getNameExpr() );
-			
-			for( DaxJobUses f : j.getOutputJobUsesSet() ) {
-				
-				applyExpr = j.getApplyExpr( f );
+				applyExpr = j.getApplyExpr( f, fileList );
 				tlc.putAssign( f.getNameExpr(), new CompoundExpr( applyExpr ) );
 			}
 		}
-			
+		
+		// gather output contract
+		for( DaxFilename output : outputList )
+			ce.addSingleExpr( output.getNameExpr() );
 		
 		return tlc;
 	}

@@ -105,7 +105,7 @@ public class TicketSrcActor extends Actor {
 	}
 	
 	@Override
-	public void processMsg( Message msg ) {
+	public synchronized void processMsg( Message msg ) {
 
 		TicketFinishedMsg ticketFinishedMsg;
 		TicketFailedMsg ticketFailedMsg;
@@ -125,7 +125,8 @@ public class TicketSrcActor extends Actor {
 			for( UUID queryId : ticketQueryMap.get( ticket ) ) {
 			
 				ticketSet = queryTicketMap.get( queryId );
-
+				if( ticketSet == null )
+					throw new NullPointerException( "queryTicketMap does not contain query "+queryId );
 					
 				if( !ticketSet.remove( ticket ) )
 					throw new RuntimeException( "Inconsistent map information." );

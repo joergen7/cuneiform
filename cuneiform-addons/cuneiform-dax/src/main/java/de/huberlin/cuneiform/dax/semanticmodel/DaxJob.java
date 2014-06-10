@@ -11,7 +11,10 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.DataType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ReduceVar;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Type;
 
 public class DaxJob {
@@ -40,7 +43,7 @@ public class DaxJob {
 		childSet.add( child );
 	}
 	
-	public void addFilenameArg( DaxJobUses filename ) {
+	public void addFilenameArg( DaxFilename filename ) {
 		
 		if( filename == null )
 			throw new NullPointerException( "Filename must not be null." );
@@ -148,11 +151,19 @@ public class DaxJob {
 		
 		for( DaxJobUses jobUses : jobUsesList ) {
 			
-			if( isBidirectional( jobUses ) )
+			if( jobUses.isExecutable() )
 				continue;
 			
-			if( jobUses.isLinkOutput() )	
-				prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
+			if( jobUses.isLinkOutput() ) {
+				
+				if( isBidirectional( jobUses ) )
+					continue;
+				
+				if( jobUses.isOptional() )
+					prototype.addOutput( new ReduceVar( PREFIX_OUT+( n++ ), type ) );
+				else
+					prototype.addOutput( new NameExpr( PREFIX_OUT+( n++ ), type ) );
+			}
 			else
 				prototype.addParam( new NameExpr( PREFIX_IN+( m++ ), type ) );
 			
@@ -177,7 +188,7 @@ public class DaxJob {
 		return i > 1;
 	}
 	
-	public String getReference( DaxJobUses filename ) {
+	public String getReference( DaxFilename filename ) {
 		
 		int i;
 		
@@ -185,6 +196,9 @@ public class DaxJob {
 		for( DaxJobUses jobUses : jobUsesList ) {
 			
 			if( !jobUses.isLinkInput() )
+				continue;
+			
+			if( jobUses.isExecutable() )
 				continue;
 			
 			if( jobUses.equals( filename ) )
@@ -198,7 +212,7 @@ public class DaxJob {
 						
 			if( !jobUses.isLinkOutput() )
 				continue;
-			
+						
 			if( jobUses.equals( filename ) )
 				return PREFIX_OUT+i;
 			
@@ -206,45 +220,6 @@ public class DaxJob {
 		}
 		
 		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered in any direction." );
-	}
-	
-	public String getInputReference( DaxJobUses filename ) {
-		
-		int i;
-		
-		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
-			
-			if( !jobUses.isLinkInput() )
-				continue;
-			
-			if( jobUses.equals( filename ) )
-				return PREFIX_IN+i;
-			
-			i++;
-		}
-		
-		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered as input." );
-	}
-	
-	public String getOutputReference( DaxJobUses filename ) {
-		
-		int i;
-		
-		i = 1;
-		for( DaxJobUses jobUses : jobUsesList ) {
-						
-			if( !jobUses.isLinkOutput() )
-				continue;
-			
-			if( jobUses.equals( filename ) )
-				return PREFIX_OUT+i;
-			
-			i++;
-		}
-		
-		throw new RuntimeException( "DAX filename '"+filename.getFile()+"' not registered as output." );
-
 	}
 	
 	public ForeignLambdaExpr getLambda() {
@@ -276,15 +251,20 @@ public class DaxJob {
 				continue;
 			}
 			
-			if( arg instanceof DaxJobUses ) {
+			if( arg instanceof DaxFilename ) {
 				
 				buf.append( '$' );
-				buf.append( getReference( ( DaxJobUses )arg ) );
+				buf.append( getReference( ( DaxFilename )arg ) );
 				continue;
 			}
 			
 			throw new RuntimeException( "Argument type not recognized." );
 		}
+		
+		for( DaxJobUses jobUses : jobUsesList )
+			if( jobUses.isLinkOutput() )
+				if( jobUses.isOptional() )
+					buf.append( "\nif [[ ! -f "+jobUses.getFile()+" ]]\nthen\n"+getReference( jobUses )+"=\nfi" );
 		
 		lambda = new ForeignLambdaExpr(
 			getPrototype(),
@@ -294,7 +274,7 @@ public class DaxJob {
 		return lambda;
 	}
 	
-	public int getChannel( DaxJobUses filename ) {
+	public int getChannel( DaxFilename filename ) {
 		
 		int channel;
 		
@@ -316,10 +296,11 @@ public class DaxJob {
 		throw new RuntimeException( "DAX filename not registered." );
 	}
 	
-	public ApplyExpr getApplyExpr( DaxJobUses filename ) {
+	public ApplyExpr getApplyExpr( DaxFilename filename, List<DaxFilename> fileList ) {
 		
 		ApplyExpr applyExpr;
 		int channel, i;
+		Prototype prototype;
 		
 		// find out channel
 		channel = getChannel( filename );
@@ -337,12 +318,30 @@ public class DaxJob {
 			if( jobUses.isLinkOutput() )
 				continue;
 			
-			if( isBidirectional( jobUses ) )
+			if( jobUses.isExecutable() )
 				continue;
 			
-			applyExpr.putAssign(
-				new NameExpr( PREFIX_IN+( i++ ) ),
-				new CompoundExpr( jobUses.getNameExpr() ) );
+			if( fileList.contains( jobUses ) )
+				applyExpr.putAssign(
+					new NameExpr( PREFIX_IN+( i++ ) ),
+					new CompoundExpr( jobUses.getNameExpr() ) );
+			else {
+				
+				try {
+
+					prototype = applyExpr.getPrototype();
+					prototype.removeParam( PREFIX_IN+i );
+					prototype.addParam( new NameExpr( PREFIX_IN+i ) );
+					
+					applyExpr.putAssign(
+							new NameExpr( PREFIX_IN+( i++ ) ),
+							new CompoundExpr( new StringExpr( jobUses.getFile() ) ) );
+				}
+				catch( NotDerivableException e ) {
+					throw new RuntimeException( e );
+				}
+				
+			}
 		}
 		
 		return applyExpr;

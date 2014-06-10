@@ -16,6 +16,7 @@ import org.apache.commons.logging.LogFactory;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformLexer;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser;
 import de.huberlin.wbi.cuneiform.core.preprocess.ChannelListener;
+import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
@@ -126,19 +127,24 @@ public abstract class BaseRepl {
 
 		// remove control targets
 		ctl = fetchCtl( tlc );
-		
+			
 		if( !tlc.isTargetListEmpty() ) {
-		
 			
-			reducer = new DynamicNodeVisitor( ticketSrc, this, tlc );
-			
+			reducer = new DynamicNodeVisitor( ticketSrc, this, tlc );			
 			queryId = reducer.getQueryId();
-			
 			runningMap.put( queryId, reducer );
-			queryStarted( queryId );
 			
-			// trigger reduction
-			reducer.step();
+			try {
+				
+				queryStarted( queryId );
+				
+				// trigger reduction
+				reducer.step();
+			
+			}
+			catch( ParseException e ) {
+				queryFailed( queryId, null, e, null, null, null );
+			}
 		}
 		
 		return ctl;
@@ -156,7 +162,7 @@ public abstract class BaseRepl {
 		return runningMap.containsKey( queryId );
 	}
 	
-	public void queryFailed( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr ) {
+	public void queryFailed( UUID queryId, Long ticketId, Exception e, String script, String stdOut, String stdErr ) {
 		
 		String s;
 		
@@ -179,7 +185,7 @@ public abstract class BaseRepl {
 		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}
 
-	public abstract void queryFailedPost( UUID queryId, long ticketId, Exception e, String script, String stdOut, String stdErr );
+	public abstract void queryFailedPost( UUID queryId, Long ticketId, Exception e, String script, String stdOut, String stdErr );
 
 	public void queryFinished( UUID queryId, CompoundExpr result ) {
 		

@@ -177,6 +177,10 @@ public class Prototype extends LambdaType implements Cloneable {
 		return h;
 	}
 	
+	public void removeParam( String name ) {
+		removeParam( new NameExpr( name ) );
+	}
+	
 	public void removeParam( NameExpr nameExpr ) {
 		
 		CorrelParam correlParam;

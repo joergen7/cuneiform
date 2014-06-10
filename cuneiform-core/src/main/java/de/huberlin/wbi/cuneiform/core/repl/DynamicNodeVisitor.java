@@ -470,8 +470,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		if( ticketSrc.isQueueClear( queryId ) ) {
 			repl.queryFinished( queryId, ce );
 			return;
-		}
-		
+		}		
 	}
 	
 	public synchronized CompoundExpr getCurrentExpr() {
