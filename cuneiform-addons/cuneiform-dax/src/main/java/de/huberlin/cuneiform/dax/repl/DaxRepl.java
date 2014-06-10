@@ -34,13 +34,6 @@ public class DaxRepl extends BaseRepl {
 		adag = process( input );
 		tlc = adag.toTopLevelContext();
 		
-		try( BufferedWriter writer = new BufferedWriter( new FileWriter( new File( "/home/jorgen/montage3.cf" ) ) ) ) {
-			
-			writer.write( tlc.toString() );
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
 		return interpret( tlc );
 		
 	}
