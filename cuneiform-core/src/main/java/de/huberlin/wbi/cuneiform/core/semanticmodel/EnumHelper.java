@@ -47,6 +47,9 @@ public class EnumHelper {
 	
 	public EnumHelper( CompoundExpr taskExpr, BaseBlock bindingBlock ) {
 		
+		Set<Param> paramSet;
+		int i, n;
+		
 		if( bindingBlock == null )
 			throw new NullPointerException( "Binding block must not be null." );
 		
@@ -56,10 +59,20 @@ public class EnumHelper {
 		this.taskExpr = taskExpr;		
 		this.prototype = ( ( LambdaExpr )taskExpr.getSingleExpr( 0 ) ).getPrototype();
 		this.bindingBlock = bindingBlock;
-
-		Set<Param> paramSet;
-		int i, n;
 		
+		// check if parameter bindings are consistent
+		for( NameExpr paramName : prototype.getParamNameSet() ) {
+			
+			if( paramName.getId().equals( CfSemanticModelVisitor.LABEL_TASK ) )
+				continue;
+			
+			if( !bindingBlock.containsName( paramName ) )
+				throw new SemanticModelException(
+					bindingBlock.toString(),
+					"The parameter '"+paramName
+					+"' is unbound in task application." );
+		}
+
 		// impose order on parameter names
 		paramSet = prototype.getParamSet();
 		
