@@ -46,6 +46,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -87,7 +88,13 @@ public class Main {
 			config( cmd );
 			
 			if( cmd.hasOption( 'h' ) ) {
-				System.out.println(  ); // TODO
+				
+				System.out.println(
+					"CUNEIFORM - A Functional Workflow Language\nversion "
+					+BaseRepl.LABEL_VERSION+" build "+BaseRepl.LABEL_BUILD );
+				new HelpFormatter().printHelp(
+					"java -jar cuneiform.jar [OPTION]*", opt );
+				
 				return;
 			}
 						
