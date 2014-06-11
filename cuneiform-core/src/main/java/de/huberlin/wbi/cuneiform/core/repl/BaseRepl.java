@@ -173,8 +173,13 @@ public abstract class BaseRepl {
 		
 		s = "";
 		
-		if( e != null )
-			s += " Exception: "+e;
+		if( e != null ) {
+			
+			s += " "+e.getClass().getName();
+			
+			if( e.getMessage() != null )
+				s += ": \""+e.getMessage()+"\"";
+		}
 		
 		if( stdOut != null )
 			s += " Output channel: \""+stdOut.replace( '\n', ' ' )+"\"";

@@ -35,6 +35,7 @@ package de.huberlin.wbi.cuneiform.core.cre;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -137,10 +138,9 @@ public class LocalThread implements Runnable {
 			
 			if( !Files.exists( successMarker ) ) {
 				
-				if( !Files.deleteIfExists( location ) )
-					throw new IOException( "Could not delete directory '"+location+"'." );
+				deleteIfExists( location );
+				Files.createDirectories( location );			
 				
-				Files.createDirectories( location );				
 				Files.createFile( lockMarker );
 							
 				scriptFile = location.resolve( Invocation.SCRIPT_FILENAME );
@@ -315,4 +315,19 @@ public class LocalThread implements Runnable {
 			if( process != null )
 				process.destroy();
 		}
-	}}
+	}
+	
+	private static void deleteIfExists( Path f ) throws IOException {
+		
+		if( !Files.exists( f ) )
+			return;
+		
+		if( Files.isDirectory( f ) )
+			try( DirectoryStream<Path> stream = Files.newDirectoryStream( f ) ) {
+				for( Path p : stream )
+					deleteIfExists( p );
+			}
+		
+		Files.delete( f );
+	}
+}

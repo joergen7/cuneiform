@@ -101,10 +101,10 @@ public class TicketFailedMsg extends Message {
 		s = "";
 		
 		if( e != null ) {
-			s += " Exception: \""+e.getClass().getName();
+			s += " "+e.getClass().getName();
+			
 			if( e.getMessage() != null )
-				s += " "+e.getMessage();
-			s += "\"";
+				s += ": \""+e.getMessage()+"\"";
 		}
 		
 		if( stdOut != null )

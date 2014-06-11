@@ -100,8 +100,9 @@ public class Main {
 			
 				case PLATFORM_LOCAL :
 					
-					sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( "/.cuneiform" );
-					Files.createDirectories( sandbox );
+					sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
+					if( !Files.exists( sandbox ) )
+						Files.createDirectories( sandbox );
 					cre = new LocalCreActor( sandbox );
 					break;
 					

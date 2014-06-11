@@ -81,15 +81,15 @@ public class TicketSrcActor extends Actor {
 			log.debug( "New TicketSrcActor's UUID: "+runId );
 	}
 	
-	public Set<Ticket> getTicketSet( UUID queryId ) {
+	public synchronized Set<Ticket> getTicketSet( UUID queryId ) {
 		return queryTicketMap.get( queryId );
 	}
 	
-	public UUID getRunId() {
+	public synchronized UUID getRunId() {
 		return runId;
 	}
 	
-	public boolean isQueueClear( UUID queryId ) {
+	public synchronized boolean isQueueClear( UUID queryId ) {
 		
 		Set<Ticket> set;
 		
@@ -105,7 +105,7 @@ public class TicketSrcActor extends Actor {
 	}
 	
 	@Override
-	public void processMsg( Message msg ) {
+	public synchronized void processMsg( Message msg ) {
 
 		TicketFinishedMsg ticketFinishedMsg;
 		TicketFailedMsg ticketFailedMsg;
@@ -153,14 +153,16 @@ public class TicketSrcActor extends Actor {
 			e = ticketFailedMsg.getException();
 			
 			queryIdSet = ticketQueryMap.get( ticket );
+			if( queryIdSet != null ) {
 			
-			for( UUID queryId : queryIdSet )
-				for( BaseRepl repl : replSet )
-					if( repl.isRunning( queryId ) )
-						repl.queryFailed( queryId, ticketId, e, script, stdOut, stdErr );
-			
-			for( UUID queryId : queryIdSet )
-				queryTicketMap.remove( queryId );
+				for( UUID queryId : queryIdSet )
+					for( BaseRepl repl : replSet )
+						if( repl.isRunning( queryId ) )
+							repl.queryFailed( queryId, ticketId, e, script, stdOut, stdErr );
+				
+				for( UUID queryId : queryIdSet )
+					queryTicketMap.remove( queryId );
+			}
 			
 			ticketQueryMap.remove( ticket );
 			cacheMap.remove( ticketId );
@@ -171,7 +173,7 @@ public class TicketSrcActor extends Actor {
 		throw new RuntimeException( "Message type "+msg.getClass()+" not recognized." );
 	}
 	
-	public QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
+	public synchronized QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
 		
 		CompoundExpr ce;
 		int channel;
@@ -247,6 +249,7 @@ public class TicketSrcActor extends Actor {
 				log.debug( "Returning ticket "+ticketId+" from cache." );
 			
 			ticket = cacheMap.get( ticketId );
+			putTicket( queryId, ticket );
 			qt = new QualifiedTicket( ticket, channel );
 		}
 		else {
@@ -291,8 +294,6 @@ public class TicketSrcActor extends Actor {
 			uuidSet = new HashSet<>();
 			ticketQueryMap.put( ticket, uuidSet );
 		}
-			
-				
 		
 		if( !ticket.isNormal() )
 			throw new RuntimeException( "Ticket not ready." );
