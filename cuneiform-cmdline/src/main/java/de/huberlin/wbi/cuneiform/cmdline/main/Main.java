@@ -33,9 +33,7 @@
 package de.huberlin.wbi.cuneiform.cmdline.main;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
@@ -67,7 +65,7 @@ public class Main {
 	
 	private static String platform;
 	private static String format;
-	private static File[] inputFileVector;
+	private static Path[] inputFileVector;
 	
 
 	public static void main( String[] args ) throws IOException, ParseException, InterruptedException {
@@ -133,7 +131,7 @@ public class Main {
 				
 				// run in quiet mode
 				
-				for( File f : inputFileVector )
+				for( Path f : inputFileVector )
 					repl.interpret( readFile( f ) );
 				
 				Thread.sleep( 3*Actor.DELAY );
@@ -165,18 +163,18 @@ public class Main {
 	public static void config( CommandLine cmd ) {
 		
 		String[] fileVector;
-		File f;
+		Path f;
 		String s;
 		int i, n;
 		
 		fileVector = cmd.getArgs();
 		n = fileVector.length;
-		inputFileVector = new File[ n ];
+		inputFileVector = new Path[ n ];
 		
 		for( i = 0; i < n; i++ ) {
 			
 			s = fileVector[ i ];
-			f = new File( s );
+			f = Paths.get( s );
 			
 			inputFileVector[ i ] = f;
 		}
@@ -220,13 +218,13 @@ public class Main {
 		
 	}
 	
-	public static String readFile( File f ) throws FileNotFoundException, IOException {
+	public static String readFile( Path f ) throws FileNotFoundException, IOException {
 		
 		String line;
 		StringBuffer buf;
 		
 		buf = new StringBuffer();
-		try( BufferedReader reader = new BufferedReader( new FileReader( f ) ) ) {
+		try( BufferedReader reader = Files.newBufferedReader( f ) ) {
 			
 			while( ( line = reader.readLine() ) != null )
 				buf.append( line ).append( '\n' );

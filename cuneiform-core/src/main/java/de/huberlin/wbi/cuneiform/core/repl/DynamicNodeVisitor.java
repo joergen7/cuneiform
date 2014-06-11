@@ -455,7 +455,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	}
 	
-	public synchronized void step() {
+	public void step() {
 		
 		CompoundExpr ce;
 		long tic, toc;
@@ -473,7 +473,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		}		
 	}
 	
-	public synchronized CompoundExpr getCurrentExpr() {
+	public CompoundExpr getCurrentExpr() {
 		
 		CompoundExpr result;
 		TopLevelContext tlc;

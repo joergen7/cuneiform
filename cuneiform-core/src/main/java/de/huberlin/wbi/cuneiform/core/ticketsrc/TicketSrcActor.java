@@ -105,7 +105,7 @@ public class TicketSrcActor extends Actor {
 	}
 	
 	@Override
-	public synchronized void processMsg( Message msg ) {
+	public void processMsg( Message msg ) {
 
 		TicketFinishedMsg ticketFinishedMsg;
 		TicketFailedMsg ticketFailedMsg;
@@ -171,7 +171,7 @@ public class TicketSrcActor extends Actor {
 		throw new RuntimeException( "Message type "+msg.getClass()+" not recognized." );
 	}
 	
-	public synchronized QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
+	public QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
 		
 		CompoundExpr ce;
 		int channel;
