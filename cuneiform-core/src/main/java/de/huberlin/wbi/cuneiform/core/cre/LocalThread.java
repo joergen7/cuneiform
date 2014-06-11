@@ -34,17 +34,14 @@ package de.huberlin.wbi.cuneiform.core.cre;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
@@ -61,54 +58,49 @@ public class LocalThread implements Runnable {
 
 	private final Invocation invoc;
 	private final Log log;
-	private final File buildDir;
+	private final Path buildDir;
 	private final TicketSrcActor ticketSrc;
 	private final BaseCreActor cre;
-	
-	public LocalThread( TicketSrcActor ticketSrc, BaseCreActor cre, Ticket ticket, File buildDir ) {
-		
-		if( buildDir == null )
-			throw new NullPointerException( "Build directory must not be null." );
-		
-		if( !buildDir.exists() )
-			throw new RuntimeException( "Build directory does not exist." );
-		
-		if( !buildDir.isDirectory() )
-			throw new RuntimeException( "Directory expected." );
-		
-		if( cre == null )
-			throw new NullPointerException( "CRE actor must not be null." );
-		
-		if( ticketSrc == null )
-			throw new NullPointerException( "Ticket source must not be null." );
-		
+
+	public LocalThread(TicketSrcActor ticketSrc, BaseCreActor cre,
+			Ticket ticket, Path buildDir) {
+
+		if (buildDir == null)
+			throw new NullPointerException("Build directory must not be null.");
+
+		if (!Files.exists(buildDir))
+			throw new RuntimeException("Build directory does not exist.");
+
+		if (!Files.isDirectory(buildDir))
+			throw new RuntimeException("Directory expected.");
+
+		if (cre == null)
+			throw new NullPointerException("CRE actor must not be null.");
+
+		if (ticketSrc == null)
+			throw new NullPointerException("Ticket source must not be null.");
+
 		this.ticketSrc = ticketSrc;
 		this.cre = cre;
 		this.buildDir = buildDir;
 
-		invoc = Invocation.createInvocation( ticket );
-		log = LogFactory.getLog( LocalThread.class );
+		invoc = Invocation.createInvocation(ticket);
+		log = LogFactory.getLog(LocalThread.class);
 	}
-	
+
 	@Override
 	public void run() {
 		
-		File scriptFile;
+		Path scriptFile, location, lockMarker, successMarker, reportFile,
+			callLocation, stdErrFile, stdOutFile;
 		Process process;
 		int exitValue;
 		Set<JsonReportEntry> report;
 		JsonReportEntry entry;
 		String line;
 		StringBuffer buf;
-		File location;
-		File callLocation;
-		File reportFile;
-		File stdErrFile;
-		File stdOutFile;
 		String signature;
 		Path srcPath, destPath;
-		File successMarker;
-		File lockMarker;
 		ProcessBuilder processBuilder;
 		Ticket ticket;
 		String script, stdOut, stdErr;
@@ -122,82 +114,83 @@ public class LocalThread implements Runnable {
 		
 		ticket = invoc.getTicket();
 		process = null;
-		lockMarker = null;
-		successMarker = null;
-		script = null;
 		stdOut = null;
 		stdErr = null;
+		lockMarker = null;
+		script = null;
+		successMarker = null;
 		try {
 					
 			if( invoc == null )
 				throw new NullPointerException( "Invocation must not be null." );
 
-			callLocation = new File( "." );
-			location = new File( buildDir.getAbsolutePath()+"/"+invoc.getTicketId() );
-			lockMarker = new File( location.getAbsolutePath()+"/"+Invocation.LOCK_FILENAME );
-			successMarker = new File( location.getAbsolutePath()+"/"+Invocation.SUCCESS_FILENAME );
-			reportFile = new File( location.getAbsolutePath()+"/"+Invocation.REPORT_FILENAME );
+
+			callLocation = Paths.get( "." );
+			location = buildDir.resolve( String.valueOf( invoc.getTicketId() ) );
+			lockMarker = buildDir.resolve( Invocation.LOCK_FILENAME );
+			successMarker = buildDir.resolve( Invocation.SUCCESS_FILENAME );
+			reportFile = buildDir.resolve( Invocation.REPORT_FILENAME );
+			script = invoc.toScript();
 			
-			if( lockMarker.exists() )
+			if( Files.exists( lockMarker ) )
 				throw new IOException( "Lock held on ticket "+invoc.getTicketId() );
 			
-			if( !successMarker.exists() ) {
+			if( !Files.exists( successMarker ) ) {
 				
-
-				if( location.exists() )
-					FileUtils.deleteDirectory( location );
+				if( !Files.deleteIfExists( location ) )
+					throw new IOException( "Could not delete directory '"+location+"'." );
 				
-				FileUtils.forceMkdir( location );
-				
-				if( !lockMarker.createNewFile() )
-					throw new IOException( "Could not create lock on ticket "+invoc.getTicketId() );
+				Files.createDirectories( location );				
+				Files.createFile( lockMarker );
 							
-				scriptFile = new File( location.getAbsolutePath()+"/"+Invocation.SCRIPT_FILENAME );
+				scriptFile = location.resolve( Invocation.SCRIPT_FILENAME );
 				
-				try( BufferedWriter writer = new BufferedWriter( new FileWriter( scriptFile, false ) ) ) {
-					
-					// write away script
-					writer.write( invoc.toScript() );
+				Files.createFile( scriptFile,
+					PosixFilePermissions.asFileAttribute(
+							PosixFilePermissions.fromString( "rwxr-x---" ) ) );
+				
+				// write executable script
+				try( BufferedWriter writer = Files.newBufferedWriter( scriptFile ) ) {
+					writer.write( script );
 				}
 				
-				scriptFile.setExecutable( true );
-				
-				
 				// write executable log entry
-				
-				try( BufferedWriter writer = new BufferedWriter( new FileWriter( reportFile, false ) ) ) {
-					
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile ) ) {
 					writer.write( ticket.getExecutableLogEntry().toString() );
 					writer.write( '\n' );
 				}
 				
 				
-					for( String filename : invoc.getStageInList() ) {
+				
+				
+				
+				
+				for( String filename : invoc.getStageInList() ) {
+					
+					
+					destPath = location.resolve( filename );
+
+					if( filename.matches( "([^/].+/)?\\d+_\\d+_[^/]+$" ) ) {
 						
-							
-						destPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+invoc.getTicketId()+"/"+filename );
-	
-						if( filename.matches( "([^/].+/)?\\d+_\\d+_[^/]+$" ) ) {
-							
-							signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
-							srcPath = FileSystems.getDefault().getPath( buildDir.getAbsolutePath()+"/"+signature+"/"+filename );				
-						}
-						else
-							
-							srcPath = FileSystems.getDefault().getPath( callLocation.getAbsolutePath()+"/"+filename );
-						
-						Files.createSymbolicLink( destPath, srcPath );
+						signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
+						srcPath = buildDir.resolve( signature ).resolve( filename );				
 					}
+					else
+						
+						srcPath = callLocation.resolve( filename );
+					
+					Files.createSymbolicLink( destPath, srcPath );
+				}
 				
 				// run script
-				processBuilder = new ProcessBuilder( scriptFile.getAbsolutePath() );
-				processBuilder.directory( location );
+				processBuilder = new ProcessBuilder( scriptFile.toString() );
+				processBuilder.directory( location.toFile() );
 				
-				stdOutFile = new File( location.getAbsolutePath()+"/"+Invocation.STDOUT_FILENAME );
-				stdErrFile = new File( location.getAbsolutePath()+"/"+Invocation.STDERR_FILENAME );
+				stdOutFile = location.resolve( Invocation.STDOUT_FILENAME );
+				stdErrFile = location.resolve( Invocation.STDERR_FILENAME );
 
-				processBuilder.redirectOutput( stdOutFile );
-				processBuilder.redirectError( stdErrFile );
+				processBuilder.redirectOutput( stdOutFile.toFile() );
+				processBuilder.redirectError( stdErrFile.toFile() );
 				
 				tic = System.currentTimeMillis();
 				process = processBuilder.start();
@@ -205,16 +198,16 @@ public class LocalThread implements Runnable {
 				toc = System.currentTimeMillis();
 				
 				
-				try( BufferedWriter reportWriter = new BufferedWriter( new FileWriter( reportFile, true ) ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile ) ) {
 					
 					obj = new JSONObject();
 					obj.put( JsonReportEntry.LABEL_REALTIME, toc-tic );
 					entry = new JsonReportEntry( tic, invoc, null, JsonReportEntry.KEY_INVOC_TIME, obj );
 					
-					reportWriter.write( entry.toString() );
-					reportWriter.write( '\n' );
+					writer.write( entry.toString() );
+					writer.write( '\n' );
 					
-					try( BufferedReader reader = new BufferedReader( new FileReader( stdOutFile ) ) ) {
+					try( BufferedReader reader = Files.newBufferedReader( stdOutFile ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
@@ -225,11 +218,12 @@ public class LocalThread implements Runnable {
 						
 						if( !stdOut.isEmpty() ) {
 							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDOUT, stdOut );
-							reportWriter.write( entry.toString() );
-							reportWriter.write( '\n' );
+							writer.write( entry.toString() );
+							writer.write( '\n' );
 						}
 					}
-					try( BufferedReader reader = new BufferedReader( new FileReader( stdErrFile ) ) ) {
+					
+					try( BufferedReader reader = Files.newBufferedReader( stdErrFile ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
@@ -239,24 +233,19 @@ public class LocalThread implements Runnable {
 						if( !stdErr.isEmpty() ) {
 						
 							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDERR, stdErr );
-							reportWriter.write( entry.toString() );
-							reportWriter.write( '\n' );
+							writer.write( entry.toString() );
+							writer.write( '\n' );
 						}
 					}
 					
-					if( exitValue == 0 ) {
+					if( exitValue == 0 )
 						
-						if( !successMarker.createNewFile() )
-							throw new IOException( "Could not create success marker." );
-					}
+						Files.createFile( successMarker );
 					
-					if( exitValue != 0 ) {
-						
-						script = invoc.toScript();
+					else {
 						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
-
-						lockMarker.delete();
+						Files.delete( lockMarker );
 						return;
 						
 					}
@@ -265,10 +254,7 @@ public class LocalThread implements Runnable {
 			
 			// gather report
 			report = new HashSet<>();
-			try(
-					
-				BufferedReader reader =
-					new BufferedReader( new FileReader( reportFile ) ) ) {
+			try( BufferedReader reader = Files.newBufferedReader( reportFile ) ) {
 				
 				while( ( line = reader.readLine() ) != null ) {
 					
@@ -301,8 +287,12 @@ public class LocalThread implements Runnable {
 				log.trace( "Something went wrong. Deleting success marker if present." );
 			
 			if( successMarker != null )
-				if( successMarker.exists() )
-					successMarker.delete();
+				try {
+					Files.deleteIfExists( successMarker );
+				}
+				catch( IOException e1 ) {
+					e1.printStackTrace();
+				}
 			
 			msg = new TicketFailedMsg( cre, ticket, e, script, stdOut, stdErr );
 			
@@ -312,8 +302,12 @@ public class LocalThread implements Runnable {
 		finally {
 			
 			if( lockMarker != null )
-				if( lockMarker.exists() )
-					lockMarker.delete();
+				try {
+					Files.deleteIfExists( lockMarker );
+				}
+				catch( IOException e ) {
+					e.printStackTrace();
+				}
 			
 			if( log.isDebugEnabled() )
 				log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
@@ -321,5 +315,4 @@ public class LocalThread implements Runnable {
 			if( process != null )
 				process.destroy();
 		}
-	}		
-}
+	}}

@@ -38,6 +38,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -72,7 +75,7 @@ public class Main {
 		Options opt;
 		BaseRepl repl;
 		BaseCreActor cre;
-		File sandbox;
+		Path sandbox;
 		ExecutorService executor;
 		TicketSrcActor ticketSrc;
 		
@@ -92,8 +95,8 @@ public class Main {
 			
 				case PLATFORM_LOCAL :
 					
-					sandbox = new File( System.getProperty( "user.home" )+"/.cuneiform" );
-					sandbox.mkdir();
+					sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( "/.cuneiform" );
+					Files.createDirectories( sandbox );
 					cre = new LocalCreActor( sandbox );
 					break;
 					

@@ -107,8 +107,12 @@ public class TicketFailedMsg extends Message {
 			s += "\"";
 		}
 		
+		if( stdOut != null )
+			s += " Output channel: \""+stdOut.replace( '\n', ' ' )+"\"";
+
 		if( stdErr != null )
 			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\"";
+		
 		
 		return "{ ticketFailed, "+ticket.getTicketId()+","+s+" }";
 	}

@@ -171,7 +171,7 @@ public class TicketSrcActor extends Actor {
 		throw new RuntimeException( "Message type "+msg.getClass()+" not recognized." );
 	}
 	
-	public QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
+	public synchronized QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
 		
 		CompoundExpr ce;
 		int channel;

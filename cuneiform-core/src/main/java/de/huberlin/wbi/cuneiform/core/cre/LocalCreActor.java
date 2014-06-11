@@ -32,7 +32,8 @@
 
 package de.huberlin.wbi.cuneiform.core.cre;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,17 +44,17 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 public class LocalCreActor extends BaseCreActor {
 
 	private final ExecutorService executor;
-	private final File buildDir;
+	private final Path buildDir;
 	
-	public LocalCreActor( File buildDir, int nthread ) {
+	public LocalCreActor( Path buildDir, int nthread ) {
 		
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
 		
-		if( !buildDir.exists() )
+		if( !Files.exists( buildDir ) )
 			throw new RuntimeException( "Build directory does not exist." );
 		
-		if( !buildDir.isDirectory() )
+		if( !Files.exists( buildDir ) )
 			throw new RuntimeException( "Directory expected." );
 		
 		if( nthread < 1 )
@@ -66,7 +67,7 @@ public class LocalCreActor extends BaseCreActor {
 			log.debug( "Local CRE actor created with "+nthread+" threads." );
 	}
 	
-	public LocalCreActor( File buildDir ) {
+	public LocalCreActor( Path buildDir ) {
 		this( buildDir, Runtime.getRuntime().availableProcessors() );
 	}
 	

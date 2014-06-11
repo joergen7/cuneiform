@@ -176,8 +176,11 @@ public abstract class BaseRepl {
 		if( e != null )
 			s += " Exception: "+e;
 		
+		if( stdOut != null )
+			s += " Output channel: \""+stdOut.replace( '\n', ' ' )+"\"";
+
 		if( stdErr != null )
-			s += " Error channel: "+stdErr.replace( '\n', ' ' );
+			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\"";
 		
 		if( log.isErrorEnabled() )
 			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
