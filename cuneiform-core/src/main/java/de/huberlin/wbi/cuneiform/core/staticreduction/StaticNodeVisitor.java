@@ -14,6 +14,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
@@ -39,7 +40,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
 		SingleExpr se;
 		NativeLambdaExpr lambda;
 		NameExpr targetNameExpr;
@@ -119,7 +120,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(NameExpr nameExpr) {
+	public CompoundExpr accept(NameExpr nameExpr) throws HasFailedException {
 		CompoundExpr result;
 		SingleExpr se;
 		
@@ -143,7 +144,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CurryExpr curryExpr) {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
 		Prototype originalPrototype;
 		SingleExpr se;
 		LambdaExpr lambdaExpr;
@@ -258,7 +259,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CondExpr condExpr) {
+	public CompoundExpr accept(CondExpr condExpr) throws HasFailedException {
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
 		List<NameExpr> outputList;
@@ -351,7 +352,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CompoundExpr ce) {
+	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException {
 		CompoundExpr result, intermediate;
 		
 		if( ce == null )
@@ -377,7 +378,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
 		
 		CompoundExpr result;
 		

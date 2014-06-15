@@ -37,10 +37,10 @@ import de.huberlin.wbi.cuneiform.core.actormodel.Message;
 
 public abstract class BaseCreActor extends Actor {
 	
-	public abstract void processMsg( TicketReadyMsg msg );
+	protected abstract void processMsg( TicketReadyMsg msg );
 	
 	@Override
-	public synchronized void processMsg( Message msg ) {
+	protected synchronized void processMsg( Message msg ) {
 		
 		if( msg instanceof TicketReadyMsg ) {
 			

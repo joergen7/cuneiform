@@ -72,7 +72,7 @@ public class LocalCreActor extends BaseCreActor {
 	}
 	
 	@Override
-	public synchronized void processMsg( TicketReadyMsg msg ) {
+	protected void processMsg( TicketReadyMsg msg ) {
 		
 		LocalThread localThread;
 		Actor sender;

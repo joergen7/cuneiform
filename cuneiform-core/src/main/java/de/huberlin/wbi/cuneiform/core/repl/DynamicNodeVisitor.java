@@ -48,6 +48,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
@@ -58,18 +59,18 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SingleExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
-import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
+import de.huberlin.wbi.cuneiform.core.ticketsrc.NodeVisitorTicketSrc;
 
 public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
-	private final TicketSrcActor ticketSrc;
+	private final NodeVisitorTicketSrc ticketSrc;
 	private final BaseRepl repl;
 	private final UUID queryId;
 	private BaseBlock currentBlock;
 	private final LinkedList<BaseBlock> blockStack;
 	private final Log log;
 	
-	public DynamicNodeVisitor( TicketSrcActor ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
+	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
 		
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source must not be null." );
@@ -88,7 +89,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( NameExpr nameExpr ) {
+	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException {
 		
 		try {
 			return currentBlock.getExpr( nameExpr ).visit( this );
@@ -99,7 +100,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CondExpr condExpr ) {
+	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException {
 		
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
@@ -195,7 +196,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		ApplyExpr applyExpr1;
 		CompoundExpr taskExpr1;
@@ -303,7 +304,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
 	
 	@Override
-	public CompoundExpr accept( CompoundExpr ce ) {
+	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException {
 		
 		CompoundExpr result, intermediate;
 		
@@ -324,7 +325,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CurryExpr curryExpr) {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
 			
 			Prototype originalPrototype;
 			SingleExpr se;
@@ -460,17 +461,22 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		CompoundExpr ce;
 		long tic, toc;
 		
-		tic = System.currentTimeMillis();
-		ce = currentBlock.visit( this );
-		toc = System.currentTimeMillis();
-		
-		if( log.isDebugEnabled() )
-			log.debug( "Completed reduction step in "+( toc-tic )+" ms." );
-		
-		if( ticketSrc.isQueueClear( queryId ) ) {
-			repl.queryFinished( queryId, ce );
-			return;
-		}		
+		try {
+			tic = System.currentTimeMillis();
+			ce = currentBlock.visit( this );
+			toc = System.currentTimeMillis();
+			
+			if( log.isDebugEnabled() )
+				log.debug( "Completed reduction step in "+( toc-tic )+" ms." );
+			
+			if( ticketSrc.isQueueClear( queryId ) ) {
+				repl.queryFinished( queryId, ce );
+				return;
+			}
+		}
+		catch( HasFailedException e ) {
+			// just drop out; we trust the error has been handled properly
+		}
 	}
 	
 	public CompoundExpr getCurrentExpr() {
@@ -492,7 +498,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	}
 
-	private CompoundExpr combineParam( ApplyExpr applyExpr ) {
+	private CompoundExpr combineParam( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		EnumHelper helper;
 		int i, n;
@@ -602,7 +608,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		currentBlock = block;
 	}
 	
-	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) {
+	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		CompoundExpr taskExpr, ce, ce0;
 		SingleExpr se;
@@ -690,7 +696,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		return ce0;
 	}
 	
-	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) {
+	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		CompoundExpr taskResult;
 		SingleExpr se;
@@ -754,7 +760,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
 		
 		CompoundExpr result;
 		

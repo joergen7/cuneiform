@@ -32,6 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
+
 public class CurryExpr extends BaseBlock implements SingleExpr {
 
 	private CompoundExpr taskExpr;
@@ -87,7 +88,7 @@ public class CurryExpr extends BaseBlock implements SingleExpr {
 	}
 	
 	@Override
-	public <T> T visit(NodeVisitor<? extends T> visitor) {
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException {
 		return visitor.accept( this );
 	}
 

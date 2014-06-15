@@ -46,6 +46,7 @@ import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
@@ -55,7 +56,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ReduceVar;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
-public class TicketSrcActor extends Actor {
+public class TicketSrcActor extends Actor implements ReplTicketSrc {
 	
 	private final Set<BaseRepl> replSet;
 	private final Map<UUID,Set<Ticket>> queryTicketMap;
@@ -63,6 +64,7 @@ public class TicketSrcActor extends Actor {
 	private final Map<Long,Ticket> cacheMap;
 	private final UUID runId;
 	private final BaseCreActor cre;
+	private final Set<UUID> failedQuerySet;
 	
 	
 	public TicketSrcActor( BaseCreActor cre ) {
@@ -76,19 +78,18 @@ public class TicketSrcActor extends Actor {
 		cacheMap = new HashMap<>();
 		replSet = new HashSet<>();
 		runId = UUID.randomUUID();
+		failedQuerySet = new HashSet<>();
 
 		if( log.isDebugEnabled() )
 			log.debug( "New TicketSrcActor's UUID: "+runId );
 	}
-	
+		
+	@Override
 	public synchronized Set<Ticket> getTicketSet( UUID queryId ) {
 		return queryTicketMap.get( queryId );
 	}
-	
-	public synchronized UUID getRunId() {
-		return runId;
-	}
-	
+		
+	@Override
 	public synchronized boolean isQueueClear( UUID queryId ) {
 		
 		Set<Ticket> set;
@@ -105,12 +106,11 @@ public class TicketSrcActor extends Actor {
 	}
 	
 	@Override
-	public synchronized void processMsg( Message msg ) {
+	protected void processMsg( Message msg ) {
 
 		TicketFinishedMsg ticketFinishedMsg;
 		TicketFailedMsg ticketFailedMsg;
 		Ticket ticket;
-		Set<Ticket> ticketSet;
 		Set<UUID> queryIdSet;
 		String script, stdOut, stdErr;
 		long ticketId;
@@ -122,21 +122,12 @@ public class TicketSrcActor extends Actor {
 			ticket = ticketFinishedMsg.getTicket();
 			ticketId = ticket.getTicketId();
 			
-			for( UUID queryId : ticketQueryMap.get( ticket ) ) {
-			
-				ticketSet = queryTicketMap.get( queryId );
-				if( ticketSet == null )
-					throw new NullPointerException( "queryTicketMap does not contain query "+queryId );
-					
-				if( !ticketSet.remove( ticket ) )
-					throw new RuntimeException( "Inconsistent map information." );
-				
+			for( UUID queryId : ticketQueryMap.get( ticket ) )				
 				for( BaseRepl repl : replSet )
 					if( repl.isRunning( queryId ) )
 						repl.ticketFinished( queryId, ticketId, ticketFinishedMsg.getReportEntrySet() );				
-			}
 			
-			ticketQueryMap.remove( ticket );
+			clearTicket( ticket );
 			
 			return;
 		}
@@ -160,11 +151,13 @@ public class TicketSrcActor extends Actor {
 						if( repl.isRunning( queryId ) )
 							repl.queryFailed( queryId, ticketId, e, script, stdOut, stdErr );
 				
-				for( UUID queryId : queryIdSet )
-					queryTicketMap.remove( queryId );
+				for( UUID queryId : queryIdSet ) {
+					clearQuery( queryId );
+					failedQuerySet.add( queryId );
+				}
 			}
 			
-			ticketQueryMap.remove( ticket );
+			clearTicket( ticket );
 			cacheMap.remove( ticketId );
 			
 			return;
@@ -173,7 +166,8 @@ public class TicketSrcActor extends Actor {
 		throw new RuntimeException( "Message type "+msg.getClass()+" not recognized." );
 	}
 	
-	public synchronized QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) {
+	@Override
+	public synchronized QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr ) throws HasFailedException {
 		
 		CompoundExpr ce;
 		int channel;
@@ -191,6 +185,9 @@ public class TicketSrcActor extends Actor {
 		
 		if( repl == null )
 			throw new NullPointerException( "REPL actor must not be null." );
+		
+		if( failedQuerySet.contains( queryId ) )
+			throw new HasFailedException( "Query "+queryId+" has already failed. Dropping request." );
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Requesting ticket for "+applyExpr.toString().replace( '\n', ' ') );
@@ -270,7 +267,9 @@ public class TicketSrcActor extends Actor {
 	}
 
 	@Override
-	protected void shutdown() {}
+	protected void shutdown() {
+		// nothing to do
+	}
 	
 	private void putTicket( UUID queryId, Ticket ticket ) {
 		
@@ -302,6 +301,20 @@ public class TicketSrcActor extends Actor {
 		uuidSet.add( queryId );
 		
 
+	}
+	
+	private void clearTicket( Ticket ticket ) {
+		
+		ticketQueryMap.remove( ticket );
+		for( Set<Ticket> ticketSet : queryTicketMap.values() )
+			ticketSet.remove( ticket );
+	}
+	
+	private void clearQuery( UUID queryId ) {
+		
+		queryTicketMap.remove( queryId );
+		for( Set<UUID> querySet : ticketQueryMap.values() )
+			querySet.remove( queryId );
 	}
 
 }

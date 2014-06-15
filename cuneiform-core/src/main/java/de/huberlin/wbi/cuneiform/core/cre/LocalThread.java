@@ -174,12 +174,15 @@ public class LocalThread implements Runnable {
 						
 						signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
 						srcPath = buildDir.resolve( signature ).resolve( filename );				
+						Files.createSymbolicLink( destPath, srcPath );
 					}
-					else
-						
-						srcPath = callLocation.resolve( filename );
+					else						
+						if( filename.charAt( 0 ) != '/' ) {
+							
+							srcPath = callLocation.resolve( filename );
+							Files.createSymbolicLink( destPath, srcPath );
+						}
 					
-					Files.createSymbolicLink( destPath, srcPath );
 				}
 				
 				// run script

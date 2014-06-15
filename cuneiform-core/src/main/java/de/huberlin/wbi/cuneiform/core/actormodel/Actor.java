@@ -82,7 +82,7 @@ public abstract class Actor implements Runnable {
 
 	}
 	
-	public abstract void processMsg( Message msg );
+	protected abstract void processMsg( Message msg );
 
 	@Override
 	public void run() {

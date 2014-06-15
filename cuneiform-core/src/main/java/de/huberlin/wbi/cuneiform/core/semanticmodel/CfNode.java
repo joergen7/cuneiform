@@ -32,6 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
+
 public interface CfNode {
-	public <T> T visit(NodeVisitor<? extends T> visitor);
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException;
 }

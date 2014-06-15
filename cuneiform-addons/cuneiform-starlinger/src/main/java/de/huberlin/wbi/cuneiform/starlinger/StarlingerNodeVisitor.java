@@ -12,6 +12,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.DataType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.DrawParam;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaType;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
@@ -115,7 +116,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CondExpr condExpr) {
+	public String accept(CondExpr condExpr) throws HasFailedException {
 		
 		String nodeId;
 		String childId;
@@ -150,7 +151,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(ApplyExpr applyExpr) {
+	public String accept(ApplyExpr applyExpr) throws HasFailedException {
 		String taskNodeId, refNodeId, taskName;
 		SingleExpr se;
 		StarlingerNode starlingerNode;
@@ -208,7 +209,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CompoundExpr compoundExpr) {
+	public String accept(CompoundExpr compoundExpr) throws HasFailedException {
 		
 		String nodeId;
 		int n;
@@ -278,7 +279,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CurryExpr curryExpr) {
+	public String accept(CurryExpr curryExpr) throws HasFailedException {
 		String taskNodeId, refNodeId;
 		StarlingerNode starlingerNode;
 		
@@ -324,7 +325,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept( TopLevelContext tlc ) {
+	public String accept( TopLevelContext tlc ) throws HasFailedException {
 		
 		for( CompoundExpr ce : tlc.getTargetList() )
 			ce.visit( this );

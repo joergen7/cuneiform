@@ -254,7 +254,7 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
-	public <T> T visit(NodeVisitor<? extends T> visitor) {
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException {
 		return visitor.accept(this);
 	}
 }

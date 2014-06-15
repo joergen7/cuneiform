@@ -42,19 +42,23 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
-import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
+import de.huberlin.wbi.cuneiform.core.ticketsrc.ReplTicketSrc;
 
 public class CmdlineRepl extends BaseRepl {
 
-	public CmdlineRepl( TicketSrcActor ticketSrc ) {
+	public CmdlineRepl( ReplTicketSrc ticketSrc ) {
 		super( ticketSrc );
 	}
 
 	@Override
-	public synchronized void queryFinishedPost( UUID queryId, CompoundExpr result ) {}
+	public synchronized void queryFinishedPost( UUID queryId, CompoundExpr result ) {
+		// nothing to do
+	}
 
 	@Override
-	public synchronized void queryStartedPost( UUID runId ) {}
+	public synchronized void queryStartedPost( UUID runId ) {
+		// nothing to do
+	}
 	
 	@Override
 	public synchronized void queryFailedPost( UUID queryId, Long ticketId, Exception e, String script, String stdOut, String stdErr ) {

@@ -25,7 +25,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SingleExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
-import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
+import de.huberlin.wbi.cuneiform.core.ticketsrc.ReplTicketSrc;
 
 public abstract class BaseRepl {
 
@@ -40,13 +40,13 @@ public abstract class BaseRepl {
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
-	private final TicketSrcActor ticketSrc;
+	private final ReplTicketSrc ticketSrc;
 	private final Log log;
 	private final Log statLog;
 	private CompoundExpr ans;
 
 
-	public BaseRepl( TicketSrcActor ticketSrc ) {
+	public BaseRepl( ReplTicketSrc ticketSrc ) {
 
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source actor must not be null." );

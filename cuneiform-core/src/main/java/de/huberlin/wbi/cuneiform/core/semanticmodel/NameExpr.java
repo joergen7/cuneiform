@@ -131,7 +131,7 @@ public class NameExpr implements SingleExpr, Param, Comparable<NameExpr> {
 		return arg0.getId().compareTo( id );
 	}
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
 		return visitor.accept( this );
 	}
 
