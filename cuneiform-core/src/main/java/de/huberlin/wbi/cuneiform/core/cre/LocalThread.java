@@ -35,6 +35,7 @@ package de.huberlin.wbi.cuneiform.core.cre;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,6 +109,7 @@ public class LocalThread implements Runnable {
 		long tic, toc;
 		JSONObject obj;
 		Message msg;
+		Charset cs;
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
@@ -120,6 +122,7 @@ public class LocalThread implements Runnable {
 		lockMarker = null;
 		script = null;
 		successMarker = null;
+		cs = Charset.forName( "UTF-8" );
 		try {
 					
 			if( invoc == null )
@@ -150,12 +153,12 @@ public class LocalThread implements Runnable {
 							PosixFilePermissions.fromString( "rwxr-x---" ) ) );
 				
 				// write executable script
-				try( BufferedWriter writer = Files.newBufferedWriter( scriptFile ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( scriptFile, cs ) ) {
 					writer.write( script );
 				}
 				
 				// write executable log entry
-				try( BufferedWriter writer = Files.newBufferedWriter( reportFile ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs ) ) {
 					writer.write( ticket.getExecutableLogEntry().toString() );
 					writer.write( '\n' );
 				}
@@ -201,7 +204,7 @@ public class LocalThread implements Runnable {
 				toc = System.currentTimeMillis();
 				
 				
-				try( BufferedWriter writer = Files.newBufferedWriter( reportFile ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs ) ) {
 					
 					obj = new JSONObject();
 					obj.put( JsonReportEntry.LABEL_REALTIME, toc-tic );
@@ -210,7 +213,7 @@ public class LocalThread implements Runnable {
 					writer.write( entry.toString() );
 					writer.write( '\n' );
 					
-					try( BufferedReader reader = Files.newBufferedReader( stdOutFile ) ) {
+					try( BufferedReader reader = Files.newBufferedReader( stdOutFile, cs ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
@@ -226,7 +229,7 @@ public class LocalThread implements Runnable {
 						}
 					}
 					
-					try( BufferedReader reader = Files.newBufferedReader( stdErrFile ) ) {
+					try( BufferedReader reader = Files.newBufferedReader( stdErrFile, cs ) ) {
 						
 						buf = new StringBuffer();
 						while( ( line = reader.readLine() ) != null )
@@ -257,7 +260,7 @@ public class LocalThread implements Runnable {
 			
 			// gather report
 			report = new HashSet<>();
-			try( BufferedReader reader = Files.newBufferedReader( reportFile ) ) {
+			try( BufferedReader reader = Files.newBufferedReader( reportFile, cs ) ) {
 				
 				while( ( line = reader.readLine() ) != null ) {
 					
