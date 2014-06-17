@@ -83,7 +83,11 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 		if( log.isDebugEnabled() )
 			log.debug( "New TicketSrcActor's UUID: "+runId );
 	}
-		
+	
+	public UUID getRunId() {
+		return runId;
+	}
+	
 	@Override
 	public synchronized Set<Ticket> getTicketSet( UUID queryId ) {
 		return queryTicketMap.get( queryId );
