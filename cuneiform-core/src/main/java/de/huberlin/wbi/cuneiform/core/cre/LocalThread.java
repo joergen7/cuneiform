@@ -40,6 +40,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.Set;
@@ -131,9 +132,9 @@ public class LocalThread implements Runnable {
 
 			callLocation = Paths.get( "." );
 			location = buildDir.resolve( String.valueOf( invoc.getTicketId() ) );
-			lockMarker = buildDir.resolve( Invocation.LOCK_FILENAME );
-			successMarker = buildDir.resolve( Invocation.SUCCESS_FILENAME );
-			reportFile = buildDir.resolve( Invocation.REPORT_FILENAME );
+			lockMarker = location.resolve( Invocation.LOCK_FILENAME );
+			successMarker = location.resolve( Invocation.SUCCESS_FILENAME );
+			reportFile = location.resolve( Invocation.REPORT_FILENAME );
 			script = invoc.toScript();
 			
 			if( Files.exists( lockMarker ) )
@@ -153,12 +154,12 @@ public class LocalThread implements Runnable {
 							PosixFilePermissions.fromString( "rwxr-x---" ) ) );
 				
 				// write executable script
-				try( BufferedWriter writer = Files.newBufferedWriter( scriptFile, cs ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( scriptFile, cs, StandardOpenOption.CREATE ) ) {
 					writer.write( script );
 				}
 				
 				// write executable log entry
-				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs, StandardOpenOption.CREATE ) ) {
 					writer.write( ticket.getExecutableLogEntry().toString() );
 					writer.write( '\n' );
 				}
@@ -204,7 +205,7 @@ public class LocalThread implements Runnable {
 				toc = System.currentTimeMillis();
 				
 				
-				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs ) ) {
+				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs, StandardOpenOption.APPEND ) ) {
 					
 					obj = new JSONObject();
 					obj.put( JsonReportEntry.LABEL_REALTIME, toc-tic );

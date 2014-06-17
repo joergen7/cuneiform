@@ -317,8 +317,8 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 	public void reportAttemptingFullContext( Parser arg0, DFA arg1, int arg2,
 			int arg3, BitSet arg4, ATNConfigSet arg5 ) {
 		
-		if( log.isDebugEnabled() )
-			log.debug( "Attempting full context." );
+		if( log.isTraceEnabled() )
+			log.trace( "Attempting full context." );
 
 	}
 
@@ -326,8 +326,8 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 	public void reportContextSensitivity( Parser arg0, DFA arg1, int arg2,
 			int arg3, int arg4, ATNConfigSet arg5) {
 		
-		if( log.isDebugEnabled() )
-			log.debug( "Context sensitivity detected." );
+		if( log.isTraceEnabled() )
+			log.trace( "Context sensitivity detected." );
 	}
 
 	

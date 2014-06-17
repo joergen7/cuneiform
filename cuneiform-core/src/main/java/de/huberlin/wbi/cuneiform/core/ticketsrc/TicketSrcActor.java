@@ -115,23 +115,27 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 		TicketFinishedMsg ticketFinishedMsg;
 		TicketFailedMsg ticketFailedMsg;
 		Ticket ticket;
-		Set<UUID> queryIdSet;
 		String script, stdOut, stdErr;
 		long ticketId;
 		Exception e;
+		Set<UUID> querySet;
 		
+
 		if( msg instanceof TicketFinishedMsg ) {
 			
 			ticketFinishedMsg = ( TicketFinishedMsg )msg;
 			ticket = ticketFinishedMsg.getTicket();
 			ticketId = ticket.getTicketId();
-			
-			for( UUID queryId : ticketQueryMap.get( ticket ) )				
-				for( BaseRepl repl : replSet )
-					if( repl.isRunning( queryId ) )
-						repl.ticketFinished( queryId, ticketId, ticketFinishedMsg.getReportEntrySet() );				
-			
+			querySet = ticketQueryMap.get( ticket );
+
 			clearTicket( ticket );
+
+			if( querySet != null )
+				for( UUID queryId : querySet )				
+					for( BaseRepl repl : replSet )
+						if( repl.isRunning( queryId ) )
+							repl.ticketFinished( queryId, ticketId, ticketFinishedMsg.getReportEntrySet() );				
+				
 			
 			return;
 		}
@@ -146,23 +150,24 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 			stdOut = ticketFailedMsg.getStdOut();
 			stdErr = ticketFailedMsg.getStdErr();
 			e = ticketFailedMsg.getException();
+			querySet = ticketQueryMap.get( ticket );
+
+			clearTicket( ticket );
+			cacheMap.remove( ticketId );
 			
-			queryIdSet = ticketQueryMap.get( ticket );
-			if( queryIdSet != null ) {
+			if( querySet != null ) {
 			
-				for( UUID queryId : queryIdSet )
+				for( UUID queryId : querySet )
 					for( BaseRepl repl : replSet )
 						if( repl.isRunning( queryId ) )
 							repl.queryFailed( queryId, ticketId, e, script, stdOut, stdErr );
 				
-				for( UUID queryId : queryIdSet ) {
+				for( UUID queryId : querySet ) {
 					clearQuery( queryId );
 					failedQuerySet.add( queryId );
 				}
 			}
 			
-			clearTicket( ticket );
-			cacheMap.remove( ticketId );
 			
 			return;
 		}
