@@ -235,7 +235,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	public String fileSize( String filename ) {
-		return "file.info( "+quote( filename )+" )$size";
+		return "file.info( "+quote( filename )+" )$size/1024";
 	}
 
 	@Override
