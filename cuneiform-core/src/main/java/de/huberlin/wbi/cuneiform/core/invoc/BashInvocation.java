@@ -369,7 +369,8 @@ public class BashInvocation extends Invocation {
 
 	@Override
 	protected String fileSize(String filename) {
-		return "`du -b -L "+filename+" | awk '{print $1}'`";
+		// return "`du -b -L "+filename+" | awk '{print $1}'`";
+		return "`stat -c %s "+filename+"`";
 	}
 
 	@Override
