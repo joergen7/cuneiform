@@ -261,7 +261,7 @@ public class BashInvocation extends Invocation {
 		buf = new StringBuffer();
 		
 		buf.append( "echo -e \"{" ).append( JsonReportEntry.ATT_TIMESTAMP )
-		.append( ":`date +%s%N | cut -b1-13`," )
+		.append( ':' ).append( System.currentTimeMillis() ).append( ',' )
 		.append( JsonReportEntry.ATT_RUNID ).append( ":\\\"" )
 		.append( getRunId() ).append( "\\\"," )
 		.append( JsonReportEntry.ATT_TASKID ).append( ':' )
