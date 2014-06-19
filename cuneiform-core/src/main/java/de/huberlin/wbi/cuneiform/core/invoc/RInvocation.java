@@ -297,7 +297,7 @@ public class RInvocation extends Invocation {
 			+"if( mode( value ) != \"character\" )\n"
 			+"stop( \"Expected key to be of type 'value'.\" )\n"
 			+"write( paste( \"{"
-			+JsonReportEntry.ATT_TIMESTAMP+":\", round( 1000*unclass( Sys.time() ) ), \","
+			+JsonReportEntry.ATT_TIMESTAMP+":"+System.currentTimeMillis()+","
 			+JsonReportEntry.ATT_RUNID+":\\\""+getRunId()+"\\\","
 			+JsonReportEntry.ATT_TASKID+":"+getTaskId()+","
 			+JsonReportEntry.ATT_TASKNAME+":"+getTaskName()+","
