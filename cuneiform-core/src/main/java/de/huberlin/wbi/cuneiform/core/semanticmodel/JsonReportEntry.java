@@ -49,7 +49,8 @@ public class JsonReportEntry {
 	public static final String KEY_INVOC_STDERR = "invoc-stderr";
 	public static final String KEY_INVOC_USER = "invoc-user";
 	public static final String KEY_INVOC_EXEC = "invoc-exec";
-	
+	public static final String KEY_REDUCTION_TIME = "reduction-time";
+
 	public static final String ATT_INVOCID = "invocId";
 	public static final String ATT_KEY = "key";
 	public static final String ATT_RUNID = "runId";
@@ -61,7 +62,7 @@ public class JsonReportEntry {
 	public static final String ATT_FILE = "file";
 	
 	public static final String LABEL_REALTIME = "realTime";
-
+	
 	private UUID runId;
 	private Long invocId;
 	private String key;

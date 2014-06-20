@@ -49,6 +49,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
@@ -69,6 +70,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	private BaseBlock currentBlock;
 	private final LinkedList<BaseBlock> blockStack;
 	private final Log log;
+	private final Log statLog;
 	
 	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
 		
@@ -84,6 +86,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		queryId = UUID.randomUUID();
 		blockStack = new LinkedList<>();
 		log = LogFactory.getLog( DynamicNodeVisitor.class );
+		statLog = LogFactory.getLog( "statLogger" );
 
 		setTopLevelContext( tlc );
 	}
@@ -466,8 +469,8 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 			ce = currentBlock.visit( this );
 			toc = System.currentTimeMillis();
 			
-			if( log.isDebugEnabled() )
-				log.debug( "Completed reduction step in "+( toc-tic )+" ms." );
+			if( statLog.isDebugEnabled() )
+				statLog.debug( new JsonReportEntry( ticketSrc.getRunId(), null, null, null, null, null, JsonReportEntry.KEY_REDUCTION_TIME, String.valueOf( toc-tic ) ) );
 			
 			if( ticketSrc.isQueueClear( queryId ) ) {
 				repl.queryFinished( queryId, ce );

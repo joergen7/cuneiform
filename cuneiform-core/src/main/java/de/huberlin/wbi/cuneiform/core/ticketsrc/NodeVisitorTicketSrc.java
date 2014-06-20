@@ -9,6 +9,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 
 public interface NodeVisitorTicketSrc {
 
+	public UUID getRunId();
 	public boolean isQueueClear( UUID queryId )throws HasFailedException;
 	public QualifiedTicket requestTicket( BaseRepl repl, UUID queryId, ApplyExpr applyExpr )throws HasFailedException;
 }

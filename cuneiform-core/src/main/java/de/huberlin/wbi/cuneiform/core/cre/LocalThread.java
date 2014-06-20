@@ -69,27 +69,27 @@ public class LocalThread implements Runnable {
 	public LocalThread(TicketSrcActor ticketSrc, BaseCreActor cre,
 			Ticket ticket, Path buildDir) {
 
-		if (buildDir == null)
-			throw new NullPointerException("Build directory must not be null.");
+		if( buildDir == null )
+			throw new NullPointerException( "Build directory must not be null." );
 
-		if (!Files.exists(buildDir))
-			throw new RuntimeException("Build directory does not exist.");
+		if( !Files.exists(buildDir) )
+			throw new RuntimeException( "Build directory does not exist." );
 
-		if (!Files.isDirectory(buildDir))
+		if( !Files.isDirectory(buildDir) )
 			throw new RuntimeException("Directory expected.");
 
-		if (cre == null)
-			throw new NullPointerException("CRE actor must not be null.");
+		if( cre == null )
+			throw new NullPointerException( "CRE actor must not be null." );
 
-		if (ticketSrc == null)
-			throw new NullPointerException("Ticket source must not be null.");
+		if( ticketSrc == null )
+			throw new NullPointerException( "Ticket source must not be null." );
 
 		this.ticketSrc = ticketSrc;
 		this.cre = cre;
 		this.buildDir = buildDir;
 
-		invoc = Invocation.createInvocation(ticket);
-		log = LogFactory.getLog(LocalThread.class);
+		invoc = Invocation.createInvocation( ticket );
+		log = LogFactory.getLog( LocalThread.class );
 	}
 
 	@Override
