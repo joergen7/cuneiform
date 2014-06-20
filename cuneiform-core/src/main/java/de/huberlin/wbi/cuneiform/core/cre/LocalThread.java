@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -130,7 +131,7 @@ public class LocalThread implements Runnable {
 				throw new NullPointerException( "Invocation must not be null." );
 
 
-			callLocation = Paths.get( "." );
+			callLocation = Paths.get( System.getProperty( "user.dir" ) );
 			location = buildDir.resolve( String.valueOf( invoc.getTicketId() ) );
 			lockMarker = location.resolve( Invocation.LOCK_FILENAME );
 			successMarker = location.resolve( Invocation.SUCCESS_FILENAME );
@@ -326,7 +327,7 @@ public class LocalThread implements Runnable {
 	
 	private static void deleteIfExists( Path f ) throws IOException {
 		
-		if( !Files.exists( f ) )
+		if( !Files.exists( f, LinkOption.NOFOLLOW_LINKS ) )
 			return;
 		
 		if( Files.isDirectory( f ) )
