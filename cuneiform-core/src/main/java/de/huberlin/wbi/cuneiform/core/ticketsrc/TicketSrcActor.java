@@ -132,10 +132,11 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 			clearTicket( ticket );
 
 			if( querySet != null )
-				for( UUID queryId : querySet )				
+				for( UUID queryId : querySet )					
 					for( BaseRepl repl : replSet )
 						if( repl.isRunning( queryId ) )
-							repl.ticketFinished( queryId, ticketId, ticketFinishedMsg.getReportEntrySet() );				
+							repl.ticketFinished( queryId, ticketId, ticketFinishedMsg.getReportEntrySet() );
+			
 				
 			
 			return;
@@ -291,6 +292,9 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 		
 		if( ticket == null )
 			throw new NullPointerException( "Ticket must not be null." );
+		
+		if( ticket.isEvaluated() )
+			return;
 		
 		ticketSet = queryTicketMap.get( queryId );
 		if( ticketSet == null ) {
