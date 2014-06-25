@@ -90,12 +90,12 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 	}
 	
 	@Override
-	public synchronized Set<Ticket> getTicketSet( UUID queryId ) {
+	public Set<Ticket> getTicketSet( UUID queryId ) {
 		return queryTicketMap.get( queryId );
 	}
 		
 	@Override
-	public synchronized boolean isQueueClear( UUID queryId ) {
+	public boolean isQueueClear( UUID queryId ) {
 		
 		Set<Ticket> set;
 		
@@ -107,7 +107,7 @@ public class TicketSrcActor extends Actor implements ReplTicketSrc {
 		if( set == null )
 			return true;
 		
-		return set.isEmpty();		
+		return set.isEmpty();
 	}
 	
 	@Override
