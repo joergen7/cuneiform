@@ -1,1 +1,1 @@
-java -cp "/usr/cuneiform/bin:/usr/cuneiform/bin/*:/usr/cuneiform/lib/*" de.huberlin.wbi.cuneiform.cmdline.main.Main $@
+java -cp "/usr/cuneiform/:/usr/cuneiform/bin/*:/usr/cuneiform/lib/*" de.huberlin.wbi.cuneiform.cmdline.main.Main $@
