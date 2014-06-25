@@ -59,6 +59,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SemanticModelException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.SingleExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.NodeVisitorTicketSrc;
 
@@ -463,6 +464,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		CompoundExpr ce;
 		long tic, toc;
+		StringBuffer buf;
 		
 		try {
 			tic = System.currentTimeMillis();
@@ -485,8 +487,19 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				return;
 			}
 			
-			if( log.isDebugEnabled() )
-				log.debug( "Queue is not empty. "+queryId+" waits for "+ticketSrc.getTicketSet( queryId ) );
+			if( log.isDebugEnabled() ) {
+				
+				buf = new StringBuffer();
+				
+				buf.append( "Queue is not empty. " ).append( queryId ).append( " waits for [ " );
+				for( Ticket t : ticketSrc.getTicketSet( queryId ) )
+					buf.append( t.getTicketId() ).append( ' ' );
+				buf.append( ']' );
+				
+				log.debug( buf.toString() );
+			}
+				
+			
 		}
 		catch( HasFailedException e ) {
 			// just drop out; we trust the error has been handled properly
