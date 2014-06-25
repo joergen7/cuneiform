@@ -472,10 +472,21 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 			if( statLog.isDebugEnabled() )
 				statLog.debug( new JsonReportEntry( ticketSrc.getRunId(), null, null, null, null, null, JsonReportEntry.KEY_REDUCTION_TIME, String.valueOf( toc-tic ) ) );
 			
+			if( log.isDebugEnabled() )
+				log.debug( "Checking if queue is clear ..." );
+			
 			if( ticketSrc.isQueueClear( queryId ) ) {
+				
+				if( log.isDebugEnabled() )
+					log.debug( "Queue is clear. Finishing query "+queryId+"." );
+
 				repl.queryFinished( queryId, ce );
+				
 				return;
 			}
+			
+			if( log.isDebugEnabled() )
+				log.debug( "Queue is not empty. "+queryId+" waits for "+ticketSrc.getTicketSet( queryId ) );
 		}
 		catch( HasFailedException e ) {
 			// just drop out; we trust the error has been handled properly
