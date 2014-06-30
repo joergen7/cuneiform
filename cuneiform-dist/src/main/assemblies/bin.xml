@@ -8,6 +8,13 @@
 		<format>tar.gz</format>
 		<format>zip</format>
 	</formats>
+	
+	<fileSets>
+		<fileSet>
+			<directory>src/main/scripts</directory>
+			<outputDirectory>cuneiform-${project.version}</outputDirectory>
+		</fileSet>
+	</fileSets>
 
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<baseDirectory>cuneiform-${project.version}</baseDirectory>
@@ -34,11 +41,6 @@
 			<includes>
 				<include>de.huberlin.wbi.cuneiform:cuneiform-cmdline</include>
 			</includes>
-
-			<!-- <excludes> -->
-			<!-- <exclude>**/*javadoc*</exclude> -->
-			<!-- <exclude>**/*sources*</exclude> -->
-			<!-- </excludes> -->
 		</dependencySet>
 
 	</dependencySets>
