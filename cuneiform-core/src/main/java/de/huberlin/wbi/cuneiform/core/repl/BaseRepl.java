@@ -36,13 +36,12 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0";
-	public static final String LABEL_BUILD = "2014-06-30";
+	public static final String LABEL_BUILD = "2014-07-01";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
 	private final ReplTicketSrc ticketSrc;
 	private final Log log;
-	private final Log statLog;
 	private CompoundExpr ans;
 
 
@@ -56,7 +55,6 @@ public abstract class BaseRepl {
 		runningMap = new HashMap<>();
 		state = new CfSemanticModelVisitor();
 		log = LogFactory.getLog( BaseRepl.class );
-		statLog = LogFactory.getLog( "statLogger" );
 	}
 	
 	public CompoundExpr getAns() {
@@ -237,11 +235,11 @@ public abstract class BaseRepl {
 		if( log.isDebugEnabled() )
 			log.debug( "Ticket finished: "+ticketId+" part of query "+queryId );
 		
-		if( statLog.isDebugEnabled() )
-			for( JsonReportEntry entry : reportEntrySet )
-				statLog.debug( entry );
+		flushStatLog( reportEntrySet );
 			
 	}
+	
+	protected abstract void flushStatLog( Set<JsonReportEntry> reportEntrySet );
 	
 	public static String getLogo() {
 		
