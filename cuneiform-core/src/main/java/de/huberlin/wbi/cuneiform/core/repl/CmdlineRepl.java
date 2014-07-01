@@ -36,26 +36,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.util.Set;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.ReplTicketSrc;
 
 public class CmdlineRepl extends BaseRepl {
 	
-	private final Log statLog;
-
-
 	public CmdlineRepl( ReplTicketSrc ticketSrc ) {
 		super( ticketSrc );
-		statLog = LogFactory.getLog( "statLogger" );
 	}
 
 	@Override
@@ -158,13 +150,4 @@ public class CmdlineRepl extends BaseRepl {
 		}
 		System.out.println( "Bye." );
 	}
-
-	@Override
-	protected void flushStatLog(Set<JsonReportEntry> reportEntrySet ) {
-		
-		if( statLog.isDebugEnabled() )
-			for( JsonReportEntry entry : reportEntrySet )
-				statLog.debug( entry );
-		
-	}	
 }

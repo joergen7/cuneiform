@@ -43,6 +43,8 @@ public abstract class BaseRepl {
 	private final ReplTicketSrc ticketSrc;
 	private final Log log;
 	private CompoundExpr ans;
+	private final Log statLog;
+
 
 
 	public BaseRepl( ReplTicketSrc ticketSrc ) {
@@ -55,6 +57,7 @@ public abstract class BaseRepl {
 		runningMap = new HashMap<>();
 		state = new CfSemanticModelVisitor();
 		log = LogFactory.getLog( BaseRepl.class );
+		statLog = LogFactory.getLog( "statLogger" );
 	}
 	
 	public CompoundExpr getAns() {
@@ -239,7 +242,13 @@ public abstract class BaseRepl {
 			
 	}
 	
-	protected abstract void flushStatLog( Set<JsonReportEntry> reportEntrySet );
+	protected void flushStatLog(Set<JsonReportEntry> reportEntrySet ) {
+		
+		if( statLog.isDebugEnabled() )
+			for( JsonReportEntry entry : reportEntrySet )
+				statLog.debug( entry );
+		
+	}
 	
 	public static String getLogo() {
 		

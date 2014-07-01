@@ -203,6 +203,26 @@ public class JsonReportEntry {
 			value );
 	}
 	
+	@Override
+	public boolean equals( Object obj ) {
+		
+		JsonReportEntry other;
+		String s1, s2;
+		
+		if( obj == null )
+			throw new NullPointerException( "Object must not be null." );
+		
+		if( !( obj instanceof JsonReportEntry ) )
+			return false;
+		
+		other = ( JsonReportEntry )obj;
+		
+		s1 = toString();
+		s2 = other.toString();
+		
+		return s1.equals( s2 );
+	}
+	
 	public String getFile() {
 		return file;
 	}
@@ -428,5 +448,10 @@ public class JsonReportEntry {
 		buf.append( '}' );
 		
 		return buf.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
 	}
 }
