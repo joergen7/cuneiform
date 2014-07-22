@@ -275,6 +275,7 @@ public abstract class Invocation {
 	}
 
 	protected abstract String callFunction( String name, String... argValue );
+	protected abstract String callProcedure( String name, String... argValue );
 	protected abstract String clip( String varName );
 	protected abstract String comment( String comment );
 	protected abstract String copyArray( String from, String to );
@@ -399,7 +400,7 @@ public abstract class Invocation {
 		for( String outputName : getReduceOutputNameSet() ) {
 			
 			buf
-				.append( varDef( "CFSTR1", "" ) )
+				.append( varDef( "CFSTR1", quote( "" ) ) )
 				.append( 
 					forEach(
 						outputName,
@@ -435,7 +436,7 @@ public abstract class Invocation {
 						quote( "}" ) ) ) )
 						
 			.append(
-				callFunction(
+				callProcedure(
 					FUN_LOG,
 					quote( JsonReportEntry.KEY_INVOC_OUTPUT ),
 					dereference( "CFSTR" ) ) ).append( '\n' );
@@ -600,7 +601,7 @@ public abstract class Invocation {
 					.append( varDef( "SIZE", fileSize( dereference( inputName ) ) ) )
 						
 					.append(
-						callFunction(
+						callProcedure(
 							FUN_LOGFILE,
 							dereference( inputName ),
 							JsonReportEntry.KEY_FILE_SIZE_STAGEIN,
@@ -652,7 +653,7 @@ public abstract class Invocation {
 					.append( varDef( "SIZE", fileSize( dereference( outputName ) ) ) )
 						
 					.append(
-						callFunction(
+						callProcedure(
 							FUN_LOGFILE,
 							dereference( outputName ),
 							JsonReportEntry.KEY_FILE_SIZE_STAGEOUT,
@@ -692,6 +693,7 @@ public abstract class Invocation {
 		
 			case ForeignLambdaExpr.LANGID_BASH : return new BashInvocation( ticket );
 			case ForeignLambdaExpr.LANGID_R : return new RInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket );
 			default : throw new RuntimeException( "Language label not recognized." );
 		}
 	}

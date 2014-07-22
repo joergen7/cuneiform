@@ -254,6 +254,37 @@ public class BashInvocation extends Invocation {
 	}
 	
 	@Override
+	protected String callProcedure( String name, String... argValue ) {
+		
+		StringBuffer buf;
+		
+		if( name == null )
+			throw new NullPointerException( "Function name must not be null." );
+		
+		if( name.isEmpty() )
+			throw new RuntimeException( "Function name must not be empty." );
+		
+		if( argValue == null )
+			throw new NullPointerException( "Parameter bindings must not be null." );
+		
+		buf = new StringBuffer();
+		
+		buf.append( name );
+		
+		for( String value : argValue )
+			
+			if( value.trim().startsWith( "\"" ) && value.trim().endsWith( "\"" ) )
+				buf.append( ' ' ).append( value );
+			else
+				buf.append( " \"" ).append( value ).append( '"' );
+		
+		
+		buf.append( '\n' );
+		
+		return buf.toString();
+	}
+	
+	@Override
 	protected String defFunctionLog() throws NotDerivableException {
 		
 		StringBuffer buf;

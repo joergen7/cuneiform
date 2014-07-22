@@ -169,6 +169,30 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
+	public String callProcedure( String name, String... argValue ) {
+		
+		StringBuffer buf;
+		boolean comma;
+		
+		buf = new StringBuffer();
+		
+		buf.append( name ).append( "( " );
+		comma = false;
+		for( String arg : argValue ) {
+
+			if( comma )
+				buf.append( ", " );
+			comma = true;
+			
+			buf.append( arg );
+		}
+		
+		buf.append( " )\n" );
+		
+		return buf.toString();
+	}
+
+	@Override
 	public String newList( String listName ) {
 		return varDef( listName, "NULL" );
 	}
@@ -200,7 +224,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	public String raise( String msg ) {
-		return callFunction( "stop", msg );
+		return callProcedure( "stop", msg );
 	}
 
 	@Override
@@ -261,7 +285,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	public String symlink( String src, String dest ) {
-		return callFunction( "file.symlink", src, dest )+"\n";
+		return callProcedure( "file.symlink", src, dest )+"\n";
 	}
 
 	@Override
