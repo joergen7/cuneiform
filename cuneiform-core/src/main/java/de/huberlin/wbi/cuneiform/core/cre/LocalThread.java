@@ -59,6 +59,9 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class LocalThread implements Runnable {
+	
+	private static final int WAIT_INTERVAL = 100;
+	private static final int MAX_TRIALS = 4;
 
 	private final Invocation invoc;
 	private final Log log;
@@ -112,6 +115,9 @@ public class LocalThread implements Runnable {
 		JSONObject obj;
 		Message msg;
 		Charset cs;
+		int trial;
+		boolean suc;
+		Exception ex;
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
@@ -199,12 +205,36 @@ public class LocalThread implements Runnable {
 
 				processBuilder.redirectOutput( stdOutFile.toFile() );
 				processBuilder.redirectError( stdErrFile.toFile() );
+
+				trial = 1;
+				suc = false;
+				ex = null;
+				do {
+					try {
+						process = processBuilder.start();
+
+						suc = true;
+					}
+					catch( IOException e ) {
+						
+						ex = e;
+						if( log.isWarnEnabled() )
+							log.warn( "Unable to start process on trial "+( trial++ )+" Waiting "+WAIT_INTERVAL+"ms: "+e.getMessage() );
+						Thread.sleep( WAIT_INTERVAL );
+					}
+				} while( suc == false || trial >= MAX_TRIALS );
+				
+				if( process == null ) {
+					
+					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, stdOut, stdErr ) );
+					Files.delete( lockMarker );
+					return;
+				}
+					
 				
 				tic = System.currentTimeMillis();
-				process = processBuilder.start();
 				exitValue = process.waitFor();
-				toc = System.currentTimeMillis();
-				
+				toc = System.currentTimeMillis();				
 				
 				try( BufferedWriter writer = Files.newBufferedWriter( reportFile, cs, StandardOpenOption.APPEND ) ) {
 					
