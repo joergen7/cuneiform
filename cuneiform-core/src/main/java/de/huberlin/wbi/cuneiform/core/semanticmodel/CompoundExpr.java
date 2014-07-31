@@ -111,7 +111,7 @@ public class CompoundExpr implements CfNode, Cloneable {
 		if( idx >= getNumAtom() )
 			throw new IndexOutOfBoundsException(
 				"Queried entry "+idx+" but the compound expression has only "
-				+getNumAtom()+" elements." );
+				+getNumAtom()+" elements: "+this );
 		
 		j = 0;
 		i = idx;

@@ -168,8 +168,8 @@ public class EnumHelper {
 					if( name.getId().equals( CfSemanticModelVisitor.LABEL_TASK ) )
 						continue;
 					
-					// TODO: Will this still work when output variable is reduce?
-					ce = new CompoundExpr( bindingBlock.getExpr( name ).getStringExprValue( j ) );
+					ce = bindingBlock.getExpr( name );
+					ce = new CompoundExpr( ce.getStringExprValue( j ) );
 										
 					if( ce.getNumAtom() != 1 )
 						throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce );
