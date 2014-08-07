@@ -1,1 +1,2 @@
 java -cp "$CF_HOME:$CF_HOME/bin/*:$CF_HOME/lib/*" de.huberlin.wbi.cuneiform.cmdline.main.Main $@
+
