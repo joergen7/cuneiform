@@ -197,7 +197,7 @@ public class LocalThread implements Runnable {
 				}
 				
 				// run script
-				processBuilder = new ProcessBuilder( scriptFile.toString() );
+				processBuilder = new ProcessBuilder( invoc.getCmd( scriptFile ) );
 				processBuilder.directory( location.toFile() );
 				
 				stdOutFile = location.resolve( Invocation.STDOUT_FILENAME );

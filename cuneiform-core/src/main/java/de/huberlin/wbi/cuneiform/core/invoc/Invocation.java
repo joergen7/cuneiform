@@ -32,6 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.invoc;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -118,6 +119,10 @@ public abstract class Invocation {
 			ticket.setValue( nameExpr, ce );
 		}
 			
+	}
+	
+	public String getCmd( Path executable ) {
+		return executable.toString();
 	}
 	
 	public String getFunDef() throws NotDerivableException {
