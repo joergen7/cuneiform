@@ -110,7 +110,7 @@ public class PerlInvocation extends Invocation {
 	}
 
 	@Override
-	public String defFunctionLog() throws NotDerivableException {
+	protected String defFunctionLog() throws NotDerivableException {
 		
 		StringBuffer buf;
 		

@@ -46,12 +46,12 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String getCheckPost() {
+	protected String getCheckPost() {
 		return "";
 	}
 
 	@Override
-	public String defFunctionLog() throws NotDerivableException {
+	protected String defFunctionLog() throws NotDerivableException {
 		
 		StringBuffer buf;
 		
@@ -77,12 +77,12 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String getShebang() {
+	protected String getShebang() {
 		return "#!/usr/bin/env Rscript\n";
 	}
 
 	@Override
-	public String varDef( String varname, CompoundExpr ce )
+	protected String varDef( String varname, CompoundExpr ce )
 			throws NotDerivableException {
 		
 		StringBuffer buf;
@@ -111,7 +111,7 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String varDef( String varname, String value ) {
+	protected String varDef( String varname, String value ) {
 		return varname+" <- "+value+"\n";
 	}
 	
@@ -145,7 +145,7 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String callFunction( String name, String... argValue ) {
+	protected String callFunction( String name, String... argValue ) {
 		
 		StringBuffer buf;
 		boolean comma;
@@ -169,7 +169,7 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String callProcedure( String name, String... argValue ) {
+	protected String callProcedure( String name, String... argValue ) {
 		
 		StringBuffer buf;
 		boolean comma;
@@ -193,27 +193,27 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String newList( String listName ) {
+	protected String newList( String listName ) {
 		return varDef( listName, "NULL" );
 	}
 
 	@Override
-	public String listAppend( String listName, String element ) {
+	protected String listAppend( String listName, String element ) {
 		return listName+" <- append( "+listName+", "+element+" )\n";
 	}
 
 	@Override
-	public String dereference( String varName ) {
+	protected String dereference( String varName ) {
 		return varName;
 	}
 
 	@Override
-	public String forEach( String listName, String elementName, String body ) {
+	protected String forEach( String listName, String elementName, String body ) {
 		return "for( "+elementName+" in "+listName+" ) {\n"+body+"\n}\n";
 	}
 
 	@Override
-	public String ifNotFileExists( String fileName, String body ) {
+	protected String ifNotFileExists( String fileName, String body ) {
 		return
 			"if( !"
 			+callFunction( "file.exists", dereference( fileName ) )
@@ -223,12 +223,12 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String raise( String msg ) {
+	protected String raise( String msg ) {
 		return callProcedure( "stop", msg );
 	}
 
 	@Override
-	public String join( String... elementList ) {
+	protected String join( String... elementList ) {
 		
 		StringBuffer buf;
 		boolean comma;
@@ -253,28 +253,28 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String quote( String content ) {
+	protected String quote( String content ) {
 		return "\""+content.replace( "\"", "\\\"" )+"\"";
 	}
 
 	@Override
-	public String fileSize( String filename ) {
+	protected String fileSize( String filename ) {
 		return "file.info( "+quote( filename )+" )$size/1024";
 	}
 
 	@Override
-	public String ifListIsNotEmpty( String listName, String body ) {
+	protected String ifListIsNotEmpty( String listName, String body ) {
 		return "if( length( "+listName+" ) != 0 ) {\n"+body+"\n}\n";
 	}
 
 	@Override
-	public String listToBraceCommaSeparatedString( String listName,
+	protected String listToBraceCommaSeparatedString( String listName,
 		String stringName, String open, String close ) {
 		return stringName+" = paste( "+listName+", sep=\"\", collapse=\",\" )\n";
 	}
 
 	@Override
-	public String defFunctionNormalize() throws NotDerivableException {
+	protected String defFunctionNormalize() throws NotDerivableException {
 		return defFunction(
 				FUN_NORMALIZE,
 				null,
@@ -284,22 +284,22 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	public String symlink( String src, String dest ) {
+	protected String symlink( String src, String dest ) {
 		return callProcedure( "file.symlink", src, dest )+"\n";
 	}
 
 	@Override
-	public String getImport() {
+	protected String getImport() {
 		return "";
 	}
 
 	@Override
-	public String comment( String comment ) {
+	protected String comment( String comment ) {
 		return "# "+comment.replace( "\n", "\n# " )+"\n";
 	}
 
 	@Override
-	public String copyArray( String from, String to ) {
+	protected String copyArray( String from, String to ) {
 		return to+"="+from+"\n";
 	}
 

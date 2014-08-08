@@ -63,7 +63,7 @@ public abstract class Invocation {
 	protected static final String FUN_LOGFILE = "cflogfilemsg";
 	protected static final String FUN_NORMALIZE = "cfnormalize";
 	public static final String REPORT_FILENAME = "__report__.txt";
-	public static final String SCRIPT_FILENAME = "__script__";
+	public static final String SCRIPT_NAME = "__script__";
 	public static final String SUCCESS_FILENAME = "__success__";
 	public static final String STDOUT_FILENAME = "__stdout__.txt";
 	public static final String STDERR_FILENAME = "__stderr__.txt";
@@ -121,9 +121,16 @@ public abstract class Invocation {
 			
 	}
 	
-	public String getCmd( Path executable ) {
-		return executable.toString();
+	@SuppressWarnings( "static-method" )
+	public String getCmd() {
+		return "./"+SCRIPT_NAME;
 	}
+	
+	@SuppressWarnings( "static-method" )
+	public Path getExecutablePath( Path location ) {
+		return location.resolve( SCRIPT_NAME );
+	}
+
 	
 	public String getFunDef() throws NotDerivableException {
 		return defFunctionLog()
@@ -186,8 +193,6 @@ public abstract class Invocation {
 			throw new RuntimeException( e.getMessage() );
 		}
 	}
-	
-	
 	
 	public UUID getRunId() {
 		return ticket.getRunId();
@@ -281,7 +286,14 @@ public abstract class Invocation {
 
 	protected abstract String callFunction( String name, String... argValue );
 	protected abstract String callProcedure( String name, String... argValue );
+	
+	/** Removes the first character of a string.
+	 * 
+	 * @param varName The name of the variable that holds the input string.
+	 * @return A statement in the foreign language.
+	 */
 	protected abstract String clip( String varName );
+	
 	protected abstract String comment( String comment );
 	protected abstract String copyArray( String from, String to );
 	protected abstract String defFunctionLog() throws NotDerivableException;
@@ -694,12 +706,18 @@ public abstract class Invocation {
 	
 	public static Invocation createInvocation( Ticket ticket ) {
 		
-		switch( ticket.getLangLabel() ) {
+		String label;
+		
+		label = ticket.getLangLabel();
+		
+		switch( label ) {
 		
 			case ForeignLambdaExpr.LANGID_BASH : return new BashInvocation( ticket );
 			case ForeignLambdaExpr.LANGID_R : return new RInvocation( ticket );
 			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket );
-			default : throw new RuntimeException( "Language label not recognized." );
+			case ForeignLambdaExpr.LANGID_MATLAB : return new MatlabInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_OCTAVE : return new OctaveInvocation( ticket );
+			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
 	}
 }

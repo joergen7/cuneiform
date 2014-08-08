@@ -154,7 +154,7 @@ public class LocalThread implements Runnable {
 				
 				Files.createFile( lockMarker );
 							
-				scriptFile = location.resolve( Invocation.SCRIPT_FILENAME );
+				scriptFile = invoc.getExecutablePath( location );
 				
 				Files.createFile( scriptFile,
 					PosixFilePermissions.asFileAttribute(
@@ -170,11 +170,6 @@ public class LocalThread implements Runnable {
 					writer.write( ticket.getExecutableLogEntry().toString() );
 					writer.write( '\n' );
 				}
-				
-				
-				
-				
-				
 				
 				for( String filename : invoc.getStageInList() ) {
 					
@@ -197,7 +192,7 @@ public class LocalThread implements Runnable {
 				}
 				
 				// run script
-				processBuilder = new ProcessBuilder( invoc.getCmd( scriptFile ) );
+				processBuilder = new ProcessBuilder( invoc.getCmd() );
 				processBuilder.directory( location.toFile() );
 				
 				stdOutFile = location.resolve( Invocation.STDOUT_FILENAME );
@@ -222,7 +217,7 @@ public class LocalThread implements Runnable {
 							log.warn( "Unable to start process on trial "+( trial++ )+" Waiting "+WAIT_INTERVAL+"ms: "+e.getMessage() );
 						Thread.sleep( WAIT_INTERVAL );
 					}
-				} while( suc == false || trial >= MAX_TRIALS );
+				} while( suc == false && trial <= MAX_TRIALS );
 				
 				if( process == null ) {
 					
