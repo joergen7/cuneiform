@@ -46,11 +46,6 @@ public class RInvocation extends Invocation {
 	}
 
 	@Override
-	protected String getCheckPost() {
-		return "";
-	}
-
-	@Override
 	protected String defFunctionLog() throws NotDerivableException {
 		
 		StringBuffer buf;
@@ -286,11 +281,6 @@ public class RInvocation extends Invocation {
 	@Override
 	protected String symlink( String src, String dest ) {
 		return callProcedure( "file.symlink", src, dest )+"\n";
-	}
-
-	@Override
-	protected String getImport() {
-		return "";
 	}
 
 	@Override

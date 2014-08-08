@@ -158,16 +158,6 @@ public class OctaveInvocation extends Invocation {
 	}
 
 	@Override
-	protected String getCheckPost() {
-		return "";
-	}
-
-	@Override
-	protected String getImport() {
-		return "";
-	}
-
-	@Override
 	protected String ifListIsNotEmpty( String listName, String body ) {
 		return "if ~isempty( "+listName+" )\n"+body+"\nend\n";
 	}

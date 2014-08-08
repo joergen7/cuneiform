@@ -122,8 +122,8 @@ public abstract class Invocation {
 	}
 	
 	@SuppressWarnings( "static-method" )
-	public String getCmd() {
-		return "./"+SCRIPT_NAME;
+	public String[] getCmd() {
+		return new String[] { "./"+SCRIPT_NAME };
 	}
 	
 	@SuppressWarnings( "static-method" )
@@ -214,6 +214,11 @@ public abstract class Invocation {
 		return ticket.getTicketId();
 	}
 	
+	@SuppressWarnings( "static-method" )
+	protected String getQuit() {
+		return "";
+	}
+	
 	public boolean hasTaskName() {
 		return ticket.hasTaskName();
 	}
@@ -281,7 +286,21 @@ public abstract class Invocation {
 		buf.append( comment( "collect stage out information" ) );
 		buf.append( getStageOutCollect() ).append( '\n' );
 		
+		// quit
+		buf.append( comment( "quit" ) );
+		buf.append( getQuit() );
+		
 		return buf.toString();
+	}
+	
+	@SuppressWarnings( "static-method" )
+	protected String getCheckPost() {
+		return "";
+	}
+	
+	@SuppressWarnings( "static-method" )
+	protected String getImport() {
+		return "";
 	}
 
 	protected abstract String callFunction( String name, String... argValue );
@@ -303,8 +322,6 @@ public abstract class Invocation {
 	protected abstract String fileSize( String filename );
 	protected abstract String forEach( String listName, String elementName, String body );
 	protected abstract String getShebang();
-	protected abstract String getCheckPost();
-	protected abstract String getImport();
 	protected abstract String ifListIsNotEmpty( String listName, String body );
 	
 	protected abstract String ifNotFileExists( String fileName, String body );

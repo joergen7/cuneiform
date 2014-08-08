@@ -241,14 +241,6 @@ public class PerlInvocation extends Invocation {
 	}
 
 	@Override
-	protected String getCheckPost() { return ""; }
-
-	@Override
-	protected String getImport() {
-		return "";
-	}
-
-	@Override
 	protected String ifListIsNotEmpty(String listName, String body) {
 		return "if (scalar "+listName+") {\n"+body+"\n}\n";
 		

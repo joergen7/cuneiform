@@ -17,11 +17,22 @@ public class MatlabInvocation extends OctaveInvocation {
 	
 	@Override
 	public Path getExecutablePath( Path location ) {
-		return location.resolve( SCRIPT_NAME+".m" );
+		return location.resolve( "cfscript.m" );
 	}
 	
 	@Override
-	public String getCmd() {		
-		return "matlab -noFigureWindows -nodisplay -nosplash -r \""+SCRIPT_NAME+"\"";
+	public String[] getCmd() {
+		
+		return new String[] {
+			"matlab",
+			"-nodisplay",
+			"-nosplash",
+			"-r",
+			"\"cfscript\"" };
+	}
+	
+	@Override
+	public String getQuit() {
+		return "exit;\n";
 	}
 }
