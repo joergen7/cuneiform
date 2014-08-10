@@ -214,16 +214,6 @@ public abstract class Invocation {
 		return ticket.getTicketId();
 	}
 	
-	@SuppressWarnings( "static-method" )
-	protected String getScriptHead() {
-		return "";
-	}
-	
-	@SuppressWarnings( "static-method" )
-	protected String getScriptFoot() {
-		return "";
-	}
-	
 	public boolean hasTaskName() {
 		return ticket.hasTaskName();
 	}
@@ -241,10 +231,6 @@ public abstract class Invocation {
 		buf.append( comment( "import libraries" ) );
 		buf.append( getImport() ).append( '\n' );
 		
-		// get script header
-		buf.append( comment( "script header" ) );
-		buf.append( getScriptHead() );
-
 		// define necessary functions
 		buf.append( comment( "define necessary functions" ) );
 		buf.append( getFunDef() ).append( '\n' );
@@ -294,11 +280,7 @@ public abstract class Invocation {
 		// collect stage out information
 		buf.append( comment( "collect stage out information" ) );
 		buf.append( getStageOutCollect() ).append( '\n' );
-		
-		// script footer
-		buf.append( comment( "script footer" ) );
-		buf.append( getScriptFoot() );
-		
+				
 		return buf.toString();
 	}
 	
@@ -419,7 +401,7 @@ public abstract class Invocation {
 		throw new RuntimeException( "Output not found." );
 	}
 	
-	private String getOutputCollect() {
+	protected String getOutputCollect() {
 		
 		StringBuffer buf;
 		
@@ -489,7 +471,7 @@ public abstract class Invocation {
 		
 	}
 	
-	private String getOutputRename() {
+	protected String getOutputRename() {
 		
 		StringBuffer buf;
 		
@@ -566,7 +548,7 @@ public abstract class Invocation {
 		return reduceList;
 	}
 	
-	private Set<String> getReduceParamNameSet() {
+	protected Set<String> getReduceParamNameSet() {
 
 		Set<Param> paramSet;
 		Set<String> reduceList;
@@ -583,16 +565,16 @@ public abstract class Invocation {
 		return reduceList;
 	}
 	
-	private CompoundExpr getReduceParam( String paramName ) throws NotBoundException {
+	protected CompoundExpr getReduceParam( String paramName ) throws NotBoundException {
 		return ticket.getExpr( paramName );
 	}
 	
-	private String getResolveableBoundToSingleParam( String paramName )
+	protected String getResolveableBoundToSingleParam( String paramName )
 	throws NotBoundException, NotDerivableException {	
 		return ticket.getExpr( paramName ).normalize().get( 0 );
 	}
 	
-	private Set<String> getSingleOutputNameSet() {
+	protected Set<String> getSingleOutputNameSet() {
 		
 		List<NameExpr> outputList;
 		Set<String> nonReduceList;
@@ -608,7 +590,7 @@ public abstract class Invocation {
 		return nonReduceList;
 	}
 	
-	private Set<String> getSingleParamNameSet() {
+	protected Set<String> getSingleParamNameSet() {
 
 		Set<Param> paramSet;
 		Set<String> nonReduceList;
@@ -626,7 +608,7 @@ public abstract class Invocation {
 		
 	}
 	
-	private String getStageInCollect() {
+	protected String getStageInCollect() {
 		
 		StringBuffer buf;
 		
@@ -678,7 +660,7 @@ public abstract class Invocation {
 		return buf.toString();
 	}
 	
-	private String getStageOutCollect() {
+	protected String getStageOutCollect() {
 		
 		StringBuffer buf;
 		
