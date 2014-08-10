@@ -308,6 +308,8 @@ public class LocalThread implements Runnable {
 			if( log.isTraceEnabled() )
 				log.trace( "Local thread ran through without exception." );
 			
+			Files.deleteIfExists( lockMarker );
+
 		}
 		catch( InterruptedException e ) {
 			
@@ -333,20 +335,13 @@ public class LocalThread implements Runnable {
 			
 		}
 		finally {
-			
-			if( lockMarker != null )
-				try {
-					Files.deleteIfExists( lockMarker );
-				}
-				catch( IOException e ) {
-					e.printStackTrace();
-				}
-			
+						
 			if( log.isDebugEnabled() )
 				log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
 
-			if( process != null )
+			if( process != null ) {
 				process.destroy();
+			}
 		}
 	}
 	
