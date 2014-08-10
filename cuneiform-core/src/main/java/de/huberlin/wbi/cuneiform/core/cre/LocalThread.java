@@ -335,13 +335,16 @@ public class LocalThread implements Runnable {
 			
 		}
 		finally {
-						
-			if( log.isDebugEnabled() )
-				log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
+			
+			
+			if( process != null )
+				if( process.isAlive() ) {
+					
+					if( log.isDebugEnabled() )
+						log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
 
-			if( process != null ) {
-				process.destroy();
-			}
+					process.destroy();
+				}
 		}
 	}
 	
