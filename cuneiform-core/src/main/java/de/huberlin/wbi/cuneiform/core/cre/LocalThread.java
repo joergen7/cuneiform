@@ -204,6 +204,7 @@ public class LocalThread implements Runnable {
 				trial = 1;
 				suc = false;
 				ex = null;
+				tic = System.currentTimeMillis();
 				do {
 					try {
 						process = processBuilder.start();
@@ -227,7 +228,6 @@ public class LocalThread implements Runnable {
 				}
 					
 				
-				tic = System.currentTimeMillis();
 				exitValue = process.waitFor();
 				toc = System.currentTimeMillis();				
 				

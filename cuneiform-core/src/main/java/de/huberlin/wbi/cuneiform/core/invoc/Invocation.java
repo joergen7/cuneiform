@@ -63,7 +63,7 @@ public abstract class Invocation {
 	protected static final String FUN_LOGFILE = "cflogfilemsg";
 	protected static final String FUN_NORMALIZE = "cfnormalize";
 	public static final String REPORT_FILENAME = "__report__.txt";
-	public static final String SCRIPT_NAME = "__script__";
+	public static final String SCRIPT_NAME = "cfscript";
 	public static final String SUCCESS_FILENAME = "__success__";
 	public static final String STDOUT_FILENAME = "__stdout__.txt";
 	public static final String STDERR_FILENAME = "__stderr__.txt";
@@ -215,7 +215,12 @@ public abstract class Invocation {
 	}
 	
 	@SuppressWarnings( "static-method" )
-	protected String getQuit() {
+	protected String getScriptHead() {
+		return "";
+	}
+	
+	@SuppressWarnings( "static-method" )
+	protected String getScriptFoot() {
 		return "";
 	}
 	
@@ -236,10 +241,14 @@ public abstract class Invocation {
 		buf.append( comment( "import libraries" ) );
 		buf.append( getImport() ).append( '\n' );
 		
+		// get script header
+		buf.append( comment( "script header" ) );
+		buf.append( getScriptHead() );
+
 		// define necessary functions
 		buf.append( comment( "define necessary functions" ) );
 		buf.append( getFunDef() ).append( '\n' );
-
+		
 		// bind single output variables to default values
 		buf.append( comment( "bind single output variables to default values" ) );
 		for( String outputName : getSingleOutputNameSet() )
@@ -286,9 +295,9 @@ public abstract class Invocation {
 		buf.append( comment( "collect stage out information" ) );
 		buf.append( getStageOutCollect() ).append( '\n' );
 		
-		// quit
-		buf.append( comment( "quit" ) );
-		buf.append( getQuit() );
+		// script footer
+		buf.append( comment( "script footer" ) );
+		buf.append( getScriptFoot() );
 		
 		return buf.toString();
 	}

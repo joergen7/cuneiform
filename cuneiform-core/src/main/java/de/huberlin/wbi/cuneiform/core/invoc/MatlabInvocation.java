@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class MatlabInvocation extends OctaveInvocation {
-
+	
 	public MatlabInvocation( Ticket ticket ) {
 		super( ticket );
 	}
@@ -17,7 +17,7 @@ public class MatlabInvocation extends OctaveInvocation {
 	
 	@Override
 	public Path getExecutablePath( Path location ) {
-		return location.resolve( "cfscript.m" );
+		return location.resolve( SCRIPT_NAME+".m" );
 	}
 	
 	@Override
@@ -28,11 +28,15 @@ public class MatlabInvocation extends OctaveInvocation {
 			"-nodisplay",
 			"-nosplash",
 			"-r",
-			"\"cfscript\"" };
+			"\"try, "+SCRIPT_NAME+", catch ex, exit( -1 ), end, exit\"" };
+	}
+	
+	public String getScriptHead() {
+		return "function "+SCRIPT_NAME+"\n";
 	}
 	
 	@Override
-	public String getQuit() {
-		return "exit;\n";
+	public String getScriptFoot() {
+		return "end\n";
 	}
 }
