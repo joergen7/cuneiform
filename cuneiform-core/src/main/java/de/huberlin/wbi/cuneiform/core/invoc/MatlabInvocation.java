@@ -66,14 +66,17 @@ public class MatlabInvocation extends OctaveInvocation {
 			SCRIPT_NAME };
 	}
 	
+	@SuppressWarnings("static-method")
 	public String getScriptHead() {
 		return "function "+SCRIPT_NAME+"\ntry\n";
 	}
 	
+	@SuppressWarnings("static-method")
 	public String getScriptFoot() {
 		return "catch ex\nexit( -1 )\nend\nexit\nend\n";
 	}
 	
+	@Override
 	public String toScript() throws NotBoundException, NotDerivableException {
 		
 		StringBuffer buf;
