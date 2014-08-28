@@ -337,8 +337,7 @@ public class LocalThread implements Runnable {
 		finally {
 			
 			
-			if( process != null )
-				if( process.isAlive() ) {
+			if( process != null ) {
 					
 					if( log.isDebugEnabled() )
 						log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
