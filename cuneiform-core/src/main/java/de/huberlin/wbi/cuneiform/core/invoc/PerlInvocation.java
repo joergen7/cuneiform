@@ -307,7 +307,7 @@ public class PerlInvocation extends Invocation {
 		StringBuffer buf;
 		buf = new StringBuffer();
 
-		buf.append( "my $"+ varname ).append( " = " ).append( value ).append(";\n");
+		buf.append( "$"+ varname ).append( " = " ).append( value ).append(";\n");
 		return buf.toString();
 	}
 
@@ -323,17 +323,17 @@ public class PerlInvocation extends Invocation {
 		buf = new StringBuffer();
 		
 		comma = false;
-		buf.append( "my @"+ varname ).append( " = ( " );
+		buf.append( "@"+ varname ).append( " = ( " );
 		for( i = 0; i < list.size(); i++ ) {
 			
 			if( comma )
-				buf.append( ',' );
+				buf.append( ", " );
 			comma = true;
 			
 			buf.append( "\"" ).append( list.get( i ) ).append( "\"" );
 		}
 		
-		buf.append( ")\n" );
+		buf.append( " );\n" );
 		
 		return buf.toString();
 	}
