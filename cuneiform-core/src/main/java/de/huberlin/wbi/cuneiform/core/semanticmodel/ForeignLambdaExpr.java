@@ -37,14 +37,19 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public static final String LANGID_BASH = "bash";
 	public static final String LANGID_LISP = "lisp";
 	public static final String LANGID_OCTAVE = "octave";
+	public static final String LANGID_MATLAB = "matlab";
 	public static final String LANGID_R = "r";
 	public static final String LANGID_PYTHON = "python";
 	public static final String LANGID_PERL = "perl";
+	public static final String LANGID_JAVA = "java";
 	public static final String LANGID_SCALA = "scala";
-	public static final String LANGID_MATLAB = "matlab";
+	public static final String LANGID_ERLANG = "erlang";
+	public static final String LANGID_HASKELL = "haskell";
 
 	public static final String[] LABEL_LANG = {
-		LANGID_BASH, LANGID_LISP, LANGID_OCTAVE, LANGID_R, LANGID_PYTHON, LANGID_PERL, LANGID_SCALA, LANGID_MATLAB
+		LANGID_BASH, LANGID_LISP, LANGID_OCTAVE, LANGID_MATLAB, LANGID_R,
+		LANGID_PYTHON, LANGID_PERL, LANGID_JAVA, LANGID_SCALA, LANGID_ERLANG,
+		LANGID_HASKELL
 	};
 	
 	private final int lang;

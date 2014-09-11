@@ -725,6 +725,12 @@ public abstract class Invocation {
 			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket );
 			case ForeignLambdaExpr.LANGID_MATLAB : return new MatlabInvocation( ticket );
 			case ForeignLambdaExpr.LANGID_OCTAVE : return new OctaveInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_JAVA : return new ScalaInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_PYTHON : return new PythonInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_ERLANG : return new ErlangInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_HASKELL : return new HaskellInvocation( ticket );
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
 	}
