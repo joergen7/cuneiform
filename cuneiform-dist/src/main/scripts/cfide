@@ -1,2 +1,4 @@
+#!/usr/bin/env bash
+
 java -cp "$CF_HOME:$CF_HOME/lib/*" de.huberlin.wbi.cuneiform.cfide.main.Main
 
