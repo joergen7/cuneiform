@@ -296,7 +296,14 @@ public class LocalThread implements Runnable {
 					if( line.isEmpty() )
 						continue;
 					
-					report.add( new JsonReportEntry( line ) );
+					entry = new JsonReportEntry( line );
+					
+					// If the report comes from the hard cache then the run id
+					// is different from the run id of this invocation. This is
+					// corrected here.
+					entry.setRunId( invoc.getRunId() );
+					
+					report.add( entry );
 				}
 				
 			}
