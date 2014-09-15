@@ -33,6 +33,7 @@
 package de.huberlin.wbi.cuneiform.cmdline.main;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,6 +56,7 @@ import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class Main {
@@ -69,7 +71,7 @@ public class Main {
 	private static Path[] inputFileVector;
 	
 
-	public static void main( String[] args ) throws IOException, ParseException, InterruptedException {
+	public static void main( String[] args ) throws IOException, ParseException, InterruptedException, NotDerivableException {
 		
 		CommandLine cmd;
 		Options opt;
@@ -78,6 +80,8 @@ public class Main {
 		Path sandbox;
 		ExecutorService executor;
 		TicketSrcActor ticketSrc;
+		JsonSummary summary;
+		Path summaryPath;
 		
 		executor = Executors.newCachedThreadPool();
 		try {
@@ -139,19 +143,17 @@ public class Main {
 				Thread.sleep( 3*Actor.DELAY );
 				while( repl.isBusy() )
 					Thread.sleep( Actor.DELAY );
-				
-				return;
-			}
-			
-			if( !format.equals( FORMAT_CF ) ) {
-				
-				// read from standard in
-				
-				repl.interpret( readStdIn() );
-				
-				Thread.sleep( 3*Actor.DELAY );
-				while( repl.isBusy() )
-					Thread.sleep( Actor.DELAY );
+
+				if( opt.hasOption( "s" ) ) {
+					
+					summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
+					summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
+					try( BufferedWriter writer = Files.newBufferedWriter( summaryPath, Charset.forName( "UTF-8" ) ) ) {
+						
+						writer.write( summary.toString() );
+					}
+					
+				}
 				
 				return;
 			}
@@ -220,6 +222,9 @@ public class Main {
 			"The platform to run. The only platform currently available is '"+PLATFORM_LOCAL+"'. Default is '"+PLATFORM_LOCAL+"'." );
 		
 		opt.addOption( "h", "help", false, "Output help." );
+		
+		opt.addOption( "s", "summary", true,
+			"The name of a JSON summary file. No file is created if this parameter is not specified." );
 		
 		return opt;
 		
