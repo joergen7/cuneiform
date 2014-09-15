@@ -148,6 +148,11 @@ public class Main {
 				// read from standard in
 				
 				repl.interpret( readStdIn() );
+				
+				Thread.sleep( 3*Actor.DELAY );
+				while( repl.isBusy() )
+					Thread.sleep( Actor.DELAY );
+				
 				return;
 			}
 			
