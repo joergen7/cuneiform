@@ -44,9 +44,9 @@ public class JsonSummary {
 		
 		buf.append( "{\n" );
 		
-		buf.append( "  runId:\"" ).append( runId ).append( "\",\n" );
+		buf.append( "  \"runId\":\"" ).append( runId ).append( "\",\n" );
 		
-		buf.append( "  output:[" );
+		buf.append( "  \"output\":[" );
 		res = false;
 		if( !output.isEmpty() ) {
 			
@@ -71,7 +71,7 @@ public class JsonSummary {
 		}
 		buf.append( "],\n" );
 		
-		buf.append( "  type:\"" );
+		buf.append( "  \"type\":\"" );
 		if( res )
 			buf.append( "File" );
 		else
