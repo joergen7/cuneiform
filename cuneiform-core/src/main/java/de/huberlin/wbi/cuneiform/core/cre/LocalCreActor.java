@@ -32,6 +32,7 @@
 
 package de.huberlin.wbi.cuneiform.core.cre;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutorService;
@@ -42,11 +43,15 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class LocalCreActor extends BaseCreActor {
+	
+	private static final String PATH_CENTRALREPO = "repo";
+
 
 	private final ExecutorService executor;
 	private final Path buildDir;
+	private final Path centralRepo;
 	
-	public LocalCreActor( Path buildDir, int nthread ) {
+	public LocalCreActor( Path buildDir, int nthread ) throws IOException {
 		
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
@@ -63,11 +68,15 @@ public class LocalCreActor extends BaseCreActor {
 		this.buildDir = buildDir;
 		executor = Executors.newFixedThreadPool( nthread );
 		
+		centralRepo = buildDir.resolve( PATH_CENTRALREPO );
+		if( !Files.exists( centralRepo ) )
+			Files.createDirectories( centralRepo );
+		
 		if( log.isDebugEnabled() )
 			log.debug( "Local CRE actor created with "+nthread+" threads." );
 	}
 	
-	public LocalCreActor( Path buildDir ) {
+	public LocalCreActor( Path buildDir ) throws IOException {
 		this( buildDir, Runtime.getRuntime().availableProcessors() );
 	}
 	
@@ -94,7 +103,7 @@ public class LocalCreActor extends BaseCreActor {
 			throw new RuntimeException(
 				"Ticket "+ticket.getTicketId()+": Trying to evaluate ticket that has already been evaluated." );
 		
-		localThread = new LocalThread( ticketSrc, this, ticket, buildDir );
+		localThread = new LocalThread( ticketSrc, this, ticket, buildDir, centralRepo );
 		
 		executor.submit( localThread );
 		

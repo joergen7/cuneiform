@@ -68,28 +68,39 @@ public class LocalThread implements Runnable {
 	private final Path buildDir;
 	private final TicketSrcActor ticketSrc;
 	private final BaseCreActor cre;
+	private final Path centralRepo;
 
 	public LocalThread(TicketSrcActor ticketSrc, BaseCreActor cre,
-			Ticket ticket, Path buildDir) {
+			Ticket ticket, Path buildDir, Path centralRepo ) {
 
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
 
-		if( !Files.exists(buildDir) )
+		if( !Files.exists( buildDir ) )
 			throw new RuntimeException( "Build directory does not exist." );
 
-		if( !Files.isDirectory(buildDir) )
-			throw new RuntimeException("Directory expected.");
+		if( !Files.isDirectory( buildDir ) )
+			throw new RuntimeException( "Build path expected to be a directory." );
 
 		if( cre == null )
 			throw new NullPointerException( "CRE actor must not be null." );
 
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source must not be null." );
+		
+		if( centralRepo == null )
+			throw new NullPointerException( "Central repository must not be null." );
+		
+		if( !Files.exists( centralRepo ) )
+			throw new RuntimeException( "Central repository does not exist." );
+		
+		if( !Files.isDirectory( centralRepo ) )
+			throw new RuntimeException( "Central repository path expected to be a directory." );
 
 		this.ticketSrc = ticketSrc;
 		this.cre = cre;
 		this.buildDir = buildDir;
+		this.centralRepo = centralRepo;
 
 		invoc = Invocation.createInvocation( ticket );
 		log = LogFactory.getLog( LocalThread.class );
@@ -118,6 +129,7 @@ public class LocalThread implements Runnable {
 		int trial;
 		boolean suc;
 		Exception ex;
+		
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
@@ -283,6 +295,8 @@ public class LocalThread implements Runnable {
 						
 					}
 				}
+				
+
 			}
 			
 			// gather report
@@ -309,7 +323,23 @@ public class LocalThread implements Runnable {
 			}
 			
 			invoc.evalReport( report );
+			
+			// create link in central data repository
+			for( String f : invoc.getStageOutList() ) {
+				
+				srcPath = location.resolve( f );
+				destPath = centralRepo.resolve( f );
+				
+				if( Files.exists( destPath ) )
+					continue;
+				
+				if( log.isTraceEnabled() )
+					log.trace( "Creating link from "+srcPath+" to "+destPath+"." );
+				
+				Files.createSymbolicLink( destPath, srcPath );
+			}
 	
+			
 			ticketSrc.sendMsg( new TicketFinishedMsg( cre, invoc.getTicket(), report ) );
 			
 			if( log.isTraceEnabled() )
@@ -350,7 +380,7 @@ public class LocalThread implements Runnable {
 						log.debug( "Stopping local thread for ticket "+invoc.getTicketId()+"." );
 
 					process.destroy();
-				}
+				}			
 		}
 	}
 	

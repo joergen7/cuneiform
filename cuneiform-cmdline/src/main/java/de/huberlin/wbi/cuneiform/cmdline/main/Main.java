@@ -144,7 +144,7 @@ public class Main {
 				while( repl.isBusy() )
 					Thread.sleep( Actor.DELAY );
 
-				if( opt.hasOption( "s" ) ) {
+				if( cmd.hasOption( "s" ) ) {
 					
 					summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
 					summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
