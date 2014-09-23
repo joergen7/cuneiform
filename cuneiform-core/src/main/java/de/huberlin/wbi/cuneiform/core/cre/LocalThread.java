@@ -117,7 +117,6 @@ public class LocalThread implements Runnable {
 		JsonReportEntry entry;
 		String line;
 		StringBuffer buf;
-		String signature;
 		Path srcPath, destPath;
 		ProcessBuilder processBuilder;
 		Ticket ticket;
@@ -187,19 +186,20 @@ public class LocalThread implements Runnable {
 					
 					
 					destPath = location.resolve( filename );
-
-					if( filename.matches( "([^/].+/)?\\d+_\\d+_[^/]+$" ) ) {
+					
+					if( filename.charAt( 0 ) == '/' )
 						
-						signature = filename.substring( filename.lastIndexOf( '/' )+1, filename.indexOf( '_' ) );
-						srcPath = buildDir.resolve( signature ).resolve( filename );				
-						Files.createSymbolicLink( destPath, srcPath );
-					}
-					else						
-						if( filename.charAt( 0 ) != '/' ) {
-							
+						srcPath = Paths.get( filename );
+					
+					else {
+						
+						srcPath = centralRepo.resolve( filename );
+						if( !Files.exists( srcPath ) )
 							srcPath = callLocation.resolve( filename );
-							Files.createSymbolicLink( destPath, srcPath );
-						}
+					}
+					
+					Files.createSymbolicLink( destPath, srcPath );
+					
 					
 				}
 				
