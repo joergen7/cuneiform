@@ -185,18 +185,22 @@ public class LocalThread implements Runnable {
 				for( String filename : invoc.getStageInList() ) {
 					
 					
-					destPath = location.resolve( filename );
 					
-					if( filename.charAt( 0 ) == '/' )
+					if( filename.charAt( 0 ) == '/' ) {
 						
 						srcPath = Paths.get( filename );
-					
+						destPath = location.resolve( srcPath.getFileName() );
+					}
 					else {
 						
 						srcPath = centralRepo.resolve( filename );
+						destPath = location.resolve( filename );
 						if( !Files.exists( srcPath ) )
 							srcPath = callLocation.resolve( filename );
 					}
+					
+					if( log.isTraceEnabled() )
+						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
 					
 					Files.createSymbolicLink( destPath, srcPath );
 					
