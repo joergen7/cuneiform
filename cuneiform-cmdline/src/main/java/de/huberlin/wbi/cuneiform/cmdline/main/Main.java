@@ -133,34 +133,40 @@ public class Main {
 					throw new RuntimeException( "Format not recognized." );
 			}
 			
-			if( inputFileVector.length > 0 ) {
+			if( cmd.hasOption( "i" ) ) {
 				
-				// run in quiet mode
-				
-				for( Path f : inputFileVector )
-					repl.interpret( readFile( f ) );
-				
-				Thread.sleep( 3*Actor.DELAY );
-				while( repl.isBusy() )
-					Thread.sleep( Actor.DELAY );
-
-				if( cmd.hasOption( "s" ) ) {
-					
-					summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
-					summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
-					try( BufferedWriter writer = Files.newBufferedWriter( summaryPath, Charset.forName( "UTF-8" ) ) ) {
-						
-						writer.write( summary.toString() );
-					}
-					
-				}
+				// run in interactive mode
+				CmdlineRepl.run( repl );
 				
 				return;
 			}
+
+			// run in quiet mode
 			
-			// run in interactive mode
+			if( inputFileVector.length > 0 )
+				
+				for( Path f : inputFileVector )
+					repl.interpret( readFile( f ) );
 			
-			CmdlineRepl.run( repl );
+			else
+				repl.interpret( readStdIn() );
+			
+				
+			Thread.sleep( 3*Actor.DELAY );
+			while( repl.isBusy() )
+				Thread.sleep( Actor.DELAY );
+
+			if( cmd.hasOption( "s" ) ) {
+				
+				summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
+				summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
+				try( BufferedWriter writer = Files.newBufferedWriter( summaryPath, Charset.forName( "UTF-8" ) ) ) {
+					
+					writer.write( summary.toString() );
+				}
+				
+			}
+				
 		
 		}
 		finally {
@@ -225,6 +231,8 @@ public class Main {
 		
 		opt.addOption( "s", "summary", true,
 			"The name of a JSON summary file. No file is created if this parameter is not specified." );
+		
+		opt.addOption( "i", "interactive", false, "Start an interactive REPL." );
 		
 		return opt;
 		
