@@ -11,7 +11,6 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.DefaultTableXYDataset;
-import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.json.JSONException;
 
@@ -20,7 +19,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 public class ParallelismView extends JPanel {
 
 	private static final long serialVersionUID = -5167316615121741821L;
-	private static final int NSAMPLE = 30;
+	private static final int NSAMPLE = 64;
 	
 	private long firstBegin;
 	private long lastBegin;
@@ -123,7 +122,7 @@ public class ParallelismView extends JPanel {
 		for( String n : seriesMap.keySet() ) {
 			
 			cvec = seriesMap.get( n );
-			series = new XYSeries( n );
+			series = new XYSeries( n, true, false );
 			for( i = 0; i < NSAMPLE; i++ )
 				series.add( tvec[ i ], cvec[ i ] );
 			
@@ -135,7 +134,7 @@ public class ParallelismView extends JPanel {
 			"Time [ms]",				// xAxisLabel
 			"N invocations",			// yAxisLabel
 			dataset,					// dataset
-			PlotOrientation.HORIZONTAL,	// orientation
+			PlotOrientation.VERTICAL,	// orientation
 			true,						// legend
 			true,						// tooltips
 			true						// urls
