@@ -388,7 +388,7 @@ public class LocalThread implements Runnable {
 		}
 	}
 	
-	private static void deleteIfExists( Path f ) throws IOException {
+	public static void deleteIfExists( Path f ) throws IOException {
 		
 		if( !Files.exists( f, LinkOption.NOFOLLOW_LINKS ) )
 			return;

@@ -54,6 +54,7 @@ import de.huberlin.cuneiform.dax.repl.DaxRepl;
 import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
+import de.huberlin.wbi.cuneiform.core.cre.LocalThread;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
@@ -100,12 +101,20 @@ public class Main {
 				
 				return;
 			}
+			
+			if( cmd.hasOption( "l" ) )
+				sandbox = Paths.get( cmd.getOptionValue( "l" ) );
+			else
+				sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
+			
+			if( cmd.hasOption( "c" ) )
+				LocalThread.deleteIfExists( sandbox );
+
 						
 			switch( platform ) {
 			
 				case PLATFORM_LOCAL :
 					
-					sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
 					cre = new LocalCreActor( sandbox );
@@ -233,6 +242,10 @@ public class Main {
 			"The name of a JSON summary file. No file is created if this parameter is not specified." );
 		
 		opt.addOption( "i", "interactive", false, "Start an interactive REPL." );
+		
+		opt.addOption( "l", "localcache", true, "Path to the local cache. Defaults to '~/.cuneiform'." );
+		
+		opt.addOption( "c", "clean", false, "Clear local cache before start." );
 		
 		return opt;
 		
