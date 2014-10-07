@@ -306,6 +306,18 @@ public class JsonReportEntry {
 		return taskname != null;
 	}
 	
+	public boolean isKeyInvocStdErr() {
+		return key.equals( KEY_INVOC_STDERR );
+	}
+	
+	public boolean isKeyInvocStdOut() {
+		return key.equals( KEY_INVOC_STDOUT );
+	}
+	
+	public boolean isKeyInvocTime() {
+		return key.equals( KEY_INVOC_TIME );
+	}
+	
 	public boolean isValueJson() {
 		return !isValueString();
 	}

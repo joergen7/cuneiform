@@ -203,7 +203,18 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 	
 	@Override
 	public void exitFromStackExpr( @NotNull CuneiformParser.FromStackExprContext ctx ) {
-		rewriter.replace( ctx.FROMSTACK().getSymbol(), exprStack.pop() );
+		
+		Token symbol;
+
+		
+		symbol = ctx.FROMSTACK().getSymbol();
+		
+		if( exprStack.isEmpty() )	
+			throw new ParseException( symbol.getLine(), symbol.getCharPositionInLine(), symbol.getText(),
+				"Pipe destination encountered where there is no source." );
+		
+		
+		rewriter.replace( symbol, exprStack.pop() );
 	}
 	
 	public String getRewrittenText() {
@@ -329,9 +340,4 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 		if( log.isTraceEnabled() )
 			log.trace( "Context sensitivity detected." );
 	}
-
-	
-
-	
-
 }

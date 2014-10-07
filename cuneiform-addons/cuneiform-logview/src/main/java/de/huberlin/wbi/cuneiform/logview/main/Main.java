@@ -32,50 +32,76 @@
 
 package de.huberlin.wbi.cuneiform.logview.main;
 
+
+import java.awt.BorderLayout;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import javax.swing.JFrame;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.WindowConstants;
 
 import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.gantt.GanttOp;
+import de.huberlin.wbi.cuneiform.logview.gui.ParallelismView;
+import de.huberlin.wbi.cuneiform.logview.gui.TaskBrowser;
+import de.huberlin.wbi.cuneiform.logview.gui.TaskView;
 
 public class Main {
 
-	public static void main( String[] args ) throws FileNotFoundException, IOException, JSONException {
+	public static void main( String[] args ) throws IOException, JSONException {
 
-		String filename = "/home/jorgen/data/14-05-28_DBIS_Experimente/logs/e11_23_2048_variant-call-09";
+
+		JFrame frame;
+		JSplitPane splitPane;
+		TaskBrowser taskBrowser;
+		TaskView taskView;
+		Path logPath;
 		String line;
-		JsonReportEntry reportEntry;
-		GanttOp op;
+		JTabbedPane tabbedPane;
+		ParallelismView parallelismView;
+		JsonReportEntry entry;
+		
+		frame = new JFrame( "Cuneiform Log View" );
+		
+		frame.setSize( 600, 400 );
+		frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
+		frame.setLayout( new BorderLayout() );
 		
 		
-		op = new GanttOp();
+		taskView = new TaskView();
+		taskBrowser = new TaskBrowser( taskView );
+		splitPane = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, taskBrowser, taskView );
+		splitPane.setDividerLocation( 200 );
 		
+		parallelismView = new ParallelismView();
 		
-		try( BufferedReader reader = new BufferedReader( new FileReader( new File( filename ) ) ) ) {
-						
+		tabbedPane = new JTabbedPane();
+		tabbedPane.addTab( "Task browser", splitPane );
+		tabbedPane.addTab( "Parallelism", parallelismView );
+		
+		frame.add( tabbedPane, BorderLayout.CENTER );
+		
+		logPath = Paths.get( "/tmp/cuneiform-stat.log" );
+		try( BufferedReader reader = Files.newBufferedReader( logPath ) ) {
+			
 			while( ( line = reader.readLine() ) != null ) {
-				
-				reportEntry = new JsonReportEntry( line );
-				op.process( reportEntry );
-			}
-			
-			reader.close();
-			
-			
-			try( BufferedWriter writer = new BufferedWriter( new FileWriter( new File( "/home/jorgen/main.m" ) ) ) ) {
-				writer.write( op.getChart() );
+				entry = new JsonReportEntry( line );
+				taskBrowser.register( entry );
+				parallelismView.register( entry );
 			}
 			
 		}
 		
+		parallelismView.updateView();
 		
+		
+		frame.setVisible( true );
 		
     }
 }
