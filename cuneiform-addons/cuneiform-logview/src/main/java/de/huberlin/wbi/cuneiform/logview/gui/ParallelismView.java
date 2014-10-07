@@ -19,7 +19,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 public class ParallelismView extends JPanel {
 
 	private static final long serialVersionUID = -5167316615121741821L;
-	private static final int NSAMPLE = 64;
+	private static final int NSAMPLE = 1024;
 	
 	private long firstBegin;
 	private long lastBegin;
@@ -30,14 +30,22 @@ public class ParallelismView extends JPanel {
 	
 	public ParallelismView() {
 		
-		firstBegin = Long.MAX_VALUE;
-		lastDur = Long.MIN_VALUE;
-		
 		beginMap = new HashMap<>();
 		durMap = new HashMap<>();
 		taskNameMap = new HashMap<>();
+		clear();
 		
 		setLayout( new BorderLayout() );
+	}
+	
+	public void clear() {
+
+		firstBegin = Long.MAX_VALUE;
+		lastDur = Long.MIN_VALUE;
+
+		beginMap.clear();
+		durMap.clear();
+		taskNameMap.clear();
 	}
 	
 	public void register( JsonReportEntry entry ) throws JSONException {
@@ -124,14 +132,14 @@ public class ParallelismView extends JPanel {
 			cvec = seriesMap.get( n );
 			series = new XYSeries( n, true, false );
 			for( i = 0; i < NSAMPLE; i++ )
-				series.add( tvec[ i ], cvec[ i ] );
+				series.add( ( ( double )( tvec[ i ]-firstBegin ) )/3600000, cvec[ i ] );
 			
 			dataset.addSeries( series );
 		}
 		
 		chart = ChartFactory.createStackedXYAreaChart(
 			"Parallelism",				// title
-			"Time [ms]",				// xAxisLabel
+			"Time [h]",					// xAxisLabel
 			"N invocations",			// yAxisLabel
 			dataset,					// dataset
 			PlotOrientation.VERTICAL,	// orientation
@@ -141,6 +149,7 @@ public class ParallelismView extends JPanel {
 		);
 		
 		add( new ChartPanel( chart ), BorderLayout.CENTER );
+		
 	}
 	
 }
