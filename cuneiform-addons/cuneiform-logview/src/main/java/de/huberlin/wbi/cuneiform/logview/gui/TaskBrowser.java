@@ -83,7 +83,7 @@ public class TaskBrowser extends JPanel {
 			else {
 				
 				if( unnamed == null ) {
-					unnamed = new DefaultMutableTreeNode( "[unnamed]" );
+					unnamed = new DefaultMutableTreeNode( "[lambda]" );
 					treeModel.insertNodeInto( unnamed, top, 0 );
 				}
 				taskItem = unnamed;
