@@ -7,6 +7,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -23,6 +24,7 @@ public class TaskView extends JPanel implements TreeSelectionListener {
 	private final JTextField taskNameField;
 	private final JTextArea stdOutArea;
 	private final JTextArea stdErrArea;
+	private final FileBrowser fileBrowser;
 	
 	public TaskView() {
 		
@@ -66,9 +68,12 @@ public class TaskView extends JPanel implements TreeSelectionListener {
 		stdErrArea.setEditable( false );
 		stdErrArea.setFont( font );
 		
+		fileBrowser = new FileBrowser();
+		
 		tabbedPane = new JTabbedPane();
 		tabbedPane.addTab( "Stdout", new JScrollPane( stdOutArea ) );
 		tabbedPane.addTab( "Stderr", new JScrollPane( stdErrArea ) );
+		tabbedPane.addTab( "Container", fileBrowser );
 		add( tabbedPane, BorderLayout.CENTER );
 	}
 
@@ -89,12 +94,14 @@ public class TaskView extends JPanel implements TreeSelectionListener {
 			taskNameField.setText( invocItem.getTaskName() );
 			stdOutArea.setText( invocItem.getStdOut() );
 			stdErrArea.setText( invocItem.getStdErr() );
+			fileBrowser.setInvocId( invocItem.getInvocId() );
 		}
 		else {
 			invocIdField.setText( null );
 			taskNameField.setText( null );
 			stdOutArea.setText( null );
 			stdErrArea.setText( null );
+			fileBrowser.blank();
 		}
 		
 	}

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
@@ -27,6 +28,7 @@ public class TaskBrowser extends Visualizable {
 
 	public TaskBrowser( TaskView taskView ) {
 		
+		JScrollPane scrollPane;
 		
 		if( taskView == null )
 			throw new NullPointerException( "Task view must not be null." );
@@ -41,7 +43,11 @@ public class TaskBrowser extends Visualizable {
 		treeModel = new DefaultTreeModel( top );
 		tree = new JTree( treeModel );
 		tree.getSelectionModel().setSelectionMode( TreeSelectionModel.SINGLE_TREE_SELECTION );
-		add( new JScrollPane( tree ), BorderLayout.CENTER );
+		
+		scrollPane = new JScrollPane( tree );
+		scrollPane.setHorizontalScrollBarPolicy( ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER );
+
+		add( scrollPane, BorderLayout.CENTER );
 		
 		tree.addTreeSelectionListener( taskView );
 		
