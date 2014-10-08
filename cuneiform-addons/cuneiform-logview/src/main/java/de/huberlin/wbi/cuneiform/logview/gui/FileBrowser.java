@@ -30,7 +30,6 @@ public class FileBrowser extends JPanel implements TreeSelectionListener {
 	private final DefaultTreeModel treeModel;
 	private final JTextArea contentArea;
 	private final Path buildPath;
-	private long currentInvocId;
 	
 	public FileBrowser() {
 		
@@ -85,7 +84,6 @@ public class FileBrowser extends JPanel implements TreeSelectionListener {
 			currentPath = buildPath.resolve( String.valueOf( invocId ) );
 			ls( currentPath, top );
 			tree.expandPath( new TreePath( top.getPath() ) );
-			this.currentInvocId = invocId;
 		}
 		catch( IOException e ) {
 			e.printStackTrace();
