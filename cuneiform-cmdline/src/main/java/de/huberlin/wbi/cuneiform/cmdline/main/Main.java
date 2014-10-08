@@ -102,12 +102,12 @@ public class Main {
 				return;
 			}
 			
-			if( cmd.hasOption( "l" ) )
+			if( cmd.hasOption( 'l' ) )
 				sandbox = Paths.get( cmd.getOptionValue( "l" ) );
 			else
 				sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
 			
-			if( cmd.hasOption( "c" ) ) {
+			if( cmd.hasOption( 'c' ) ) {
 				LocalThread.deleteIfExists( sandbox );
 				LocalThread.deleteIfExists( Paths.get( "/tmp/cuneiform-stat.log" ) );
 			}
@@ -119,7 +119,12 @@ public class Main {
 					
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
-					cre = new LocalCreActor( sandbox );
+					
+					if( cmd.hasOption( 't' ) )
+						cre = new LocalCreActor( sandbox, Integer.valueOf( cmd.getOptionValue( 't' ) ) );
+					else
+						cre = new LocalCreActor( sandbox );
+					
 					break;
 					
 				default : throw new RuntimeException( "Platform not recognized." );
@@ -248,6 +253,8 @@ public class Main {
 		opt.addOption( "l", "localcache", true, "Path to the local cache. Defaults to '~/.cuneiform'." );
 		
 		opt.addOption( "c", "clean", false, "Clear local cache before start." );
+		
+		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine." );
 		
 		return opt;
 		

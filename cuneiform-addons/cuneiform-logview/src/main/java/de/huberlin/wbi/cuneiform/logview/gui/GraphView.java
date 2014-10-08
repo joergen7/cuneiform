@@ -16,6 +16,9 @@ import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
 public class GraphView extends Visualizable {
 
 	private static final long serialVersionUID = 9059116172334909768L;
+	private static final String COLOR_FILE = "darkgoldenrod";
+	private static final String COLOR_INVOC = "blue";
+	private static final double WIDTH_VERTEX = .03;
 	
 	private final Map<String,CfEdge> edgeMap;
 	private final Map<String,Set<Long>> vertexMap;
@@ -103,11 +106,15 @@ public class GraphView extends Visualizable {
 		// add vertices to subgraphs
 		sg = 0;
 		for( String taskName : vertexMap.keySet() ) {
+			
 			buf.append( "  subgraph cluster" ).append( sg++ ).append( " {\n" );
 			buf.append( "    label=\"" ).append( taskName ).append( "\";\n" );
+			
 			for( Long invocId : vertexMap.get( taskName ) )
 				buf.append( "    node_invoc" ).append( invocId )
-					.append( " [color=blue,width=.2,label=\"\"];\n" );
+					.append( " [color=" ).append( COLOR_INVOC )
+					.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" );
+			
 			buf.append( "  }\n" );
 		}
 		
@@ -122,12 +129,13 @@ public class GraphView extends Visualizable {
 				
 				// edge is an input file
 				buf.append( "  node_file" ).append( hc )
-					.append( " [color=yellow,width=.2,label=\"\"];\n" );
+					.append( " [color=" ).append( COLOR_FILE )
+					.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" );
 				
 				for( long consumerId : edge.getConsumerIdSet() )
 					
-					buf.append( "  node_file" ).append( hc ).append( " -> " )
-						.append( "node_invoc" ).append( consumerId ).append( ";\n" );
+					buf.append( "  node_file" ).append( hc ).append( ":s -> " )
+						.append( "node_invoc" ).append( consumerId ).append( ":n;\n" );
 			}
 			else {
 				
@@ -136,8 +144,8 @@ public class GraphView extends Visualizable {
 				
 				for( long consumerId : edge.getConsumerIdSet() )
 					
-					buf.append( "  node_invoc" ).append( producerId ).append( " -> " )
-						.append( "node_invoc" ).append( consumerId ).append( ";\n" );
+					buf.append( "  node_invoc" ).append( producerId ).append( ":s -> " )
+						.append( "node_invoc" ).append( consumerId ).append( ":n;\n" );
 				
 			}
 		}
