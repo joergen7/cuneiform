@@ -1,0 +1,49 @@
+package de.huberlin.wbi.cuneiform.logview.gui;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
+public class CfEdge {
+
+	private final String title;
+	private Long producer;
+	private final Set<Long> consumerSet;
+
+	public CfEdge( String title ) {
+		this( title, null );
+	}
+	
+	public CfEdge( String title, Long producer ) {
+		
+		if( title == null )
+			throw new NullPointerException( "Vertex title must not be null." );
+		
+		if( title.isEmpty() )
+			throw new RuntimeException( "Vertex title must not be empty." );
+		
+		this.title = title;
+		this.producer = producer;
+		consumerSet = new HashSet<>();
+	}
+	
+	public void addConsumer( long invocId ) {
+		consumerSet.add( invocId );
+	}
+	
+	public Set<Long> getConsumerSet() {
+		return Collections.unmodifiableSet( consumerSet );
+	}
+	
+	public String getTitle() {
+		return title;
+	}
+	
+	public boolean hasProducer() {
+		return producer != null;
+	}
+	
+	public Long getProducer() {
+		return producer;
+	}	
+}

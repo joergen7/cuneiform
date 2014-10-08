@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -13,12 +12,12 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
 
-public class TaskBrowser extends JPanel {
+public class TaskBrowser extends Visualizable {
 
 	private static final long serialVersionUID = 2782394011894606586L;
 	
-	private final TaskView taskView;
 	private final DefaultMutableTreeNode top;
 	private DefaultMutableTreeNode unnamed;
 	private final Map<Long,InvocationItem> invocMap;
@@ -32,7 +31,6 @@ public class TaskBrowser extends JPanel {
 		if( taskView == null )
 			throw new NullPointerException( "Task view must not be null." );
 		
-		this.taskView = taskView;
 		invocMap = new HashMap<>();
 		taskMap = new HashMap<>();
 		
@@ -49,6 +47,7 @@ public class TaskBrowser extends JPanel {
 		
 	}
 	
+	@Override
 	public void register( JsonReportEntry entry ) {
 		
 		long invocId;
@@ -100,5 +99,19 @@ public class TaskBrowser extends JPanel {
 		if( entry.isKeyInvocStdOut() )
 			invocItem.setStdOut( entry.getValueRawString() );
 		
+	}
+
+	@Override
+	public void clear() {
+		
+		int i;
+		
+		for( i = treeModel.getChildCount( top )-1; i >= 0; i-- )
+			treeModel.removeNodeFromParent( ( DefaultMutableTreeNode )top.getChildAt( i ) );
+	}
+
+	@Override
+	public void updateView() {
+		// nothing to do
 	}
 }

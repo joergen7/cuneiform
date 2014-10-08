@@ -49,6 +49,7 @@ public class JsonReportEntry {
 	public static final String KEY_INVOC_STDERR = "invoc-stderr";
 	public static final String KEY_INVOC_USER = "invoc-user";
 	public static final String KEY_INVOC_EXEC = "invoc-exec";
+	public static final String KEY_INVOC_SCRIPT = "invoc-script";
 	public static final String KEY_REDUCTION_TIME = "reduction-time";
 
 	public static final String ATT_INVOCID = "invocId";
@@ -91,9 +92,28 @@ public class JsonReportEntry {
 	public JsonReportEntry(
 		UUID runId, Long taskId, String taskname,
 		String lang, Long invocId, String file, String key, String rawValue ) {
+		
 		this( System.currentTimeMillis(), runId, taskId, taskname, lang, invocId, file, key, rawValue );
 	}
 		
+	public JsonReportEntry(
+		UUID runId, Long taskId, String taskname,
+		String lang, Long invocId, String key, String rawValue ) {
+		
+		this( System.currentTimeMillis(), runId, taskId, taskname, lang, invocId, null, key, rawValue );
+	}
+	
+	public JsonReportEntry( Ticket ticket, String key, String rawValue ) {		
+		this(
+			ticket.getRunId(),
+			ticket.getTicketId(),
+			ticket.getTaskName(),
+			ticket.getLangLabel(),
+			ticket.getTicketId(),
+			key,
+			rawValue );
+	}
+	
 	public JsonReportEntry(
 		long timestamp, UUID runId, Long taskId, String taskname,
 		String lang, Long invocId, String file, String key, JSONObject obj ) {
@@ -318,6 +338,22 @@ public class JsonReportEntry {
 		return key.equals( KEY_INVOC_TIME );
 	}
 	
+	public boolean isKeyInvocOutput() {
+		return key.equals( KEY_INVOC_OUTPUT );
+	}
+	
+	public boolean isKeyInvocExec() {
+		return key.equals( KEY_INVOC_EXEC );
+	}
+	
+	public boolean isKeyFileSizeStageIn() {
+		return key.equals( KEY_FILE_SIZE_STAGEIN );
+	}
+	
+	public boolean isKeyFileSizeStageOut() {
+		return key.equals( KEY_FILE_SIZE_STAGEOUT );
+	}
+
 	public boolean isValueJson() {
 		return !isValueString();
 	}

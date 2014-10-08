@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.JPanel;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -15,8 +13,9 @@ import org.jfree.data.xy.XYSeries;
 import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
 
-public class ParallelismView extends JPanel {
+public class ParallelismView extends Visualizable {
 
 	private static final long serialVersionUID = -5167316615121741821L;
 	private static final int NSAMPLE = 1024;
@@ -38,6 +37,7 @@ public class ParallelismView extends JPanel {
 		setLayout( new BorderLayout() );
 	}
 	
+	@Override
 	public void clear() {
 
 		firstBegin = Long.MAX_VALUE;
@@ -48,6 +48,7 @@ public class ParallelismView extends JPanel {
 		taskNameMap.clear();
 	}
 	
+	@Override
 	public void register( JsonReportEntry entry ) throws JSONException {
 
 		long begin, dur;
@@ -78,6 +79,7 @@ public class ParallelismView extends JPanel {
 		taskNameMap.put( invocId, taskName );
 	}
 	
+	@Override
 	public void updateView() {
 		
 		JFreeChart chart;

@@ -130,7 +130,14 @@ public abstract class Invocation {
 	public Path getExecutablePath( Path location ) {
 		return location.resolve( SCRIPT_NAME );
 	}
-
+	
+	public JsonReportEntry getExecutableLogEntry() {
+		return ticket.getExecutableLogEntry();
+	}
+	
+	public JsonReportEntry getScriptLogEntry() throws NotBoundException, NotDerivableException {
+		return new JsonReportEntry( ticket, JsonReportEntry.KEY_INVOC_SCRIPT, toScript() );
+	}
 	
 	public String getFunDef() throws NotDerivableException {
 		return defFunctionLog()
