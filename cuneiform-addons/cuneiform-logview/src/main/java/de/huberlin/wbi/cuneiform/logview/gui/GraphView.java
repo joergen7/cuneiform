@@ -18,7 +18,8 @@ public class GraphView extends Visualizable {
 	private static final long serialVersionUID = 9059116172334909768L;
 	private static final String COLOR_FILE = "darkgoldenrod";
 	private static final String COLOR_INVOC = "blue";
-	private static final double WIDTH_VERTEX = .03;
+	private static final double WIDTH_VERTEX = .01;
+	private static final double NODESEP = .03;
 	
 	private final Map<String,CfEdge> edgeMap;
 	private final Map<String,Set<Long>> vertexMap;
@@ -98,7 +99,7 @@ public class GraphView extends Visualizable {
 		int hc;
 		
 		buf = new StringBuffer();
-		buf.append( "digraph G {\n" );
+		buf.append( "digraph G {\n  nodesep=" ).append( NODESEP ).append( ";\n" );
 		
 		
 		// add vertices to subgraphs
@@ -110,7 +111,7 @@ public class GraphView extends Visualizable {
 			
 			for( Long invocId : vertexMap.get( taskName ) )
 				buf.append( "    node_invoc" ).append( invocId )
-					.append( " [color=" ).append( COLOR_INVOC )
+					.append( " [shape=box,color=" ).append( COLOR_INVOC )
 					.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" );
 			
 			buf.append( "  }\n" );
@@ -126,7 +127,7 @@ public class GraphView extends Visualizable {
 				
 				// edge is an input file
 				buf.append( "  node_infile" ).append( hc )
-					.append( " [color=" ).append( COLOR_FILE )
+					.append( " [shape=box,color=" ).append( COLOR_FILE )
 					.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" );
 				
 				for( long consumerId : edge.getConsumerIdSet() )
@@ -140,7 +141,7 @@ public class GraphView extends Visualizable {
 				producerId = edge.getProducerId();
 				
 				if( edge.isConsumerIdSetEmpty() )
-					buf.append( "  node_outfile" ).append( hc ).append( " [color=" ).append( COLOR_FILE )
+					buf.append( "  node_outfile" ).append( hc ).append( " [shape=box,color=" ).append( COLOR_FILE )
 						.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" )
 						.append( "  node_invoc" ).append( producerId )
 						.append( ":s -> node_outfile" ).append( hc ).append( ":n;\n" );

@@ -69,7 +69,7 @@ public class ParallelismView extends Visualizable {
 		if( begin < firstBegin )
 			firstBegin = begin;
 		else
-			if( begin > lastBegin ) {
+			if( begin+dur > lastBegin+lastDur ) {
 				lastBegin = begin;
 				lastDur = dur;
 			}

@@ -35,7 +35,6 @@ package de.huberlin.wbi.cuneiform.logview.main;
 
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,8 +43,6 @@ import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
-
-import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.logview.gui.GraphView;
@@ -71,7 +68,7 @@ public class Main {
 		
 		frame = new JFrame( "Cuneiform Log View" );
 		
-		frame.setSize( 600, 400 );
+		frame.setSize( 1024, 768 );
 		frame.setDefaultCloseOperation( WindowConstants.DISPOSE_ON_CLOSE );
 		frame.setLayout( new BorderLayout() );
 		
