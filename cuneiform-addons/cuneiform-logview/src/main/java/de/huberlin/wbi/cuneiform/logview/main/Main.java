@@ -48,13 +48,14 @@ import javax.swing.WindowConstants;
 import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.logview.gui.GraphView;
 import de.huberlin.wbi.cuneiform.logview.gui.ParallelismView;
 import de.huberlin.wbi.cuneiform.logview.gui.TaskBrowser;
 import de.huberlin.wbi.cuneiform.logview.gui.TaskView;
 
 public class Main {
 
-	public static void main( String[] args ) throws IOException, JSONException {
+	public static void main( String[] args ) throws Exception {
 
 
 		JFrame frame;
@@ -66,6 +67,7 @@ public class Main {
 		JTabbedPane tabbedPane;
 		ParallelismView parallelismView;
 		JsonReportEntry entry;
+		GraphView graphView;
 		
 		frame = new JFrame( "Cuneiform Log View" );
 		
@@ -81,9 +83,12 @@ public class Main {
 		
 		parallelismView = new ParallelismView();
 		
+		graphView = new GraphView();
+		
 		tabbedPane = new JTabbedPane();
 		tabbedPane.addTab( "Task browser", splitPane );
 		tabbedPane.addTab( "Parallelism", parallelismView );
+		tabbedPane.addTab( "Invocation graph", graphView );
 		
 		frame.add( tabbedPane, BorderLayout.CENTER );
 		
@@ -94,11 +99,14 @@ public class Main {
 				entry = new JsonReportEntry( line );
 				taskBrowser.register( entry );
 				parallelismView.register( entry );
+				graphView.register( entry );
 			}
 			
 		}
 		
+		taskBrowser.updateView();
 		parallelismView.updateView();
+		graphView.updateView();
 		
 		
 		frame.setVisible( true );

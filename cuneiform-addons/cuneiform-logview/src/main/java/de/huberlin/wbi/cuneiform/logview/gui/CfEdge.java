@@ -27,11 +27,11 @@ public class CfEdge {
 		consumerSet = new HashSet<>();
 	}
 	
-	public void addConsumer( long invocId ) {
+	public void addConsumerId( long invocId ) {
 		consumerSet.add( invocId );
 	}
 	
-	public Set<Long> getConsumerSet() {
+	public Set<Long> getConsumerIdSet() {
 		return Collections.unmodifiableSet( consumerSet );
 	}
 	
@@ -43,7 +43,7 @@ public class CfEdge {
 		return producer != null;
 	}
 	
-	public Long getProducer() {
+	public Long getProducerId() {
 		return producer;
 	}	
 }
