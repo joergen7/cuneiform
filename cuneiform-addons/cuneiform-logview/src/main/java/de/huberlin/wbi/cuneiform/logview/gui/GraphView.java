@@ -91,9 +91,7 @@ public class GraphView extends Visualizable {
 	@Override
 	public void updateView() {
 
-		Long src;
 		CfEdge edge;
-		long producer;
 		StringBuffer buf;
 		int sg;
 		long producerId;
@@ -121,20 +119,19 @@ public class GraphView extends Visualizable {
 		for( String filename : edgeMap.keySet() ) {
 			
 			edge = edgeMap.get( filename );
+			hc = Math.abs( filename.hashCode() );
 			
 			
 			if( !edge.hasProducer() ) {
 				
-				hc = Math.abs( filename.hashCode() );
-				
 				// edge is an input file
-				buf.append( "  node_file" ).append( hc )
+				buf.append( "  node_infile" ).append( hc )
 					.append( " [color=" ).append( COLOR_FILE )
 					.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" );
 				
 				for( long consumerId : edge.getConsumerIdSet() )
 					
-					buf.append( "  node_file" ).append( hc ).append( ":s -> " )
+					buf.append( "  node_infile" ).append( hc ).append( ":s -> " )
 						.append( "node_invoc" ).append( consumerId ).append( ":n;\n" );
 			}
 			else {
@@ -142,10 +139,17 @@ public class GraphView extends Visualizable {
 				// edge has a producer
 				producerId = edge.getProducerId();
 				
-				for( long consumerId : edge.getConsumerIdSet() )
-					
-					buf.append( "  node_invoc" ).append( producerId ).append( ":s -> " )
-						.append( "node_invoc" ).append( consumerId ).append( ":n;\n" );
+				if( edge.isConsumerIdSetEmpty() )
+					buf.append( "  node_outfile" ).append( hc ).append( " [color=" ).append( COLOR_FILE )
+						.append( ",width=" ).append( WIDTH_VERTEX ).append( ",label=\"\"];\n" )
+						.append( "  node_invoc" ).append( producerId )
+						.append( ":s -> node_outfile" ).append( hc ).append( ":n;\n" );
+				
+				else
+					for( long consumerId : edge.getConsumerIdSet() )
+						
+						buf.append( "  node_invoc" ).append( producerId ).append( ":s -> " )
+							.append( "node_invoc" ).append( consumerId ).append( ":n;\n" );
 				
 			}
 		}

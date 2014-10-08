@@ -8,7 +8,7 @@ public class CfEdge {
 
 	private final String title;
 	private Long producer;
-	private final Set<Long> consumerSet;
+	private final Set<Long> consumerIdSet;
 
 	public CfEdge( String title ) {
 		this( title, null );
@@ -24,15 +24,19 @@ public class CfEdge {
 		
 		this.title = title;
 		this.producer = producer;
-		consumerSet = new HashSet<>();
+		consumerIdSet = new HashSet<>();
 	}
 	
 	public void addConsumerId( long invocId ) {
-		consumerSet.add( invocId );
+		consumerIdSet.add( invocId );
+	}
+	
+	public boolean isConsumerIdSetEmpty() {
+		return consumerIdSet.isEmpty();
 	}
 	
 	public Set<Long> getConsumerIdSet() {
-		return Collections.unmodifiableSet( consumerSet );
+		return Collections.unmodifiableSet( consumerIdSet );
 	}
 	
 	public String getTitle() {
