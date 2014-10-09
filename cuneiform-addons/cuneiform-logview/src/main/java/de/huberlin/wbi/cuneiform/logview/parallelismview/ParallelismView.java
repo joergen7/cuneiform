@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.gui;
+package de.huberlin.wbi.cuneiform.logview.parallelismview;
 
 import java.awt.BorderLayout;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import org.jfree.data.xy.XYSeries;
 import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
 
 public class ParallelismView extends Visualizable {
 

@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.gui;
+package de.huberlin.wbi.cuneiform.taskview;
 
 import java.awt.BorderLayout;
 import java.awt.Font;

@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.gui;
+package de.huberlin.wbi.cuneiform.taskview;
 
 import java.awt.BorderLayout;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
 
 public class TaskBrowser extends Visualizable {
 

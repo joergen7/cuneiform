@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.gui;
+package de.huberlin.wbi.cuneiform.logview.graphview;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
@@ -11,7 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.op.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
 
 public class GraphView extends Visualizable {
 

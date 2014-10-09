@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.op;
+package de.huberlin.wbi.cuneiform.logview.main;
 
 import javax.swing.JPanel;
 

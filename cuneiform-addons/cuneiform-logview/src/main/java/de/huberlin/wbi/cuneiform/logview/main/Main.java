@@ -45,10 +45,10 @@ import javax.swing.JTabbedPane;
 import javax.swing.WindowConstants;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.gui.GraphView;
-import de.huberlin.wbi.cuneiform.logview.gui.ParallelismView;
-import de.huberlin.wbi.cuneiform.logview.gui.TaskBrowser;
-import de.huberlin.wbi.cuneiform.logview.gui.TaskView;
+import de.huberlin.wbi.cuneiform.logview.graphview.GraphView;
+import de.huberlin.wbi.cuneiform.logview.parallelismview.ParallelismView;
+import de.huberlin.wbi.cuneiform.taskview.TaskBrowser;
+import de.huberlin.wbi.cuneiform.taskview.TaskView;
 
 public class Main {
 

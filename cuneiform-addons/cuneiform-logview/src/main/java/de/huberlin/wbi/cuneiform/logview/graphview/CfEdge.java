@@ -1,4 +1,4 @@
-package de.huberlin.wbi.cuneiform.logview.gui;
+package de.huberlin.wbi.cuneiform.logview.graphview;
 
 import java.util.Collections;
 import java.util.HashSet;
