@@ -73,7 +73,7 @@ public class MatlabInvocation extends OctaveInvocation {
 	
 	@SuppressWarnings("static-method")
 	public String getScriptFoot() {
-		return "catch ex\nexit( -1 )\nend\nexit\nend\n";
+		return "catch ex\nex\nex.stack\nexit( -1 )\nend\nexit\nend\n";
 	}
 	
 	@Override
