@@ -13,7 +13,7 @@ import org.jfree.data.xy.XYSeries;
 import org.json.JSONException;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.common.Visualizable;
 
 public class ParallelismView extends Visualizable {
 

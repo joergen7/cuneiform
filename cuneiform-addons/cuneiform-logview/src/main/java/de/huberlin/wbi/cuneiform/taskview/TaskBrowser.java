@@ -13,7 +13,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.common.Visualizable;
 
 public class TaskBrowser extends Visualizable {
 

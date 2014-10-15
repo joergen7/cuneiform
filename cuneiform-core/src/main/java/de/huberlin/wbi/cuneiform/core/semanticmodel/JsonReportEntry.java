@@ -37,8 +37,6 @@ import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
-
 public class JsonReportEntry {
 	
 	public static final String KEY_INVOC_TIME = "invoc-time";
@@ -183,44 +181,6 @@ public class JsonReportEntry {
 			System.err.println( raw );
 			throw e;
 		}
-	}
-	
-	public JsonReportEntry( Invocation invoc, String file, String key, String value ) {		
-		this(
-			invoc.getRunId(),
-			invoc.getTaskId(),
-			invoc.getTaskName(),
-			invoc.getLangLabel(),
-			invoc.getTicketId(),
-			file,
-			key,
-			value );
-	}
-	
-	public JsonReportEntry( long timestamp, Invocation invoc, String file, String key, String value ) {		
-		this(
-			timestamp,
-			invoc.getRunId(),
-			invoc.getTaskId(),
-			invoc.getTaskName(),
-			invoc.getLangLabel(),
-			invoc.getTicketId(),
-			file,
-			key,
-			value );
-	}
-	
-	public JsonReportEntry( long timestamp, Invocation invoc, String file, String key, JSONObject value ) {		
-		this(
-			timestamp,
-			invoc.getRunId(),
-			invoc.getTaskId(),
-			invoc.getTaskName(),
-			invoc.getLangLabel(),
-			invoc.getTicketId(),
-			file,
-			key,
-			value );
 	}
 	
 	@Override

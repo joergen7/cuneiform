@@ -266,7 +266,7 @@ public class LocalThread implements Runnable {
 					
 					obj = new JSONObject();
 					obj.put( JsonReportEntry.LABEL_REALTIME, toc-tic );
-					entry = new JsonReportEntry( tic, invoc, null, JsonReportEntry.KEY_INVOC_TIME, obj );
+					entry = invoc.createJsonReportEntry( tic, JsonReportEntry.KEY_INVOC_TIME, obj );
 					
 					writer.write( entry.toString() );
 					writer.write( '\n' );
@@ -281,7 +281,7 @@ public class LocalThread implements Runnable {
 						stdOut = buf.toString();
 						
 						if( !stdOut.isEmpty() ) {
-							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDOUT, stdOut );
+							entry = invoc.createJsonReportEntry( JsonReportEntry.KEY_INVOC_STDOUT, stdOut );
 							writer.write( entry.toString() );
 							writer.write( '\n' );
 						}
@@ -296,7 +296,7 @@ public class LocalThread implements Runnable {
 						stdErr = buf.toString();
 						if( !stdErr.isEmpty() ) {
 						
-							entry = new JsonReportEntry( invoc, null, JsonReportEntry.KEY_INVOC_STDERR, stdErr );
+							entry = invoc.createJsonReportEntry( JsonReportEntry.KEY_INVOC_STDERR, stdErr );
 							writer.write( entry.toString() );
 							writer.write( '\n' );
 						}

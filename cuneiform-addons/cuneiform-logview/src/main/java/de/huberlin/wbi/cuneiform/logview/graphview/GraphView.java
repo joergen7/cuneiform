@@ -11,7 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
-import de.huberlin.wbi.cuneiform.logview.main.Visualizable;
+import de.huberlin.wbi.cuneiform.logview.common.Visualizable;
 
 public class GraphView extends Visualizable {
 

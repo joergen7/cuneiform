@@ -741,4 +741,84 @@ public abstract class Invocation {
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
 	}
+	
+	
+	public JsonReportEntry createJsonReportEntry( String file, String key, String value ) {		
+		return new JsonReportEntry(
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			file,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry createJsonReportEntry( long timestamp, String file, String key, String value ) {		
+		return new JsonReportEntry(
+			timestamp,
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			file,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry createJsonReportEntry( long timestamp, String file, String key, JSONObject value ) {		
+		return new JsonReportEntry(
+			timestamp,
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			file,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry createJsonReportEntry( String key, String value ) {		
+		return new JsonReportEntry(
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			null,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry createJsonReportEntry( long timestamp, String key, String value ) {		
+		return new JsonReportEntry(
+			timestamp,
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			null,
+			key,
+			value );
+	}
+	
+	public JsonReportEntry createJsonReportEntry( long timestamp, String key, JSONObject value ) {		
+		return new JsonReportEntry(
+			timestamp,
+			getRunId(),
+			getTaskId(),
+			getTaskName(),
+			getLangLabel(),
+			getTicketId(),
+			null,
+			key,
+			value );
+	}
+
+	
+
 }
