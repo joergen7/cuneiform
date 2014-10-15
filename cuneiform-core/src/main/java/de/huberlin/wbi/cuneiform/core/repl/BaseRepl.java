@@ -120,7 +120,7 @@ public abstract class BaseRepl {
 		return ans != null;
 	}
 	
-	public int interpret( String input ) throws CloneNotSupportedException {
+	public int interpret( String input ) {
 		
 		String afterPre, afterChannel;
 		CuneiformLexer lexer;
@@ -152,7 +152,7 @@ public abstract class BaseRepl {
 		return interpret( tlc );
 	}
 	
-	public int interpret( TopLevelContext tlc ) throws CloneNotSupportedException {
+	public int interpret( TopLevelContext tlc ) {
 		
 		int ctl;
 		DynamicNodeVisitor reducer;
@@ -309,7 +309,7 @@ public abstract class BaseRepl {
 			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJörgen Brandt    Marc Bux    Ulf Leser\n";
 	}
 
-	public static int fetchCtl( TopLevelContext tlc ) throws CloneNotSupportedException {
+	public static int fetchCtl( TopLevelContext tlc ) {
 		
 		int ctl;
 		List<CompoundExpr> removeCandidateList;
@@ -321,44 +321,50 @@ public abstract class BaseRepl {
 		ctl = 0;
 		removeCandidateList = new ArrayList<>();
 		
-		for( CompoundExpr ce : tlc.getTargetList() ) {
-			
-			cp = ce.clone();
-			
-			for( SingleExpr se : cp.getSingleExprList() )
-				if( se instanceof NameExpr ) {
-					
-					
-					if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
-						ctl += CTL_STATE;
-						ce.remove( se );
-						removeCandidateList.add( ce );
-						continue;
+		try {
+		
+			for( CompoundExpr ce : tlc.getTargetList() ) {
+				
+				cp = ce.clone();
+				
+				for( SingleExpr se : cp.getSingleExprList() )
+					if( se instanceof NameExpr ) {
+						
+						
+						if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
+							ctl += CTL_STATE;
+							ce.remove( se );
+							removeCandidateList.add( ce );
+							continue;
+						}
+	
+						if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
+							ctl += CTL_QUIT;
+							ce.remove( se );
+							removeCandidateList.add( ce );
+							continue;
+						}
+	
+						if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
+							ctl += CTL_QUERYSET;
+							ce.remove( se );
+							removeCandidateList.add( ce );
+							continue;
+						}
+						
+						if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
+							ctl += CTL_TICKETSET;
+							ce.remove( se );
+							removeCandidateList.add( ce );
+							continue;
+						}
 					}
-
-					if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
-						ctl += CTL_QUIT;
-						ce.remove( se );
-						removeCandidateList.add( ce );
-						continue;
-					}
-
-					if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
-						ctl += CTL_QUERYSET;
-						ce.remove( se );
-						removeCandidateList.add( ce );
-						continue;
-					}
-					
-					if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
-						ctl += CTL_TICKETSET;
-						ce.remove( se );
-						removeCandidateList.add( ce );
-						continue;
-					}
-
-				}
+			}
 		}
+		catch( CloneNotSupportedException e ) {
+			throw new RuntimeException( e );
+		}
+		
 		
 		for( CompoundExpr ce : removeCandidateList )
 			if( ce.getNumSingleExpr() == 0 )

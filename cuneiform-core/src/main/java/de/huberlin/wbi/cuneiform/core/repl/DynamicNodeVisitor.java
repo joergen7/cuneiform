@@ -73,7 +73,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	private final Log log;
 	private final Log statLog;
 	
-	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) throws CloneNotSupportedException {
+	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
 		
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source must not be null." );
@@ -451,12 +451,17 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		return queryId;
 	}
 			
-	public void setTopLevelContext( TopLevelContext tlc ) throws CloneNotSupportedException {
+	public void setTopLevelContext( TopLevelContext tlc ) {
 
 		if( tlc == null )
 			throw new NullPointerException( "Top level context must not be null." );
 		
-		currentBlock = tlc.clone();
+		try {
+			currentBlock = tlc.clone();
+		}
+		catch( CloneNotSupportedException e ) {
+			throw new RuntimeException( e );
+		}
 
 	}
 	
