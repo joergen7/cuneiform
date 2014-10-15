@@ -188,22 +188,37 @@ public class LocalThread implements Runnable {
 					
 					if( filename.charAt( 0 ) == '/' ) {
 						
+						
 						srcPath = Paths.get( filename );
+						if( log.isInfoEnabled() )
+							log.info( "Resolving absolute path '"+srcPath+"'." );
+						
 						destPath = location.resolve( srcPath.getFileName() );
 					}
 					else {
 						
 						srcPath = centralRepo.resolve( filename );
 						destPath = location.resolve( filename );
-						if( !Files.exists( srcPath ) )
+						
+						if( !Files.exists( srcPath ) ) {
+							
 							srcPath = callLocation.resolve( filename );
+							if( log.isInfoEnabled() )
+								log.info( "Resolving relative path '"+srcPath+"'." );
+						}
+						else
+
+							if( log.isInfoEnabled() )
+								log.info( "Resolving path to central repository '"+srcPath+"'." );
 					}
 					
-					if( log.isTraceEnabled() )
-						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
+					if( log.isInfoEnabled() )
+						log.info( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
+
+					if( !Files.exists( destPath.getParent() ) )
+						Files.createDirectories( destPath.getParent() );
 					
 					Files.createSymbolicLink( destPath, srcPath );
-					
 					
 				}
 				
