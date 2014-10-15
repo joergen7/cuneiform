@@ -56,6 +56,15 @@ public class CorrelParam implements Param {
 		return nameExprSet.contains( nameExpr );
 	}
 	
+	public boolean contains( String id ) {
+		
+		for( NameExpr ne : nameExprSet )
+			if( ne.getId().equals( id ) )
+				return true;
+		
+		return false;
+	}
+	
 	@Override
 	public int getNumParam() {
 		return nameExprSet.size();

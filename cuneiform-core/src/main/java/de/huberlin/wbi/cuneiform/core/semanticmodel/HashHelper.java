@@ -34,7 +34,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class HashHelper {
 
-	private static final long PRIME = Long.valueOf( "99194853094755497" ); // large prime number below 9223372036854775807
+	private static final long PRIME = 99194853094755497L; // large prime number below 9223372036854775807
 	
 	private static int abs( int x ) {
 		

@@ -134,6 +134,10 @@ public class LocalThread implements Runnable {
 			log.debug( "Starting up local thread for ticket "+invoc.getTicketId()+"." );
 		
 		
+		if( invoc == null )
+			throw new NullPointerException( "Invocation must not be null." );
+
+
 		ticket = invoc.getTicket();
 		process = null;
 		stdOut = null;
@@ -142,10 +146,9 @@ public class LocalThread implements Runnable {
 		script = null;
 		successMarker = null;
 		cs = Charset.forName( "UTF-8" );
+		
 		try {
 					
-			if( invoc == null )
-				throw new NullPointerException( "Invocation must not be null." );
 
 
 			callLocation = Paths.get( System.getProperty( "user.dir" ) );

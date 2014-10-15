@@ -57,6 +57,27 @@ public abstract class BaseBlock implements CfNode, Cloneable {
 		assignMap.clear();
 	}
 	
+	@Override
+	public BaseBlock clone() throws CloneNotSupportedException {
+		
+		BaseBlock block1;
+		
+		block1 = ( BaseBlock )super.clone();
+		block1.setParent( parent );
+
+		try {
+			
+			for( NameExpr key : getNameSet() )
+				block1.putAssign( key, getExpr( key ) );
+		}
+		catch( NotBoundException e ) {
+			throw new RuntimeException( e );
+		}
+		
+		return block1;
+		
+	}
+	
 	public boolean containsName( NameExpr nameExpr ) {
 		return assignMap.containsKey( nameExpr );
 	}

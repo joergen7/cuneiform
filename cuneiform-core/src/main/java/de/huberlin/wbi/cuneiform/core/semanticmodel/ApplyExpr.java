@@ -35,7 +35,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class ApplyExpr extends BaseBlock implements SingleExpr {
 
-	private final int channel;
+	private int channel;
 	private boolean rest;
 	private CompoundExpr taskExpr;
 	
@@ -47,24 +47,21 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 
 		super( parent );
 
-		if( channel < 1 ) 
-			throw new SemanticModelException(
-				String.valueOf( channel ),
-				"Invalid channel "+channel+". Channel must be a positive integer." );
-		
-		this.channel = channel;
-		
+		setChannel( channel );
 		setRest( inheritsExtra );
 	}
 	
 	@Override
-	public ApplyExpr clone() {
+	public ApplyExpr clone() throws CloneNotSupportedException {
 		
 		ApplyExpr ae;
 		
-		ae = new ApplyExpr( channel, rest, getParent() );
-		ae.setTaskExpr( taskExpr );
+		ae = ( ApplyExpr )super.clone();
 		
+		ae.setChannel( channel );
+		ae.setRest( rest );
+		ae.setTaskExpr( taskExpr );
+				
 		return ae;
 	}
 	
@@ -219,6 +216,16 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 		
 		rest = false;
 	}
+	
+	public void setChannel( int channel ) {
+		
+		if( channel < 1 ) 
+			throw new SemanticModelException(
+				String.valueOf( channel ),
+				"Invalid channel "+channel+". Channel must be a positive integer." );
+		
+		this.channel = channel;
+	}
 		
 	public void setRest( boolean inheritsExtra ) {
 		this.rest = inheritsExtra;
@@ -297,7 +304,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	}
 
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException, CloneNotSupportedException {
 		return visitor.accept( this );
 	}
 

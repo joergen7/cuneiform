@@ -120,7 +120,7 @@ public abstract class BaseRepl {
 		return ans != null;
 	}
 	
-	public int interpret( String input ) {
+	public int interpret( String input ) throws CloneNotSupportedException {
 		
 		String afterPre, afterChannel;
 		CuneiformLexer lexer;
@@ -152,7 +152,7 @@ public abstract class BaseRepl {
 		return interpret( tlc );
 	}
 	
-	public int interpret( TopLevelContext tlc ) {
+	public int interpret( TopLevelContext tlc ) throws CloneNotSupportedException {
 		
 		int ctl;
 		DynamicNodeVisitor reducer;
@@ -309,7 +309,7 @@ public abstract class BaseRepl {
 			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJörgen Brandt    Marc Bux    Ulf Leser\n";
 	}
 
-	public static int fetchCtl( TopLevelContext tlc ) {
+	public static int fetchCtl( TopLevelContext tlc ) throws CloneNotSupportedException {
 		
 		int ctl;
 		List<CompoundExpr> removeCandidateList;

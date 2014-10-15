@@ -73,7 +73,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	private final Log log;
 	private final Log statLog;
 	
-	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) {
+	public DynamicNodeVisitor( NodeVisitorTicketSrc ticketSrc, BaseRepl repl, TopLevelContext tlc ) throws CloneNotSupportedException {
 		
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source must not be null." );
@@ -93,7 +93,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException {
+	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		try {
 			return currentBlock.getExpr( nameExpr ).visit( this );
@@ -104,7 +104,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException {
+	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
@@ -200,7 +200,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		ApplyExpr applyExpr1;
 		CompoundExpr taskExpr1;
@@ -308,7 +308,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
 	
 	@Override
-	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException {
+	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException, CloneNotSupportedException {
 		
 		CompoundExpr result, intermediate;
 		
@@ -329,7 +329,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, CloneNotSupportedException {
 			
 			Prototype originalPrototype;
 			SingleExpr se;
@@ -451,7 +451,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		return queryId;
 	}
 			
-	public void setTopLevelContext( TopLevelContext tlc ) {
+	public void setTopLevelContext( TopLevelContext tlc ) throws CloneNotSupportedException {
 
 		if( tlc == null )
 			throw new NullPointerException( "Top level context must not be null." );
@@ -504,6 +504,9 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		catch( HasFailedException e ) {
 			// just drop out; we trust the error has been handled properly
 		}
+		catch( CloneNotSupportedException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 	
 	public CompoundExpr getCurrentExpr() {
@@ -525,7 +528,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	}
 
-	private CompoundExpr combineParam( ApplyExpr applyExpr ) throws HasFailedException {
+	private CompoundExpr combineParam( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		EnumHelper helper;
 		int i, n;
@@ -635,7 +638,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		currentBlock = block;
 	}
 	
-	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException {
+	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		CompoundExpr taskExpr, ce, ce0;
 		SingleExpr se;
@@ -723,7 +726,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		return ce0;
 	}
 	
-	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) throws HasFailedException {
+	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
 		
 		CompoundExpr taskResult;
 		SingleExpr se;
@@ -787,7 +790,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, CloneNotSupportedException {
 		
 		CompoundExpr result;
 		

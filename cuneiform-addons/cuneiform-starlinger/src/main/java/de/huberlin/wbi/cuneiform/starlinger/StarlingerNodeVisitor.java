@@ -148,7 +148,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CondExpr condExpr) throws HasFailedException {
+	public String accept(CondExpr condExpr) throws HasFailedException, CloneNotSupportedException {
 		
 		String nodeId;
 		String childId;
@@ -183,7 +183,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(ApplyExpr applyExpr) throws HasFailedException {
+	public String accept(ApplyExpr applyExpr) throws HasFailedException, CloneNotSupportedException {
 		String taskNodeId, refNodeId, taskName;
 		SingleExpr se;
 		StarlingerNode starlingerNode;
@@ -241,7 +241,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CompoundExpr compoundExpr) throws HasFailedException {
+	public String accept(CompoundExpr compoundExpr) throws HasFailedException, CloneNotSupportedException {
 		
 		String nodeId;
 		int n;
@@ -311,7 +311,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept(CurryExpr curryExpr) throws HasFailedException {
+	public String accept(CurryExpr curryExpr) throws HasFailedException, CloneNotSupportedException {
 		String taskNodeId, refNodeId;
 		StarlingerNode starlingerNode;
 		
@@ -357,7 +357,7 @@ public class StarlingerNodeVisitor extends StarlingerWorkflow implements NodeVis
 	}
 
 	@Override
-	public String accept( TopLevelContext tlc ) throws HasFailedException {
+	public String accept( TopLevelContext tlc ) throws HasFailedException, CloneNotSupportedException {
 		
 		for( CompoundExpr ce : tlc.getTargetList() )
 			ce.visit( this );

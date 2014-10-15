@@ -54,7 +54,7 @@ public class DaxRepl extends BaseRepl {
 	}
 	
 	@Override
-	public synchronized int interpret( String input ) {
+	public synchronized int interpret( String input ) throws CloneNotSupportedException {
 		
 		DaxSemanticModelListener adag;
 		TopLevelContext tlc;

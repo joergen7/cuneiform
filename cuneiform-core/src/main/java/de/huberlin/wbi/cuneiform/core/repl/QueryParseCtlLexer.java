@@ -69,7 +69,7 @@ public class QueryParseCtlLexer extends ParseCtlLexer {
 				case ParseCtlLexer.RMMECB    : if( depth == 0 ) ready = true; break; 
 				case ParseCtlLexer.ANY       : if( depth == 0 ) ready = false; break;
 				case ParseCtlLexer.SEMICOLON : if( depth == 0 ) ready = true; break;
-				default : // ignore
+				default : break; // ignore
 			}
 		}
 		

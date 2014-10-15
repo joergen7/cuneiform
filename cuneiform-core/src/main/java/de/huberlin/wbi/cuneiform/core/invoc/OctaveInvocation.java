@@ -306,30 +306,32 @@ public class OctaveInvocation extends Invocation {
 	
 	private static String defFunction( String funName, String outputName, String[] inputNameList, String body ) {
 		
-		String ret;
 		boolean comma;
+		StringBuffer buf;
 		
-		ret = "function ";
+		buf = new StringBuffer();
+		
+		buf.append( "function " );
 		
 		if( outputName != null )
-		 ret += outputName+" = ";
+		 buf.append( outputName ).append( " = " );
 		
-		ret += funName+"( ";
+		buf.append( funName ).append( "( " );
 		
 		comma = false;
 		for( String inputName : inputNameList ) {
 			
 			if( comma )
-				ret += ", ";
+				buf.append( ", " );
 			
 			comma = true;
 			
-			ret += inputName;
+			buf.append( inputName );
 		}
 		
-		ret += " )\n"+body+"\nend\n";
+		buf.append( " )\n" ).append( body ).append( "\nend\n" );
 		
-		return ret;
+		return buf.toString();
 	}
 
 	private static String octaveForLoop( String runVar, String times, String body ) {

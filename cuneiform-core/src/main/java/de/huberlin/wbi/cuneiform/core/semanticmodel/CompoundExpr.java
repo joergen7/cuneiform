@@ -66,11 +66,11 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
-	public CompoundExpr clone() {
+	public CompoundExpr clone() throws CloneNotSupportedException {
 		
 		CompoundExpr ce;
 		
-		ce = new CompoundExpr();
+		ce = ( CompoundExpr )super.clone();
 		ce.addCompoundExpr( this );
 		
 		return ce;
@@ -254,7 +254,7 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
-	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException {
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException, CloneNotSupportedException {
 		return visitor.accept(this);
 	}
 }

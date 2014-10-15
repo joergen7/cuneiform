@@ -36,6 +36,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -98,7 +99,7 @@ public class CmdlineRepl extends BaseRepl {
 	
 	}
 
-	public static void run( BaseRepl repl ) throws IOException {
+	public static void run( BaseRepl repl ) throws IOException, CloneNotSupportedException {
 		
 		StringBuffer buf;
 		String line;
@@ -110,7 +111,7 @@ public class CmdlineRepl extends BaseRepl {
 		buf = new StringBuffer();
 		System.out.print( "> " );
 		
-		try( BufferedReader reader = new BufferedReader( new InputStreamReader( System.in ) ) ) {
+		try( BufferedReader reader = new BufferedReader( new InputStreamReader( System.in, Charset.forName( "UTF-8" ) ) ) ) {
 			
 			while( ( line = reader.readLine() ) != null ) {
 				

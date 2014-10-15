@@ -32,12 +32,18 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-public class LambdaType implements Type {
+public class LambdaType implements Type, Cloneable {
 
 	@Override
 	public String toString() {
 		return "(:)";
 	}
+	
+	@Override
+	public LambdaType clone() throws CloneNotSupportedException {
+		return ( LambdaType )super.clone();
+	}
+	
 	@Override
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );

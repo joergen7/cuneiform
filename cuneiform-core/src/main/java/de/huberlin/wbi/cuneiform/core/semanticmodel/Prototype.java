@@ -38,7 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class Prototype extends LambdaType implements Cloneable {
+public class Prototype extends LambdaType {
 
 	private final List<NameExpr> outputList;
 	private final Set<Param> paramSet;
@@ -73,11 +73,11 @@ public class Prototype extends LambdaType implements Cloneable {
 	}
 	
 	@Override
-	public Prototype clone() {
+	public Prototype clone() throws CloneNotSupportedException {
 		
 		Prototype child;
 		
-		child = new Prototype();
+		child = ( Prototype )super.clone();
 		
 		child.addOutput( outputList );
 		child.addParam( paramSet );
@@ -131,7 +131,7 @@ public class Prototype extends LambdaType implements Cloneable {
 		
 		for( Param param : paramSet )
 			if( param instanceof CorrelParam )
-				if( param.getNameExprSet().contains(
+				if( ( ( CorrelParam )param ).contains(
 					CfSemanticModelVisitor.LABEL_TASK ) )
 				
 					return true;

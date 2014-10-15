@@ -58,25 +58,16 @@ public class TopLevelContext extends BaseBlock {
 	}
 	
 	@Override
-	public TopLevelContext clone() {
+	public TopLevelContext clone() throws CloneNotSupportedException {
 		
 		TopLevelContext tlc;
 		
-		try {
-			
-			tlc = new TopLevelContext( getParent() );
-			
-			for( NameExpr key : getNameSet() )
-				tlc.putAssign( key, getExpr( key ) );
-			
-			for( CompoundExpr ce : targetList )
-				tlc.addTarget( ce );
-			
-			return tlc;
-		}
-		catch( NotBoundException e ) {
-			throw new RuntimeException( e.getMessage() );
-		}
+		tlc = ( TopLevelContext )super.clone();
+		
+		for( CompoundExpr ce : targetList )
+			tlc.addTarget( ce );
+		
+		return tlc;
 	}
 	
 	public String getBlockString() {
@@ -123,7 +114,7 @@ public class TopLevelContext extends BaseBlock {
 	}
 
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException, CloneNotSupportedException {
 		return visitor.accept( this );
 	}
 }

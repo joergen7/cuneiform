@@ -190,7 +190,7 @@ public class JsonReportEntry {
 		String s1, s2;
 		
 		if( obj == null )
-			throw new NullPointerException( "Object must not be null." );
+			return false;
 		
 		if( !( obj instanceof JsonReportEntry ) )
 			return false;

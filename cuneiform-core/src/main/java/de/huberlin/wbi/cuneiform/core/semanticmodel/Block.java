@@ -42,19 +42,12 @@ public class Block extends BaseBlock {
 	}
 
 	@Override
-	public Block clone() {
+	public Block clone() throws CloneNotSupportedException {
 		
 		Block block1;
 		
-		block1 = new Block( getParent() );
-		
-		try {
-			for( NameExpr key : getNameSet() )
-					block1.putAssign( key, getExpr( key ) );
-		} catch( NotBoundException e ) {
-			throw new RuntimeException( e );
-		}
-		
+		block1 = ( Block )super.clone();
+			
 		return block1;
 	}
 	

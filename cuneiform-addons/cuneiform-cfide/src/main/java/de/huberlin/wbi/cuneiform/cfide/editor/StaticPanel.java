@@ -208,6 +208,8 @@ public class StaticPanel extends JPanel implements Runnable {
 				}
 				catch( HasFailedException e ) {
 					e.printStackTrace();
+				} catch ( CloneNotSupportedException e ) {
+					e.printStackTrace();
 				}
 				finally {
 					errorTableModel.fireTableDataChanged();				

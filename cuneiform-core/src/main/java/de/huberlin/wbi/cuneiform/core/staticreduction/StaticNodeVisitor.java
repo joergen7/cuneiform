@@ -70,7 +70,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
 		SingleExpr se;
 		NativeLambdaExpr lambda;
 		NameExpr targetNameExpr;
@@ -150,7 +150,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(NameExpr nameExpr) throws HasFailedException {
+	public CompoundExpr accept(NameExpr nameExpr) throws HasFailedException, CloneNotSupportedException {
 		CompoundExpr result;
 		SingleExpr se;
 		
@@ -174,7 +174,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, CloneNotSupportedException {
 		Prototype originalPrototype;
 		SingleExpr se;
 		LambdaExpr lambdaExpr;
@@ -289,7 +289,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CondExpr condExpr) throws HasFailedException {
+	public CompoundExpr accept(CondExpr condExpr) throws HasFailedException, CloneNotSupportedException {
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
 		List<NameExpr> outputList;
@@ -382,7 +382,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException {
+	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException, CloneNotSupportedException {
 		CompoundExpr result, intermediate;
 		
 		if( ce == null )
@@ -408,7 +408,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, CloneNotSupportedException {
 		
 		CompoundExpr result;
 		

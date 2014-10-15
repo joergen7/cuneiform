@@ -72,7 +72,7 @@ public class Main {
 	private static Path[] inputFileVector;
 	
 
-	public static void main( String[] args ) throws IOException, ParseException, InterruptedException, NotDerivableException {
+	public static void main( String[] args ) throws IOException, ParseException, InterruptedException, NotDerivableException, CloneNotSupportedException {
 		
 		CommandLine cmd;
 		Options opt;

@@ -34,5 +34,5 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 
 public interface CfNode {
-	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException;
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException, CloneNotSupportedException;
 }

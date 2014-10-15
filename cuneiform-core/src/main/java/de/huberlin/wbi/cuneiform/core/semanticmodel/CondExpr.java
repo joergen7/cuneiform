@@ -151,7 +151,7 @@ public class CondExpr implements SingleExpr {
 	}
 	
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException, CloneNotSupportedException {
 		return visitor.accept( this );
 	}
 

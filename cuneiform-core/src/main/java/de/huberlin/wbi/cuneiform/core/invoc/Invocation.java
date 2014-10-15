@@ -156,14 +156,13 @@ public abstract class Invocation {
 
 		try {
 
-			ce = new CompoundExpr();
 			set = new HashSet<>();
 			
 			for( NameExpr nameExpr : ticket.getNameSet() )
 				
 				if( isParamStage( nameExpr.getId() ) ) {
 					
-					ce= ticket.getExpr( nameExpr );
+					ce = ticket.getExpr( nameExpr );
 					for( String s : ce.normalize() )						
 						set.add( s );
 				}
@@ -182,14 +181,13 @@ public abstract class Invocation {
 
 		try {
 
-			ce = new CompoundExpr();
 			set = new HashSet<>();
 			
 			for( NameExpr nameExpr : ticket.getOutputList() )
 				
 				if( isOutputStage( nameExpr.getId() ) ) {
 					
-					ce= ticket.getOutputValue( nameExpr );
+					ce = ticket.getOutputValue( nameExpr );
 					for( String s : ce.normalize() )						
 						set.add( s );
 				}
