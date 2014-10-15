@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -126,7 +127,7 @@ public class FileBrowser extends JPanel implements TreeSelectionListener {
 				
 			
 				try( BufferedReader reader =
-					Files.newBufferedReader( ( ( FileMutableTreeNode )node ).getFilePath() ) ) {
+					Files.newBufferedReader( ( ( FileMutableTreeNode )node ).getFilePath(), Charset.forName( "UTF-8" ) ) ) {
 					
 					buf = new StringBuffer();
 					for( i = 0; i < 1024; i++ ) {

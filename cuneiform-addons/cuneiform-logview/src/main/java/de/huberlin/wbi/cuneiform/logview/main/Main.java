@@ -35,6 +35,7 @@ package de.huberlin.wbi.cuneiform.logview.main;
 
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -90,7 +91,7 @@ public class Main {
 		frame.add( tabbedPane, BorderLayout.CENTER );
 		
 		logPath = Paths.get( "/tmp/cuneiform-stat.log" );
-		try( BufferedReader reader = Files.newBufferedReader( logPath ) ) {
+		try( BufferedReader reader = Files.newBufferedReader( logPath, Charset.forName( "UTF-8" ) ) ) {
 			
 			while( ( line = reader.readLine() ) != null ) {
 				entry = new JsonReportEntry( line );
