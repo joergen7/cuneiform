@@ -190,8 +190,8 @@ public class LocalThread implements Runnable {
 						
 						
 						srcPath = Paths.get( filename );
-						if( log.isInfoEnabled() )
-							log.info( "Resolving absolute path '"+srcPath+"'." );
+						if( log.isTraceEnabled() )
+							log.trace( "Resolving absolute path '"+srcPath+"'." );
 						
 						destPath = location.resolve( srcPath.getFileName() );
 					}
@@ -203,17 +203,17 @@ public class LocalThread implements Runnable {
 						if( !Files.exists( srcPath ) ) {
 							
 							srcPath = callLocation.resolve( filename );
-							if( log.isInfoEnabled() )
-								log.info( "Resolving relative path '"+srcPath+"'." );
+							if( log.isTraceEnabled() )
+								log.trace( "Resolving relative path '"+srcPath+"'." );
 						}
 						else
 
-							if( log.isInfoEnabled() )
-								log.info( "Resolving path to central repository '"+srcPath+"'." );
+							if( log.isTraceEnabled() )
+								log.trace( "Resolving path to central repository '"+srcPath+"'." );
 					}
 					
-					if( log.isInfoEnabled() )
-						log.info( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
+					if( log.isTraceEnabled() )
+						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
 
 					if( !Files.exists( destPath.getParent() ) )
 						Files.createDirectories( destPath.getParent() );
