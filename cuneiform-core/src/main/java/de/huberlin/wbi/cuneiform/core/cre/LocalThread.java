@@ -256,7 +256,7 @@ public class LocalThread implements Runnable {
 				
 				if( process == null ) {
 					
-					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, stdOut, stdErr ) );
+					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, null, null ) );
 					Files.delete( lockMarker );
 					return;
 				}
