@@ -143,7 +143,6 @@ public class FileBrowser extends JPanel implements TreeSelectionListener {
 					return;
 				}
 				catch( IOException x ) {
-					x.printStackTrace();
 					contentArea.setText( "[binary]" );
 					return;
 				}

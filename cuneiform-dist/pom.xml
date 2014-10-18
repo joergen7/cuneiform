@@ -25,6 +25,11 @@
 			<artifactId>cuneiform-cfide</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<artifactId>cuneiform-logview</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
