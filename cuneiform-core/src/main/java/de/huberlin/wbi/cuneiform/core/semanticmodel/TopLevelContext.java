@@ -38,7 +38,7 @@ import java.util.List;
 
 public class TopLevelContext extends BaseBlock {
 	
-	private final List<CompoundExpr> targetList;
+	private List<CompoundExpr> targetList;
 
 	public TopLevelContext() {
 		this( null );
@@ -63,6 +63,7 @@ public class TopLevelContext extends BaseBlock {
 		TopLevelContext tlc;
 		
 		tlc = ( TopLevelContext )super.clone();
+		targetList = new ArrayList<>();
 		
 		for( CompoundExpr ce : targetList )
 			tlc.addTarget( ce );
