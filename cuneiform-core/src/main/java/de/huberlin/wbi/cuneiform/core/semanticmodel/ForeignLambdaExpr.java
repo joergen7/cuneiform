@@ -107,7 +107,7 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		return name != null;
 	}	
 	
-	public void setTaskName( String name ) {
+	public void setOptionalTaskName( String name ) {
 		
 		if( name == null )
 			throw new NullPointerException( "Task name must not be null." );

@@ -162,7 +162,7 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 			if( se instanceof ForeignLambdaExpr ) {
 				
 				lambda = ( ForeignLambdaExpr )se;
-				lambda.setTaskName( ( ( NameExpr )nameExpr ).getId() );
+				lambda.setOptionalTaskName( ( ( NameExpr )nameExpr ).getId() );
 			}
 				
 		}

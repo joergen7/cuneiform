@@ -99,7 +99,7 @@ public class CmdlineRepl extends BaseRepl {
 	
 	}
 
-	public static void run( BaseRepl repl ) throws IOException, CloneNotSupportedException {
+	public static void run( BaseRepl repl ) throws IOException {
 		
 		StringBuffer buf;
 		String line;
@@ -126,16 +126,16 @@ public class CmdlineRepl extends BaseRepl {
 						
 						ctl = repl.interpret( buf.toString() );
 						
-						if( ( ctl & BaseRepl.CTL_STATE ) > 0 )
+						if( ( ctl & BaseRepl.CTL_STATE ) != 0 )
 							System.out.print( repl.getState() );
 						
-						if( ( ctl & BaseRepl.CTL_QUERYSET ) > 0 )
+						if( ( ctl & BaseRepl.CTL_QUERYSET ) != 0 )
 							System.out.print( repl.getRunningSet() );
 						
-						if( ( ctl & BaseRepl.CTL_TICKETSET ) > 0 )
+						if( ( ctl & BaseRepl.CTL_TICKETSET ) != 0 )
 							System.out.print( repl.getTicketSet() );
 
-						if( ( ctl & BaseRepl.CTL_QUIT ) > 0 )
+						if( ( ctl & BaseRepl.CTL_QUIT ) != 0 )
 							break;
 					}
 					catch( ParseException e ) {
