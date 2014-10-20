@@ -92,10 +92,14 @@ public class ParallelismView extends Visualizable {
 		long[] tvec;
 		long delta;
 		XYSeries series;
+		long dur;
+		String uname;
+		int udiv;
 		
 		seriesMap = new HashMap<>();
 		tvec = new long[ NSAMPLE ];
-		delta = ( lastBegin+lastDur-firstBegin )/( NSAMPLE-1 );
+		dur = lastBegin+lastDur-firstBegin;
+		delta = dur/( NSAMPLE-1 )+1;
 		
 		t = firstBegin;
 		for( i = 0; i < NSAMPLE; i++ ) {
@@ -123,9 +127,30 @@ public class ParallelismView extends Visualizable {
 				}
 				
 				cvec[ i ]++;
+				
 			}
 			
 			t += delta;
+		}
+
+		udiv = 3600000;
+		uname = "h";
+		if( dur < 2*3600000 ) {
+			
+			udiv = 60000;
+			uname = "min";
+		}
+		
+		if( dur < 2*60000 ) {
+			
+			udiv = 1000;
+			uname = "s";
+		}
+		
+		if( dur < 2000 ) {
+			
+			udiv = 1;
+			uname = "ms";
 		}
 		
 		dataset = new DefaultTableXYDataset();
@@ -134,14 +159,14 @@ public class ParallelismView extends Visualizable {
 			cvec = seriesMap.get( n );
 			series = new XYSeries( n, true, false );
 			for( i = 0; i < NSAMPLE; i++ )
-				series.add( ( ( double )( tvec[ i ]-firstBegin ) )/3600000, cvec[ i ] );
+				series.add( ( ( double )( tvec[ i ]-firstBegin ) )/udiv, cvec[ i ] );
 			
 			dataset.addSeries( series );
 		}
 		
 		chart = ChartFactory.createStackedXYAreaChart(
 			"Parallelism",				// title
-			"Time [h]",					// xAxisLabel
+			"Time ["+uname+"]",					// xAxisLabel
 			"N invocations",			// yAxisLabel
 			dataset,					// dataset
 			PlotOrientation.VERTICAL,	// orientation
