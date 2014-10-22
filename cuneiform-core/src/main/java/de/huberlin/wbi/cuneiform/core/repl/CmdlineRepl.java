@@ -40,6 +40,7 @@ import java.nio.charset.Charset;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.apache.commons.logging.Log;
 
 import de.huberlin.wbi.cuneiform.core.preprocess.ParseException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
@@ -47,8 +48,8 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.ReplTicketSrc;
 
 public class CmdlineRepl extends BaseRepl {
 	
-	public CmdlineRepl( ReplTicketSrc ticketSrc ) {
-		super( ticketSrc );
+	public CmdlineRepl( ReplTicketSrc ticketSrc, Log statLog ) {
+		super( ticketSrc, statLog );
 	}
 
 	@Override

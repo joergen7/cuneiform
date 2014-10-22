@@ -49,6 +49,8 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import de.huberlin.cuneiform.dax.repl.DaxRepl;
 import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
@@ -83,6 +85,9 @@ public class Main {
 		TicketSrcActor ticketSrc;
 		JsonSummary summary;
 		Path summaryPath;
+		Log statLog;
+		
+		statLog = LogFactory.getLog( "statLogger" );
 		
 		executor = Executors.newCachedThreadPool();
 		try {
@@ -138,11 +143,11 @@ public class Main {
 			switch( format ) {
 			
 				case FORMAT_CF :
-					repl = new CmdlineRepl( ticketSrc );
+					repl = new CmdlineRepl( ticketSrc, statLog );
 					break;
 					
 				case FORMAT_DAX :
-					repl = new DaxRepl( ticketSrc );
+					repl = new DaxRepl( ticketSrc, statLog );
 					break;
 					
 				default :

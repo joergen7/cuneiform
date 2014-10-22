@@ -38,6 +38,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.apache.commons.logging.Log;
 
 import de.huberlin.cuneiform.dax.semanticmodel.DaxSemanticModelListener;
 import de.huberlin.cuneiform.libdax.parser.DaxLexer;
@@ -49,8 +50,8 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class DaxRepl extends BaseRepl {
 
-	public DaxRepl( TicketSrcActor ticketSrc ) {
-		super( ticketSrc );
+	public DaxRepl( TicketSrcActor ticketSrc, Log statLog ) {
+		super( ticketSrc, statLog );
 	}
 	
 	@Override

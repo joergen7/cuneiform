@@ -68,7 +68,7 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0";
-	public static final String LABEL_BUILD = "2014-10-18";
+	public static final String LABEL_BUILD = "2014-10-21";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -79,7 +79,7 @@ public abstract class BaseRepl {
 
 
 
-	public BaseRepl( ReplTicketSrc ticketSrc ) {
+	public BaseRepl( ReplTicketSrc ticketSrc, Log statLog ) {
 
 		if( ticketSrc == null )
 			throw new NullPointerException( "Ticket source actor must not be null." );
@@ -89,7 +89,7 @@ public abstract class BaseRepl {
 		runningMap = new HashMap<>();
 		state = new CfSemanticModelVisitor();
 		log = LogFactory.getLog( BaseRepl.class );
-		statLog = LogFactory.getLog( "statLogger" );
+		this.statLog = statLog;
 	}
 	
 	public CompoundExpr getAns() {
@@ -274,12 +274,14 @@ public abstract class BaseRepl {
 			
 	}
 	
-	protected void flushStatLog(Set<JsonReportEntry> reportEntrySet ) {
+	protected void flushStatLog( Set<JsonReportEntry> reportEntrySet ) {
+		
+		if( statLog == null )
+			return;
 		
 		if( statLog.isDebugEnabled() )
 			for( JsonReportEntry entry : reportEntrySet )
 				statLog.debug( entry );
-		
 	}
 	
 	public static String getLogo() {

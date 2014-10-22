@@ -132,9 +132,16 @@ public class ParallelismView extends Visualizable {
 			
 			t += delta;
 		}
+		
+		udiv = 3600000*24;
+		uname = "d";
+		
+		if( dur < 2*3600000*24 ) {
 
-		udiv = 3600000;
-		uname = "h";
+			udiv = 3600000;
+			uname = "h";
+		}
+
 		if( dur < 2*3600000 ) {
 			
 			udiv = 60000;
