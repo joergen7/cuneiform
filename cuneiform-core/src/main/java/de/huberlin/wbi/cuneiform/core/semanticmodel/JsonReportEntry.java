@@ -104,7 +104,7 @@ public class JsonReportEntry {
 	public JsonReportEntry( Ticket ticket, String key, String rawValue ) {		
 		this(
 			ticket.getRunId(),
-			ticket.getTicketId(),
+			ticket.getLambdaId(),
 			ticket.getTaskName(),
 			ticket.getLangLabel(),
 			ticket.getTicketId(),
