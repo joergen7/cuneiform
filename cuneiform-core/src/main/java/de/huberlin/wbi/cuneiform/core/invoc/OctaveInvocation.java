@@ -259,7 +259,7 @@ public class OctaveInvocation extends Invocation {
 
 	@Override
 	protected String raise( String msg ) {
-		return callProcedure( "error", quote( msg ) );
+		return callProcedure( "error", msg );
 	}
 
 	@Override

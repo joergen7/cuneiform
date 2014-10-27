@@ -66,14 +66,8 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
-	public CompoundExpr clone() throws CloneNotSupportedException {
-		
-		CompoundExpr ce;
-		
-		ce = ( CompoundExpr )super.clone();
-		ce.addCompoundExpr( this );
-		
-		return ce;
+	public CompoundExpr clone() throws CloneNotSupportedException {		
+		return ( CompoundExpr )super.clone();
 	}
 	
 	public int getNumAtom() throws NotDerivableException {
