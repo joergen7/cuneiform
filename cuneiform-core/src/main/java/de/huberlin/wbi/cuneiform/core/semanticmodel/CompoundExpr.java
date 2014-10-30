@@ -38,7 +38,7 @@ import java.util.List;
 
 public class CompoundExpr implements CfNode, Cloneable {
 
-	private final List<SingleExpr> singleExprList;
+	private List<SingleExpr> singleExprList;
 	
 	public CompoundExpr() {
 		singleExprList = new ArrayList<>();
@@ -66,8 +66,15 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
-	public CompoundExpr clone() throws CloneNotSupportedException {		
-		return ( CompoundExpr )super.clone();
+	public CompoundExpr clone() throws CloneNotSupportedException {
+		
+		CompoundExpr ce;
+		
+		ce = ( CompoundExpr )super.clone();
+		ce.singleExprList = new ArrayList<>();
+		ce.singleExprList.addAll( singleExprList );
+		
+		return ce;
 	}
 	
 	public int getNumAtom() throws NotDerivableException {
