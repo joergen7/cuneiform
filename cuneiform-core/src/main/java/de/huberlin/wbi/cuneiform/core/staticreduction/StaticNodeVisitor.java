@@ -33,13 +33,19 @@
 
 package de.huberlin.wbi.cuneiform.core.staticreduction;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
+import de.huberlin.wbi.cuneiform.core.preprocess.ChannelListener;
+import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseBlock;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.BaseNodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Block;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CurryExpr;
@@ -61,16 +67,18 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
  */
 public class StaticNodeVisitor extends BaseNodeVisitor {
 
-	private BaseBlock currentBlock;
 	private final LinkedList<BaseBlock> blockStack;
+	private BaseBlock currentBlock;
+	private final Set<NameExpr> freeVarSet;
 	
 	public StaticNodeVisitor( BaseBlock currentBlock ) {
-		this.blockStack = new LinkedList<>();
+		blockStack = new LinkedList<>();
 		this.currentBlock = currentBlock;
+		freeVarSet = new HashSet<>();
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
 		SingleExpr se;
 		NativeLambdaExpr lambda;
 		NameExpr targetNameExpr;
@@ -150,146 +158,24 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(NameExpr nameExpr) throws HasFailedException, CloneNotSupportedException {
-		CompoundExpr result;
-		SingleExpr se;
+	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException {
+		CompoundExpr result, intermediate;
 		
-		try {
-			
-			CompoundExpr expr = currentBlock.getExpr( nameExpr );
-			result = expr.visit( this );
+		if( ce == null )
+			throw new NullPointerException( "Compound expression must not be null." );
 
-			if( result.getNumSingleExpr() == 1 ) {
-				
-				se = result.getSingleExpr( 0 );
-				if( se instanceof ForeignLambdaExpr )
-					return new CompoundExpr( nameExpr );
-			}
-			
-			return result;
+		result = new CompoundExpr();
+		
+		for( SingleExpr singleExpr : ce.getSingleExprList() ) {
+			intermediate = singleExpr.visit( this );
+			result.addCompoundExpr( intermediate );
 		}
-		catch( NotBoundException e ) {
-			return new CompoundExpr( nameExpr );
-		}
+
+		return result;
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, CloneNotSupportedException {
-		Prototype originalPrototype;
-		SingleExpr se;
-		LambdaExpr lambdaExpr;
-		NativeLambdaExpr nativeLambdaExpr;
-		Block originalBodyBlock;
-		Block curriedBodyBlock;
-		Prototype curriedPrototype;
-		NativeLambdaExpr curriedLambdaExpr;
-		
-		if( !curryExpr.hasTaskExpr() )
-			throw new SemanticModelException(
-				curryExpr.toString(),
-				"Task parameter not bound." );
-		
-		if( curryExpr.getTaskExpr().getNumSingleExpr() == 0 )
-			throw new SemanticModelException(
-				curryExpr.toString(),
-				"Task expression must not be nil." );
-		
-		if( curryExpr.getTaskExpr().getNumSingleExpr() > 1 )
-			return new CompoundExpr( curryExpr );
-		
-		CompoundExpr taskExpr = curryExpr.getTaskExpr();
-		se = taskExpr.visit( this ).getSingleExpr( 0 );
-		
-		
-		if( se instanceof NameExpr )
-			return new CompoundExpr( curryExpr );
-		
-		if( !( se instanceof LambdaExpr ) )
-			throw new SemanticModelException( curryExpr.toString(), se+" is not a lambda expression." );
-		
-		lambdaExpr = ( LambdaExpr )se;
-				
-		originalPrototype = lambdaExpr.getPrototype();
-		
-		// the prototype of the curried lambda expression is derived from
-		// the original prototype
-		curriedPrototype = originalPrototype.clone();
-		
-		// from the prototype we remove all inputs that are bound by
-		// currying
-		for( NameExpr nameExpr : curryExpr.getNameSet() )
-			curriedPrototype.removeParam( nameExpr );
-
-		if( !( lambdaExpr instanceof NativeLambdaExpr ) )
-			throw new RuntimeException( "Lambda expression type not recognized." );
-			
-		nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
-		
-		originalBodyBlock = nativeLambdaExpr.getBodyBlock();
-					
-		// the body block of the curried lambda expression is derived from the
-		// body block of the original lambda expression
-		curriedBodyBlock = originalBodyBlock.clone();
-
-		// with the curried expression's binding block merged in
-		try {
-			for( NameExpr nameExpr : curryExpr.getNameSet() )
-				curriedBodyBlock.putAssign(
-					nameExpr, curryExpr.getExpr( nameExpr ) );
-		}
-		catch( NotBoundException e ) {
-			throw new RuntimeException( e.getMessage() );
-		}			
-		
-		// from the curried prototype and body expression we form the
-		// resulting curried lambda expression
-		curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
-
-		return new CompoundExpr( curriedLambdaExpr );
-		
-		// reuse this commented block when in dynamic reducer
-		/* if( lambdaExpr instanceof ForeignLambdaExpr ) {
-			
-			applyExpr = new ApplyExpr( 1, false );
-			
-			applyExpr.setTaskExpr( new CompoundExpr( lambdaExpr ) );
-			
-			try {
-				
-				for( NameExpr nameExpr : originalPrototype.getParamNameExprSet() )
-					
-					if( curryExpr.containsName( nameExpr ) )
-						applyExpr.putAssign( nameExpr, curryExpr.getExpr( nameExpr ) );
-					else
-						applyExpr.putAssign( nameExpr, new CompoundExpr( nameExpr ) );
-			}
-			catch( NotBoundException e ) {
-				throw new RuntimeException( e.getMessage() );
-			}
-			
-			curriedBodyBlock = new Block();
-			
-			n = originalPrototype.getNumOutput();
-			
-			// replicate apply expression for each output name expression
-			for( i = 0; i < n; i++  ) {
-				
-				ne = originalPrototype.getOutput( i );
-				
-				ae = applyExpr.clone();
-				ae.setChannel( i+1 );
-				
-				curriedBodyBlock.putAssign( ne, new CompoundExpr( ae ) );
-			}
-			
-			curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
-			
-			return new CompoundExpr( curriedLambdaExpr );			
-		} */
-	}
-
-	@Override
-	public CompoundExpr accept(CondExpr condExpr) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept(CondExpr condExpr) throws HasFailedException {
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
 		List<NameExpr> outputList;
@@ -382,35 +268,160 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException, CloneNotSupportedException {
-		CompoundExpr result, intermediate;
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
 		
-		if( ce == null )
-			throw new NullPointerException( "Compound expression must not be null." );
-
-		result = new CompoundExpr();
+		Prototype originalPrototype;
+		SingleExpr se;
+		LambdaExpr lambdaExpr;
+		NativeLambdaExpr nativeLambdaExpr;
+		Block originalBodyBlock;
+		Block curriedBodyBlock;
+		Prototype curriedPrototype;
+		NativeLambdaExpr curriedLambdaExpr;
 		
-		for( SingleExpr singleExpr : ce.getSingleExprList() ) {
-			intermediate = singleExpr.visit( this );
-			result.addCompoundExpr( intermediate );
-		}
-
-		return result;
-	}
-
-	private void pushIntoBlock( Block block ) {
-		blockStack.push( currentBlock );
-		currentBlock = block;
-	}
+		try {
+		
+			if( !curryExpr.hasTaskExpr() )
+				throw new SemanticModelException(
+					curryExpr.toString(),
+					"Task parameter not bound." );
+			
+			if( curryExpr.getTaskExpr().getNumSingleExpr() == 0 )
+				throw new SemanticModelException(
+					curryExpr.toString(),
+					"Task expression must not be nil." );
+			
+			if( curryExpr.getTaskExpr().getNumSingleExpr() > 1 )
+				return new CompoundExpr( curryExpr );
+			
+			CompoundExpr taskExpr = curryExpr.getTaskExpr();
+			se = taskExpr.visit( this ).getSingleExpr( 0 );
+			
+			
+			if( se instanceof NameExpr )
+				return new CompoundExpr( curryExpr );
+			
+			if( !( se instanceof LambdaExpr ) )
+				throw new SemanticModelException( curryExpr.toString(), se+" is not a lambda expression." );
+			
+			lambdaExpr = ( LambdaExpr )se;
+					
+			originalPrototype = lambdaExpr.getPrototype();
+			
+			// the prototype of the curried lambda expression is derived from
+			// the original prototype
+			curriedPrototype = originalPrototype.clone();
+			
+			// from the prototype we remove all inputs that are bound by
+			// currying
+			for( NameExpr nameExpr : curryExpr.getNameSet() )
+				curriedPrototype.removeParam( nameExpr );
 	
-	private void popBlock() {
-		currentBlock = blockStack.pop();
+			if( !( lambdaExpr instanceof NativeLambdaExpr ) )
+				throw new RuntimeException( "Lambda expression type not recognized." );
+				
+			nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
+			
+			originalBodyBlock = nativeLambdaExpr.getBodyBlock();
+						
+			// the body block of the curried lambda expression is derived from the
+			// body block of the original lambda expression
+			curriedBodyBlock = originalBodyBlock.clone();
+	
+			// with the curried expression's binding block merged in
+			try {
+				for( NameExpr nameExpr : curryExpr.getNameSet() )
+					curriedBodyBlock.putAssign(
+						nameExpr, curryExpr.getExpr( nameExpr ) );
+			}
+			catch( NotBoundException e ) {
+				throw new RuntimeException( e.getMessage() );
+			}			
+			
+			// from the curried prototype and body expression we form the
+			// resulting curried lambda expression
+			curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
+	
+			return new CompoundExpr( curriedLambdaExpr );
+		}
+		catch( CloneNotSupportedException e ) {
+			throw new RuntimeException( e );
+		}
+		
+		// reuse this commented block when in dynamic reducer
+		/* if( lambdaExpr instanceof ForeignLambdaExpr ) {
+			
+			applyExpr = new ApplyExpr( 1, false );
+			
+			applyExpr.setTaskExpr( new CompoundExpr( lambdaExpr ) );
+			
+			try {
+				
+				for( NameExpr nameExpr : originalPrototype.getParamNameExprSet() )
+					
+					if( curryExpr.containsName( nameExpr ) )
+						applyExpr.putAssign( nameExpr, curryExpr.getExpr( nameExpr ) );
+					else
+						applyExpr.putAssign( nameExpr, new CompoundExpr( nameExpr ) );
+			}
+			catch( NotBoundException e ) {
+				throw new RuntimeException( e.getMessage() );
+			}
+			
+			curriedBodyBlock = new Block();
+			
+			n = originalPrototype.getNumOutput();
+			
+			// replicate apply expression for each output name expression
+			for( i = 0; i < n; i++  ) {
+				
+				ne = originalPrototype.getOutput( i );
+				
+				ae = applyExpr.clone();
+				ae.setChannel( i+1 );
+				
+				curriedBodyBlock.putAssign( ne, new CompoundExpr( ae ) );
+			}
+			
+			curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
+			
+			return new CompoundExpr( curriedLambdaExpr );			
+		} */
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException {
 		
 		CompoundExpr result;
+		SingleExpr se;
+		CompoundExpr expr;
+		
+		try {
+			
+			expr = currentBlock.getExpr( nameExpr );
+			result = expr.visit( this );
+
+			if( result.getNumSingleExpr() == 1 ) {
+				
+				se = result.getSingleExpr( 0 );
+				if( se instanceof ForeignLambdaExpr )
+					return new CompoundExpr( nameExpr );
+			}
+			
+			return result;
+		}
+		catch( NotBoundException e ) {
+			freeVarSet.add( nameExpr );
+			return new CompoundExpr( nameExpr );
+		}
+	}
+
+	@Override
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
+		
+		CompoundExpr result;
+		
+		freeVarSet.clear();
 		
 		result = new CompoundExpr();
 		
@@ -418,6 +429,60 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 			result.addCompoundExpr( ce.visit( this ) );
 		
 		return result;
+	}
+	
+	public Set<NameExpr> getFreeVarSet() {
+		return Collections.unmodifiableSet( freeVarSet );
+	}
+	
+	private void popBlock() {
+		currentBlock = blockStack.pop();
+	}
+
+	private void pushIntoBlock( Block block ) {
+		blockStack.push( currentBlock );
+		currentBlock = block;
+	}
+	
+	public static TopLevelContext createTlc( String src ) {
+		
+		String afterPre, afterChannel;
+		TopLevelContext tlc;
+
+		afterPre = PreListener.process( src );
+		afterChannel = ChannelListener.process( afterPre );		
+		tlc = CfSemanticModelVisitor.process( afterChannel );
+		
+		return tlc;
+	}
+	
+	public static Set<String> getFreeVarNameSet( TopLevelContext tlc )throws HasFailedException {
+		
+		StaticNodeVisitor staticVisitor;
+		Set<String> nameSet;
+		
+		nameSet = new HashSet<>();
+			
+		staticVisitor = new StaticNodeVisitor( tlc );
+		
+		tlc.visit( staticVisitor );
+			
+		for( NameExpr ne : staticVisitor.getFreeVarSet() )
+			nameSet.add( ne.getId() );
+		
+		return Collections.unmodifiableSet( nameSet );
+	}
+	
+	public static Set<String> getTargetVarNameSet( TopLevelContext tlc ) {
+
+		Set<String> nameSet;
+		
+		nameSet = new HashSet<>();
+		
+		for( NameExpr ne : tlc.getNameSet() )
+			nameSet.add( ne.getId() );
+		
+		return nameSet;
 	}
 
 }

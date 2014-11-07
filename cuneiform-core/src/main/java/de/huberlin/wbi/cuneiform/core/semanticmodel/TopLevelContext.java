@@ -115,7 +115,7 @@ public class TopLevelContext extends BaseBlock {
 	}
 
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException, CloneNotSupportedException {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
 		return visitor.accept( this );
 	}
 }

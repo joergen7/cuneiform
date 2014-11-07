@@ -93,7 +93,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException {
 		
 		try {
 			return currentBlock.getExpr( nameExpr ).visit( this );
@@ -104,7 +104,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException {
 		
 		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
 		CompoundExpr ce;
@@ -200,7 +200,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		ApplyExpr applyExpr1;
 		CompoundExpr taskExpr1;
@@ -308,7 +308,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
 	
 	@Override
-	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException {
 		
 		CompoundExpr result, intermediate;
 		
@@ -329,7 +329,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
 			
 			Prototype originalPrototype;
 			SingleExpr se;
@@ -362,48 +362,54 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				throw new SemanticModelException( curryExpr.toString(),
 					se+" is not a lambda expression." );
 			
-			lambdaExpr = ( LambdaExpr )se;
-					
-			originalPrototype = lambdaExpr.getPrototype();
-			
-			// the prototype of the curried lambda expression is derived from
-			// the original prototype
-			curriedPrototype = originalPrototype.clone();
-			
-			// from the prototype we remove all inputs that are bound by
-			// currying
-			for( NameExpr nameExpr : curryExpr.getNameSet() )
-				curriedPrototype.removeParam( nameExpr );
-			
-			// TODO: Foreign lambda expressions can of course also be curried
-			// TODO: Make sure that the remaining parameters and all output
-			//       variables in the prototype are uncorrelated reduce
-			if( !( lambdaExpr instanceof NativeLambdaExpr ) )
-				throw new UnsupportedOperationException( "NYI. Only native lambda expression can be curried." );
-				
-			nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
-			
-			originalBodyBlock = nativeLambdaExpr.getBodyBlock();
-						
-			// the body block of the curried lambda expression is derived from the
-			// body block of the original lambda expression
-			curriedBodyBlock = originalBodyBlock.clone();
-
-			// with the curried expression's binding block merged in
 			try {
-				for( NameExpr nameExpr : curryExpr.getNameSet() )
-					curriedBodyBlock.putAssign(
-						nameExpr, curryExpr.getExpr( nameExpr ) );
-			}
-			catch( NotBoundException e ) {
-				throw new RuntimeException( e.getMessage() );
-			}			
 			
-			// from the curried prototype and body expression we form the
-			// resulting curried lambda expression
-			curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
-
-			return new CompoundExpr( curriedLambdaExpr );
+				lambdaExpr = ( LambdaExpr )se;
+						
+				originalPrototype = lambdaExpr.getPrototype();
+				
+				// the prototype of the curried lambda expression is derived from
+				// the original prototype
+				curriedPrototype = originalPrototype.clone();
+				
+				// from the prototype we remove all inputs that are bound by
+				// currying
+				for( NameExpr nameExpr : curryExpr.getNameSet() )
+					curriedPrototype.removeParam( nameExpr );
+				
+				// TODO: Foreign lambda expressions can of course also be curried
+				// TODO: Make sure that the remaining parameters and all output
+				//       variables in the prototype are uncorrelated reduce
+				if( !( lambdaExpr instanceof NativeLambdaExpr ) )
+					throw new UnsupportedOperationException( "NYI. Only native lambda expression can be curried." );
+					
+				nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
+				
+				originalBodyBlock = nativeLambdaExpr.getBodyBlock();
+							
+				// the body block of the curried lambda expression is derived from the
+				// body block of the original lambda expression
+				curriedBodyBlock = originalBodyBlock.clone();
+	
+				// with the curried expression's binding block merged in
+				try {
+					for( NameExpr nameExpr : curryExpr.getNameSet() )
+						curriedBodyBlock.putAssign(
+							nameExpr, curryExpr.getExpr( nameExpr ) );
+				}
+				catch( NotBoundException e ) {
+					throw new RuntimeException( e.getMessage() );
+				}			
+				
+				// from the curried prototype and body expression we form the
+				// resulting curried lambda expression
+				curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
+	
+				return new CompoundExpr( curriedLambdaExpr );
+			}
+			catch( CloneNotSupportedException e ) {
+				throw new RuntimeException( e );
+			}
 			
 			// reuse this commented block when in dynamic reducer
 			/* if( lambdaExpr instanceof ForeignLambdaExpr ) {
@@ -509,9 +515,6 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		catch( HasFailedException e ) {
 			// just drop out; we trust the error has been handled properly
 		}
-		catch( CloneNotSupportedException e ) {
-			throw new RuntimeException( e );
-		}
 	}
 	
 	public CompoundExpr getCurrentExpr() {
@@ -533,7 +536,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 
 	}
 
-	private CompoundExpr combineParam( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
+	private CompoundExpr combineParam( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		EnumHelper helper;
 		int i, n;
@@ -643,7 +646,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		currentBlock = block;
 	}
 	
-	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
+	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		CompoundExpr taskExpr, ce, ce0;
 		SingleExpr se;
@@ -652,86 +655,92 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		ApplyExpr applyExpr1;
 		int i, n;
 		
-		if( log.isTraceEnabled() )
-			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: "+applyExpr.toString().replace( '\n', ' ' ) );
-
+		try {
 		
-		taskExpr = applyExpr.getTaskExpr();
-		se = taskExpr.getSingleExpr( 0 );
-		
-		if( !( se instanceof LambdaExpr ) ) {
-			
 			if( log.isTraceEnabled() )
-				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Task expression is not a lambda expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: "+applyExpr.toString().replace( '\n', ' ' ) );
+	
 			
-			return new CompoundExpr( applyExpr );
-		}
-		
-		lambda = ( LambdaExpr )se;
-		prototype = lambda.getPrototype();
-		
-		if( prototype.isTaskCorrelated() ) {
+			taskExpr = applyExpr.getTaskExpr();
+			se = taskExpr.getSingleExpr( 0 );
 			
-			// task parameter is correlated
-			if( log.isTraceEnabled() )
-				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is task-correlated." );
-			
-			// combine and create tickets
-			
-			return  combineParam( applyExpr );
-		}
-		
-		// enumerate task expression and create an application from each
-		if( log.isTraceEnabled() )
-			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is not task-correlated.Enumerate task expressions and create application for each." );
-		
-		try {	
-			n = taskExpr.getNumAtom();
-		}
-		catch( NotDerivableException e ) {
-			
-			if( log.isTraceEnabled() )
-				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Could not derive cardinality of task expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
-
-			return new CompoundExpr( applyExpr );
-		}
-		
-		ce = new CompoundExpr();
-		
-		for( i = 0; i < n; i++ ) {
-			
-			applyExpr1 = applyExpr.clone();
-			
-			// TODO: This won't work if the task expression was the result of an output-reduce task
-			ce0 = new CompoundExpr( taskExpr.getSingleExpr( i ) );
-			
-			try {
-				if( ce0.getNumAtom() != 1 )
-					throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce0 );
-			} catch (NotDerivableException e) {
-				throw new RuntimeException( e );
+			if( !( se instanceof LambdaExpr ) ) {
+				
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Task expression is not a lambda expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
+				
+				return new CompoundExpr( applyExpr );
 			}
 			
-			applyExpr1.setTaskExpr( ce0 );
+			lambda = ( LambdaExpr )se;
+			prototype = lambda.getPrototype();
+			
+			if( prototype.isTaskCorrelated() ) {
+				
+				// task parameter is correlated
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is task-correlated." );
+				
+				// combine and create tickets
+				
+				return  combineParam( applyExpr );
+			}
+			
+			// enumerate task expression and create an application from each
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Prototype is not task-correlated.Enumerate task expressions and create application for each." );
+			
+			try {	
+				n = taskExpr.getNumAtom();
+			}
+			catch( NotDerivableException e ) {
+				
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Could not derive cardinality of task expression. Returning original: "+applyExpr.toString().replace( '\n', ' ' ) );
+	
+				return new CompoundExpr( applyExpr );
+			}
+			
+			ce = new CompoundExpr();
+			
+			for( i = 0; i < n; i++ ) {
+				
+				applyExpr1 = applyExpr.clone();
+				
+				// TODO: This won't work if the task expression was the result of an output-reduce task
+				ce0 = new CompoundExpr( taskExpr.getSingleExpr( i ) );
+				
+				try {
+					if( ce0.getNumAtom() != 1 )
+						throw new RuntimeException( "Enumeration resulted in non-singular expression: "+ce0 );
+				} catch (NotDerivableException e) {
+					throw new RuntimeException( e );
+				}
+				
+				applyExpr1.setTaskExpr( ce0 );
+				
+				if( log.isTraceEnabled() )
+					log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Appending "+applyExpr.toString().replace( '\n', ' ' ) );
+				
+				ce.addSingleExpr( applyExpr1 );
+			}
 			
 			if( log.isTraceEnabled() )
-				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Appending "+applyExpr.toString().replace( '\n', ' ' ) );
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Trying to reduce "+ce.toString().replace( '\n', ' ' ) );
 			
-			ce.addSingleExpr( applyExpr1 );
+			ce0 = ce.visit( this );
+			
+			if( log.isTraceEnabled() )
+				log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Returning "+ce0.toString().replace( '\n', ' ' ) );		
+			
+			return ce0;
 		}
-		
-		if( log.isTraceEnabled() )
-			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Trying to reduce "+ce.toString().replace( '\n', ' ' ) );
-		
-		ce0 = ce.visit( this );
-		
-		if( log.isTraceEnabled() )
-			log.trace( "DynamicNodeVisitor reducePotentiallyCorrelated ApplyExpr: Returning "+ce0.toString().replace( '\n', ' ' ) );		
-		
-		return ce0;
+		catch( CloneNotSupportedException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 	
-	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) throws HasFailedException, CloneNotSupportedException {
+	private CompoundExpr reduceSingleNative( ApplyExpr applyExpr ) throws HasFailedException {
 		
 		CompoundExpr taskResult;
 		SingleExpr se;
@@ -795,7 +804,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, CloneNotSupportedException {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
 		
 		CompoundExpr result;
 		

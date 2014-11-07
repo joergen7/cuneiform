@@ -103,7 +103,7 @@ public abstract class BaseBlock implements CfNode, Cloneable {
 	
 	public Set<NameExpr> getNameSet() {
 		return assignMap.keySet();
-	}	
+	}
 	
 	public Map<NameExpr,CompoundExpr> getParamBindMap() {
 		return Collections.unmodifiableMap( assignMap );
