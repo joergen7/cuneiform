@@ -6,6 +6,6 @@ Cuneiform is a workflow specification language which makes it easy to integrate 
 
 Cuneiform comes in the form of a functional programming language with a Foreign Function Interface (FFI) that lets users create functions in any suitable scripting language and apply these functions in a uniform way.
 
-Data paralelism is expressed by applying map, cross-product, dot-product or combinations of the aforementioned algorithmic skeletons to lists of files containing black-box data.
+Data paralelism is expressed by applying map, cross-product, dot-product, or combinations of the aforementioned algorithmic skeletons to collections of black-box data.
 
 
