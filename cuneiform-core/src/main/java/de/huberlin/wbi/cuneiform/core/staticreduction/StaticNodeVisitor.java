@@ -33,6 +33,7 @@
 
 package de.huberlin.wbi.cuneiform.core.staticreduction;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -456,33 +457,32 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 		return tlc;
 	}
 	
-	public static Set<String> getFreeVarNameSet( TopLevelContext tlc )throws HasFailedException {
+	public static List<String> getFreeVarNameList( TopLevelContext tlc )throws HasFailedException {
 		
 		StaticNodeVisitor staticVisitor;
-		Set<String> nameSet;
+		List<String> nameList;
 		
-		nameSet = new HashSet<>();
+		nameList = new ArrayList<>();
 			
 		staticVisitor = new StaticNodeVisitor( tlc );
 		
 		tlc.visit( staticVisitor );
 			
 		for( NameExpr ne : staticVisitor.getFreeVarSet() )
-			nameSet.add( ne.getId() );
+			nameList.add( ne.getId() );
 		
-		return Collections.unmodifiableSet( nameSet );
+		return Collections.unmodifiableList( nameList );
 	}
 	
-	public static Set<String> getTargetVarNameSet( TopLevelContext tlc ) {
+	public static List<String> getTargetVarNameList( TopLevelContext tlc ) {
 
-		Set<String> nameSet;
+		List<String> nameList;
 		
-		nameSet = new HashSet<>();
+		nameList = new ArrayList<>();
 		
 		for( NameExpr ne : tlc.getNameSet() )
-			nameSet.add( ne.getId() );
+			nameList.add( ne.getId() );
 		
-		return nameSet;
+		return nameList;
 	}
-
 }
