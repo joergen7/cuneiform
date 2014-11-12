@@ -300,7 +300,7 @@ public class DaxJob {
 		
 		lambda = new ForeignLambdaExpr(
 			getPrototype(),
-			ForeignLambdaExpr.LANGID_BASH,
+			ForeignLambdaExpr.LANGID_PEGASUS,
 			buf.toString() );
 		
 		return lambda;

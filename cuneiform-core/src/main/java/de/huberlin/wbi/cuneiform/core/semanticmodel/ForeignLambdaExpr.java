@@ -45,11 +45,12 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public static final String LANGID_SCALA = "scala";
 	public static final String LANGID_ERLANG = "erlang";
 	public static final String LANGID_HASKELL = "haskell";
+	public static final String LANGID_PEGASUS = "pegasus";
 
 	private static final String[] LABEL_LANG = {
 		LANGID_BASH, LANGID_LISP, LANGID_OCTAVE, LANGID_MATLAB, LANGID_R,
 		LANGID_PYTHON, LANGID_PERL, LANGID_JAVA, LANGID_SCALA, LANGID_ERLANG,
-		LANGID_HASKELL
+		LANGID_HASKELL, LANGID_PEGASUS
 	};
 	
 	private final int lang;
@@ -70,8 +71,8 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		if( body.isEmpty() )
 			throw new RuntimeException( "Body must not be empty." );
 		
-		if( lang < 0 || lang > 7 )
-			throw new RuntimeException( "Language id "+lang+" not recognized. Must be a number in [0,6]." );
+		if( lang < 0 || lang >= LABEL_LANG.length )
+			throw new RuntimeException( "Language id "+lang+" not recognized. Must be a number in [0,"+( LABEL_LANG.length-1 )+"]." );
 		
 		this.body = body;		
 		this.lang = lang;
