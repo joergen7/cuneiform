@@ -74,7 +74,7 @@ public class Main {
 	private static Path[] inputFileVector;
 	
 
-	public static void main( String[] args ) throws IOException, ParseException, InterruptedException, NotDerivableException, CloneNotSupportedException {
+	public static void main( String[] args ) throws IOException, ParseException, InterruptedException, NotDerivableException {
 		
 		CommandLine cmd;
 		Options opt;
@@ -259,7 +259,7 @@ public class Main {
 		
 		opt.addOption( "c", "clean", false, "Clear local cache before start." );
 		
-		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine." );
+		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
 		
 		return opt;
 		
