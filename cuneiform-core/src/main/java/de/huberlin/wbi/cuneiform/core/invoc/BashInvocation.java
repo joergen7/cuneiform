@@ -39,51 +39,17 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class BashInvocation extends Invocation {
 
-	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
-
-	public BashInvocation( Ticket ticket ) {
-		super( ticket );
-	}
-
-	@Override
-	protected String getShebang() {
-		return BASH_SHEBANG;
-	}
-	
-	@Override
-	protected String getCheckPost() {
-		return bashIfNotEquals(
-			"$?",
-			"0",
-			"echo Task invocation returned non-zero exit value. >&2\nexit -1" );		
-	}
-	
-	@Override
-	protected String varDef( String varname, CompoundExpr list ) throws NotDerivableException {
+	private static String bashAllFrom( String varname ) {
 		
-		StringBuffer buf;
+		if( varname == null )
+			throw new NullPointerException( "Varname must not be null." );
 		
-		buf = new StringBuffer();
+		if( varname.isEmpty() )
+			throw new RuntimeException( "Varname must not be empty." );
 		
-		buf.append( varname ).append( "=( " );
-		for( String s : list.normalize() )			
-			buf.append( '"' ).append( s ).append( "\" " );
-		buf.append( ")\n" );
-		
-		return buf.toString();
-
-	}
-	
-
-	@Override
-	protected String varDef( String varname, String value ) {
-		return varname+"="+value+"\n";
+		return bashArrayGet( varname, "@" );
 	}
 
-	private static String bashArraySize( String varName ) {
-		return "${#"+varName+"[@]}";
-	}
-	
 	private static String bashArrayGet( String varName, String index ) {
 		
 		String v, i;
@@ -119,6 +85,10 @@ public class BashInvocation extends Invocation {
 		
 		return "${"+v+"["+index+"]}";
 	}
+
+	private static String bashArraySize( String varName ) {
+		return "${#"+varName+"[@]}";
+	}
 	
 	private static String bashIfNotEquals( String a, String b, String thenBlock ) {
 		
@@ -149,79 +119,13 @@ public class BashInvocation extends Invocation {
 		return ret;
 	}
 	
-	private static String bashAllFrom( String varname ) {
-		
-		if( varname == null )
-			throw new NullPointerException( "Varname must not be null." );
-		
-		if( varname.isEmpty() )
-			throw new RuntimeException( "Varname must not be empty." );
-		
-		return bashArrayGet( varname, "@" );
-	}
+	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
 	
-	@Override
-	protected String ifNotFileExists( String filename, String body ) {
-		
-		String ret;
-		
-		if( filename == null )
-			throw new NullPointerException( "Filename must not be null." );
-		
-		if( filename.isEmpty() )
-			throw new RuntimeException( "Filename must not be empty." );
-		
-		if( body == null )
-			throw new NullPointerException( "Then block must not be null." );
-		
-		if( body.isEmpty() )
-			throw new RuntimeException( "Then block must not be empty." );
-		
-		
-		ret = "if [ ! -e "+filename+" ]\nthen\n"+body+"\n";
-		
-		ret += "fi\n";
-		
-		return ret;
+
+	public BashInvocation( Ticket ticket ) {
+		super( ticket );
 	}
 
-	private String defFunction( String funName, String outputName, String[] inputNameList, String body ) {
-		
-		int i;
-		
-		if( funName == null )
-			throw new NullPointerException( "Function name must not be null." );
-		
-		if( funName.isEmpty() )
-			throw new RuntimeException( "Function name must not be empty." );
-		
-		if( body == null )
-			throw new NullPointerException( "Function body must not be null." );
-		
-		if( body.isEmpty() )
-			throw new RuntimeException( "Function body must not be empty." );
-		
-		StringBuffer buf;
-		
-		buf = new StringBuffer();
-		
-		buf.append( funName ).append( "() {\n" );
-		
-		i = 0;
-		for( String inputName : inputNameList )
-			buf.append(
-				varDef( inputName, dereference( String.valueOf( ++i ) ) ) );
-		
-		buf.append( body );
-		
-		if( outputName != null )
-			buf.append( "echo " ).append( dereference( outputName ) );
-		
-		buf.append( "\n}\n" );
-		
-		return buf.toString();
-	}
-	
 	@Override
 	protected String callFunction( String name, String... argValue ) {
 		
@@ -285,6 +189,58 @@ public class BashInvocation extends Invocation {
 	}
 	
 	@Override
+	protected String clip(String varName) {
+		return varName+"=${"+varName+":1}\n";
+	}
+	
+	@Override
+	protected String comment( String comment ) {
+		return "# "+comment.replace( "\n", "\n# " )+"\n";
+	}
+	
+	@Override
+	protected String copyArray( String from, String to ) {
+		return newList( to )+varDef( to, bashAllFrom( from ) );
+	}
+
+	private String defFunction( String funName, String outputName, String[] inputNameList, String body ) {
+		
+		int i;
+		
+		if( funName == null )
+			throw new NullPointerException( "Function name must not be null." );
+		
+		if( funName.isEmpty() )
+			throw new RuntimeException( "Function name must not be empty." );
+		
+		if( body == null )
+			throw new NullPointerException( "Function body must not be null." );
+		
+		if( body.isEmpty() )
+			throw new RuntimeException( "Function body must not be empty." );
+		
+		StringBuffer buf;
+		
+		buf = new StringBuffer();
+		
+		buf.append( funName ).append( "() {\n" );
+		
+		i = 0;
+		for( String inputName : inputNameList )
+			buf.append(
+				varDef( inputName, dereference( String.valueOf( ++i ) ) ) );
+		
+		buf.append( body );
+		
+		if( outputName != null )
+			buf.append( "echo " ).append( dereference( outputName ) );
+		
+		buf.append( "\n}\n" );
+		
+		return buf.toString();
+	}
+	
+	@Override
 	protected String defFunctionLog() throws NotDerivableException {
 		
 		StringBuffer buf;
@@ -340,22 +296,28 @@ public class BashInvocation extends Invocation {
 		.append( JsonReportEntry.ATT_VALUE ).append( ":$3}\" >> " )
 		.append( REPORT_FILENAME );
 		
-		return defFunction( FUN_LOGFILE, null, new String[] { "key", "payload" }, buf.toString() );
+		return defFunction( FUN_LOGFILE, null, new String[] { "file", "key", "payload" }, buf.toString() );
 	}
 	
 	@Override
-	protected String newList( String listName ) {
-		return listName+"=()\n";
+	protected String defFunctionNormalize() throws NotDerivableException {
+		return defFunction(
+			FUN_NORMALIZE,
+			null,
+			new String[] { "channel", "f" },
+			"echo "+getTicketId()+"_"+"${channel}_${f##*/}\n" );
 	}
-
-	@Override
-	protected String listAppend( String listName, String element ) {
-		return listName+"=("+bashAllFrom( listName )+" "+element+")\n";
-	}
-
+	
 	@Override
 	protected String dereference(String varName) {
 		return "$"+varName;
+	}
+	
+	@Override
+	protected String fileSize(String filename) {
+		// return "`du -b -L "+filename+" | awk '{print $1}'`";
+		// return "`stat -c %s "+filename+"`";
+		return "`du -k -L "+filename+" | awk '{print $1}'`";
 	}
 
 	@Override
@@ -373,8 +335,51 @@ public class BashInvocation extends Invocation {
 	}
 
 	@Override
-	protected String raise( String msg ) {
-		return "echo "+msg+" >&2\nexit -1";
+	protected String getCheckPost() {
+		return bashIfNotEquals(
+			"$?",
+			"0",
+			"echo Task invocation returned non-zero exit value. >&2\nexit -1" );		
+	}
+
+	@Override
+	protected String getImport() {
+		return "";
+	}
+
+	@Override
+	protected String getShebang() {
+		return BASH_SHEBANG;
+	}
+
+	@Override
+	protected String ifListIsNotEmpty( String listName, String body ) {
+		return bashIfNotEquals( bashArraySize( listName ), "0", body );
+	}
+
+	@Override
+	protected String ifNotFileExists( String filename, String body ) {
+		
+		String ret;
+		
+		if( filename == null )
+			throw new NullPointerException( "Filename must not be null." );
+		
+		if( filename.isEmpty() )
+			throw new RuntimeException( "Filename must not be empty." );
+		
+		if( body == null )
+			throw new NullPointerException( "Then block must not be null." );
+		
+		if( body.isEmpty() )
+			throw new RuntimeException( "Then block must not be empty." );
+		
+		
+		ret = "if [ ! -e "+filename+" ]\nthen\n"+body+"\n";
+		
+		ret += "fi\n";
+		
+		return ret;
 	}
 
 	@Override
@@ -389,6 +394,21 @@ public class BashInvocation extends Invocation {
 	}
 
 	@Override
+	protected String listAppend( String listName, String element ) {
+		return listName+"=("+bashAllFrom( listName )+" "+element+")\n";
+	}
+	
+	@Override
+	protected String listToBraceCommaSeparatedString( String src, String dest, String open, String close ) {
+		return dest+"=`printf \",%s\" ${"+src+"[@]}`\n"+dest+"="+open+"${"+dest+":1}"+close+"\n";
+	}
+
+	@Override
+	protected String newList( String listName ) {
+		return listName+"=()\n";
+	}
+
+	@Override
 	protected String quote( String content ) {
 		
 		String ret;
@@ -399,29 +419,8 @@ public class BashInvocation extends Invocation {
 	}
 
 	@Override
-	protected String fileSize(String filename) {
-		// return "`du -b -L "+filename+" | awk '{print $1}'`";
-		// return "`stat -c %s "+filename+"`";
-		return "`du -k -L "+filename+" | awk '{print $1}'`";
-	}
-
-	@Override
-	protected String ifListIsNotEmpty( String listName, String body ) {
-		return bashIfNotEquals( bashArraySize( listName ), "0", body );
-	}
-	
-	@Override
-	protected String listToBraceCommaSeparatedString( String src, String dest, String open, String close ) {
-		return dest+"=`printf \",%s\" ${"+src+"[@]}`\n"+dest+"="+open+"${"+dest+":1}"+close+"\n";
-	}
-
-	@Override
-	protected String defFunctionNormalize() throws NotDerivableException {
-		return defFunction(
-			FUN_NORMALIZE,
-			null,
-			new String[] { "channel", "f" },
-			"echo "+getTicketId()+"_"+"${channel}_${f##*/}\n" );
+	protected String raise( String msg ) {
+		return "echo "+msg+" >&2\nexit -1";
 	}
 
 	@Override
@@ -431,23 +430,24 @@ public class BashInvocation extends Invocation {
 	}
 
 	@Override
-	protected String getImport() {
-		return "";
+	protected String varDef( String varname, CompoundExpr list ) throws NotDerivableException {
+		
+		StringBuffer buf;
+		
+		buf = new StringBuffer();
+		
+		buf.append( varname ).append( "=( " );
+		for( String s : list.normalize() )			
+			buf.append( '"' ).append( s ).append( "\" " );
+		buf.append( ")\n" );
+		
+		return buf.toString();
+
 	}
 
 	@Override
-	protected String comment( String comment ) {
-		return "# "+comment.replace( "\n", "\n# " )+"\n";
-	}
-
-	@Override
-	protected String copyArray( String from, String to ) {
-		return newList( to )+varDef( to, bashAllFrom( from ) );
-	}
-
-	@Override
-	protected String clip(String varName) {
-		return varName+"=${"+varName+":1}\n";
+	protected String varDef( String varname, String value ) {
+		return varname+"="+value+"\n";
 	}
 
 
