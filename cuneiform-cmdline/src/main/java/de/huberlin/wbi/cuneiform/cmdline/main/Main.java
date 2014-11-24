@@ -112,10 +112,9 @@ public class Main {
 			else
 				sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
 			
-			if( cmd.hasOption( 'c' ) ) {
+			if( cmd.hasOption( 'c' ) )
 				LocalThread.deleteIfExists( sandbox );
-				LocalThread.deleteIfExists( Paths.get( "/tmp/cuneiform-stat.log" ) );
-			}
+			
 
 						
 			switch( platform ) {
