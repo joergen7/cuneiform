@@ -25,6 +25,40 @@ Data paralelism is expressed by applying map, cross-product, dot-product, or com
 		<url>https://github.com/joergen7/cuneiform.git</url>
 	</scm>
 
+	<developers>
+		<developer>
+			<name>Jörgen Brandt</name>
+			<email>brandjoe@informatik.hu-berlin.de</email>
+			<organization>Humboldt-Universität zu Berlin</organization>
+			<organizationUrl>https://www.hu-berlin.de/</organizationUrl>
+		</developer>
+		<developer>
+			<name>Marc Bux</name>
+			<email>buxmarcn@informatik.hu-berlin.de</email>
+			<organization>Humboldt-Universität zu Berlin</organization>
+			<organizationUrl>https://www.hu-berlin.de/</organizationUrl>
+		</developer>
+		<developer>
+			<name>Ulf Leser</name>
+			<email>leser@informatik.hu-berlin.de</email>
+			<organization>Humboldt-Universität zu Berlin</organization>
+			<organizationUrl>https://www.hu-berlin.de/</organizationUrl>
+		</developer>
+	</developers>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype.snapshot</id>
+			<name>Sonatype snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype.release</id>
+			<name>Sonatype release repository</name>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+		</repository>
+	</distributionManagement>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
