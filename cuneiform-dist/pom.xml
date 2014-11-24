@@ -16,17 +16,17 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 			<artifactId>cuneiform-cmdline</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 			<artifactId>cuneiform-cfide</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 			<artifactId>cuneiform-logview</artifactId>
 			<version>${project.version}</version>
 		</dependency>

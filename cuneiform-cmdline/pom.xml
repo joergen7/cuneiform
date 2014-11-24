@@ -12,13 +12,13 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 			<artifactId>cuneiform-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
-			<groupId>de.huberlin.wbi.cuneiform</groupId>
+			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 			<artifactId>cuneiform-dax</artifactId>
 			<version>${project.version}</version>
 		</dependency>
