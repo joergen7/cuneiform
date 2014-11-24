@@ -1,10 +1,29 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.huberlin.wbi.cuneiform</groupId>
+	<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 	<artifactId>cuneiform</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
+	<name>cuneiform</name>
+	<description>A Functional Workflow Language.
+
+Cuneiform is a workflow specification language which makes it easy to integrate heterogeneous tools and libraries and exploit data parallelism. Users do not have to create heavy-weight wrappers for establised tools or to reimplement them. Instead, they apply their existing software to partitioned data. Using the Hi-WAY application master Cuneiform can be executed on Hadoop YARN which makes it suitable for large scale data analysis.
+
+Cuneiform comes in the form of a functional programming language with a Foreign Function Interface (FFI) that lets users create functions in any suitable scripting language and apply these functions in a uniform way.
+
+Data paralelism is expressed by applying map, cross-product, dot-product, or combinations of the aforementioned algorithmic skeletons to collections of black-box data.</description>
+	<url>https://github.com/joergen7/cuneiform</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>https://github.com/joergen7/cuneiform.git</url>
+	</scm>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -28,6 +47,20 @@
 	</dependencyManagement>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
