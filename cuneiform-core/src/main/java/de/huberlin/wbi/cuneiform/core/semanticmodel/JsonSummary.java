@@ -1,12 +1,9 @@
-package de.huberlin.wbi.cuneiform.cmdline.main;
+package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 
 public class JsonSummary {
 

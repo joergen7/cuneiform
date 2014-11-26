@@ -59,6 +59,7 @@ import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalThread;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonSummary;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
