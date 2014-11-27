@@ -62,12 +62,14 @@ import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonSummary;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
+import de.huberlin.wbi.cuneiform.htcondorcre.CondorCreActor;
 
 public class Main {
 	
 	private static final String FORMAT_CF = "cf";
 	private static final String FORMAT_DAX = "dax";
 	private static final String PLATFORM_LOCAL = "local";
+	private static final String PLATFORM_HTCONDOR = "htcondor";
 	
 	
 	private static String platform;
@@ -129,6 +131,15 @@ public class Main {
 						cre = new LocalCreActor( sandbox, Integer.valueOf( cmd.getOptionValue( 't' ) ) );
 					else
 						cre = new LocalCreActor( sandbox );
+					
+					break;
+					
+				case PLATFORM_HTCONDOR :
+					
+					if( !Files.exists( sandbox ) )
+						Files.createDirectories( sandbox );
+
+					cre = new CondorCreActor( sandbox );
 					
 					break;
 					
@@ -246,7 +257,7 @@ public class Main {
 			"The format of the input file. Must be either '"+FORMAT_CF+"' for Cuneiform or '"+FORMAT_DAX+"' for Pegasus DAX. Default is '"+FORMAT_CF+"'." );
 		
 		opt.addOption( "p", "platform", true,
-			"The platform to run. The only platform currently available is '"+PLATFORM_LOCAL+"'. Default is '"+PLATFORM_LOCAL+"'." );
+			"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
 		
 		opt.addOption( "h", "help", false, "Output help." );
 		
