@@ -105,7 +105,9 @@ public abstract class Actor implements Runnable {
 					break;
 				}
 				
+				preRec();
 				processQueue();
+				postRec();
 			}
 			
 			shutdown();
@@ -116,5 +118,11 @@ public abstract class Actor implements Runnable {
 	}
 	
 	protected abstract void shutdown();
+	protected void preRec() {
+		// override if necessary
+	}
+	protected void postRec() {
+		// override if necessary
+	}
 	
 }
