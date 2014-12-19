@@ -57,8 +57,10 @@ import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.LocalThread;
+import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 import de.huberlin.wbi.cuneiform.htcondorcre.CondorCreActor;
@@ -108,6 +110,9 @@ public class Main {
 				
 				return;
 			}
+			
+			if( cmd.hasOption( "r" ) )
+				Invocation.putLibPath( ForeignLambdaExpr.LANGID_R, cmd.getOptionValue( "r" ) );
 			
 			if( cmd.hasOption( 'l' ) )
 				sandbox = Paths.get( cmd.getOptionValue( "l" ) );
@@ -270,6 +275,9 @@ public class Main {
 		opt.addOption( "c", "clean", false, "Clear local cache before start." );
 		
 		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
+		
+		opt.addOption( "r", "r-lib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
+		
 		
 		return opt;
 		

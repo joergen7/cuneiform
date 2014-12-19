@@ -33,8 +33,10 @@
 package de.huberlin.wbi.cuneiform.core.invoc;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,6 +61,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Type;
 
 public abstract class Invocation {
 	
+	private static final Map<String,String> libPathMap = new HashMap<>();
+	
 	protected static final String FUN_LOG = "cflogmsg";
 	protected static final String FUN_LOGFILE = "cflogfilemsg";
 	protected static final String FUN_NORMALIZE = "cfnormalize";
@@ -70,14 +74,16 @@ public abstract class Invocation {
 	public static final String LOCK_FILENAME = "__lock__";
 
 
+	protected final String libPath; 
 	private final Ticket ticket;
 	
-	public Invocation( Ticket ticket ) {
+	public Invocation( Ticket ticket, String libPath ) {
 
 		if( ticket == null )
 			throw new NullPointerException( "Ticket must not be null." );
 		
 		this.ticket = ticket;
+		this.libPath = libPath;
 	}
 	
 	public void evalReport( Set<JsonReportEntry> report ) throws JSONException {
@@ -223,6 +229,10 @@ public abstract class Invocation {
 		return ticket.hasTaskName();
 	}
 	
+	public boolean hasLibPath() {
+		return libPath != null;
+	}
+	
 	public String toScript() throws NotBoundException, NotDerivableException {
 		
 		StringBuffer buf;
@@ -231,6 +241,11 @@ public abstract class Invocation {
 		
 		// insert shebang
 		buf.append( getShebang() ).append( '\n' );
+		
+		// modify library path
+		buf.append( comment( "modify library path" ) );
+		if( hasLibPath() )
+			buf.append( getLibPath() );
 		
 		// import libraries
 		buf.append( comment( "import libraries" ) );
@@ -318,6 +333,7 @@ public abstract class Invocation {
 	protected abstract String fileSize( String filename );
 	protected abstract String forEach( String listName, String elementName, String body );
 	protected abstract String getShebang();
+	protected abstract String getLibPath();
 	protected abstract String ifListIsNotEmpty( String listName, String body );
 	
 	protected abstract String ifNotFileExists( String fileName, String body );
@@ -719,26 +735,35 @@ public abstract class Invocation {
 	
 	public static Invocation createInvocation( Ticket ticket ) {
 		
-		String label;
+		String label, libPath;
 		
 		label = ticket.getLangLabel();
+		libPath = libPathMap.get( label );
 		
 		switch( label ) {
 		
-			case ForeignLambdaExpr.LANGID_BASH : return new BashInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_R : return new RInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_MATLAB : return new MatlabInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_OCTAVE : return new OctaveInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_JAVA : return new ScalaInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_PYTHON : return new PythonInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_ERLANG : return new ErlangInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_HASKELL : return new HaskellInvocation( ticket );
-			case ForeignLambdaExpr.LANGID_PEGASUS : return new PegasusInvocation( ticket );
+			case ForeignLambdaExpr.LANGID_BASH : return new BashInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_R : return new RInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_MATLAB : return new MatlabInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_OCTAVE : return new OctaveInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_JAVA : return new ScalaInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_PYTHON : return new PythonInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_ERLANG : return new ErlangInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_HASKELL : return new HaskellInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_PEGASUS : return new PegasusInvocation( ticket, libPath );
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
+	}
+	
+	public static void putLibPath( String langId, String libPath ) {
+		
+		if( langId == null )
+			throw new NullPointerException( "Language id must not be null." );
+		
+		libPathMap.put( langId, libPath );
 	}
 	
 	

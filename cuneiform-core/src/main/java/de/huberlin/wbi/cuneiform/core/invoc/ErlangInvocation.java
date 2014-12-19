@@ -6,8 +6,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class ErlangInvocation extends Invocation {
 
-	public ErlangInvocation( Ticket ticket ) {
-		super( ticket );
+	public ErlangInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -146,6 +146,12 @@ public class ErlangInvocation extends Invocation {
 	@Override
 	protected String varDef(String varname, CompoundExpr ce)
 			throws NotDerivableException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected String getLibPath() {
 		// TODO Auto-generated method stub
 		return null;
 	}

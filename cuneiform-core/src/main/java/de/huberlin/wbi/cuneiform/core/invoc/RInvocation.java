@@ -41,8 +41,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class RInvocation extends Invocation {
 
-	protected RInvocation( Ticket ticket ) {
-		super( ticket );
+	protected RInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -323,6 +323,11 @@ public class RInvocation extends Invocation {
 			+"file=\""+REPORT_FILENAME+"\" )" ) );
 		
 		return buf.toString();
+	}
+
+	@Override
+	protected String getLibPath() {
+		return callProcedure( ".libPaths", quote( libPath.toString() ) );
 	}
 
 }

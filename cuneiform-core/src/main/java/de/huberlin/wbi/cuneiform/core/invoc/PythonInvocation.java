@@ -34,8 +34,8 @@ public class PythonInvocation extends Invocation {
 		return buf.toString();
 	}
 	
-	public PythonInvocation( Ticket ticket ) {
-		super( ticket );
+	public PythonInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -245,6 +245,11 @@ public class PythonInvocation extends Invocation {
 	@Override
 	protected String varDef( String varname, String value ) {
 		return varname+"="+value+"\n";
+	}
+
+	@Override
+	protected String getLibPath() {
+		throw new UnsupportedOperationException( "NYI" );
 	}
 
 }

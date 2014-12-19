@@ -41,8 +41,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class MatlabInvocation extends OctaveInvocation {
 	
-	public MatlabInvocation( Ticket ticket ) {
-		super( ticket );
+	public MatlabInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override

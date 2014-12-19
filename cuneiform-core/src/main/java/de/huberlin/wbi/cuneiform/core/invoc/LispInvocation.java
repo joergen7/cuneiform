@@ -6,8 +6,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class LispInvocation extends Invocation {
 
-	public LispInvocation( Ticket ticket ) {
-		super( ticket );
+	public LispInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -146,6 +146,12 @@ public class LispInvocation extends Invocation {
 	@Override
 	protected String varDef(String varname, CompoundExpr ce)
 			throws NotDerivableException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected String getLibPath() {
 		// TODO Auto-generated method stub
 		return null;
 	}

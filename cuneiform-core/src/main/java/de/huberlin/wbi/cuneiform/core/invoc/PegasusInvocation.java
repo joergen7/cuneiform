@@ -5,8 +5,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class PegasusInvocation extends BashInvocation {
 
-	public PegasusInvocation( Ticket ticket ) {
-		super(ticket);
+	public PegasusInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 	
 	@Override

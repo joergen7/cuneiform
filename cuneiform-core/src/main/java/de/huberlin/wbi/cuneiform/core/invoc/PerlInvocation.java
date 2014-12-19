@@ -41,8 +41,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class PerlInvocation extends Invocation {
 
-	public PerlInvocation( Ticket ticket ) {
-		super( ticket );
+	public PerlInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -336,6 +336,12 @@ public class PerlInvocation extends Invocation {
 		buf.append( " );\n" );
 		
 		return buf.toString();
+	}
+
+	@Override
+	protected String getLibPath() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

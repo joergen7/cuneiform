@@ -122,8 +122,8 @@ public class BashInvocation extends Invocation {
 	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
 	
 
-	public BashInvocation( Ticket ticket ) {
-		super( ticket );
+	public BashInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -448,6 +448,11 @@ public class BashInvocation extends Invocation {
 	@Override
 	protected String varDef( String varname, String value ) {
 		return varname+"="+value+"\n";
+	}
+
+	@Override
+	protected String getLibPath() {
+		throw new UnsupportedOperationException( "NYI" );
 	}
 
 

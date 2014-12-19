@@ -41,8 +41,8 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
 public class OctaveInvocation extends Invocation {
 
-	public OctaveInvocation( Ticket ticket ) {
-		super( ticket );
+	public OctaveInvocation( Ticket ticket, String libPath ) {
+		super( ticket, libPath );
 	}
 
 	@Override
@@ -336,5 +336,11 @@ public class OctaveInvocation extends Invocation {
 
 	private static String octaveForLoop( String runVar, String times, String body ) {
 		return "for "+runVar+" = 1:"+times+"\n"+body+"\nend\n";
+	}
+
+	@Override
+	protected String getLibPath() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
