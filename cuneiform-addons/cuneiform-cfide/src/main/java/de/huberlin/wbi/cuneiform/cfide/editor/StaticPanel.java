@@ -244,9 +244,7 @@ public class StaticPanel extends JPanel implements Runnable {
 		executorService.submit( new ProducerThread( p, dot ) );
 		executorService.shutdown();
 		
-		try(
-			InputStream inStream =  p.getInputStream();
-			) {
+		try( InputStream inStream =  p.getInputStream() ) {
 			
 			
 			rawImage = ImageIO.read( inStream );
