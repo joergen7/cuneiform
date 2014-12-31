@@ -477,12 +477,25 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	public static List<String> getTargetVarNameList( TopLevelContext tlc ) {
 
 		List<String> nameList;
+		CompoundExpr ce;
 		
 		nameList = new ArrayList<>();
 		
-		for( NameExpr ne : tlc.getNameSet() )
-			nameList.add( ne.getId() );
+		try {
+			for( NameExpr ne : tlc.getNameSet() ) {
+				
+				ce = tlc.getExpr( ne );
+				if( ce.getNumSingleExpr() == 1 )
+					if( ce.getSingleExpr( 0 ) instanceof LambdaExpr )
+						continue;
+				
+				nameList.add( ne.getId() );
+			}
+			return nameList;
+		}
+		catch ( NotBoundException e ) {
+			throw new RuntimeException( e );
+		}
 		
-		return nameList;
 	}
 }
