@@ -2,6 +2,7 @@ package de.huberlin.wbi.cuneiform.taskview;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.nio.file.Path;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -25,7 +26,7 @@ public class TaskView extends JPanel implements TreeSelectionListener {
 	private final JTextArea stdErrArea;
 	private final FileBrowser fileBrowser;
 	
-	public TaskView() {
+	public TaskView( Path buildPath ) {
 		
 		JPanel infoBox;
 		JPanel col;
@@ -67,7 +68,7 @@ public class TaskView extends JPanel implements TreeSelectionListener {
 		stdErrArea.setEditable( false );
 		stdErrArea.setFont( font );
 		
-		fileBrowser = new FileBrowser();
+		fileBrowser = new FileBrowser( buildPath );
 		
 		tabbedPane = new JTabbedPane();
 		tabbedPane.addTab( "Stdout", new JScrollPane( stdOutArea ) );

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -32,12 +31,15 @@ public class FileBrowser extends JPanel implements TreeSelectionListener {
 	private final JTextArea contentArea;
 	private final Path buildPath;
 	
-	public FileBrowser() {
+	public FileBrowser( Path buildPath ) {
 		
 		JSplitPane splitPane;
 		JScrollPane scrollPane;
 		
-		buildPath = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
+		if( buildPath == null )
+			throw new IllegalArgumentException( "Build path must not be null." );
+		
+		this.buildPath = buildPath;
 		top = new DefaultMutableTreeNode( "[Container]" );
 		treeModel = new DefaultTreeModel( top );
 		tree = new JTree( treeModel );

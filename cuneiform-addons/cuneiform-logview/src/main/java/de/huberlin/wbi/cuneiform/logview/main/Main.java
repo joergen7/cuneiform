@@ -66,6 +66,11 @@ public class Main {
 		ParallelismView parallelismView;
 		JsonReportEntry entry;
 		GraphView graphView;
+		Path buildPath;
+		
+		buildPath = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
+		if( args.length > 0 )
+			buildPath = Paths.get( args[ 0 ] );
 		
 		frame = new JFrame( "Cuneiform Log View" );
 		
@@ -74,7 +79,7 @@ public class Main {
 		frame.setLayout( new BorderLayout() );
 		
 		
-		taskView = new TaskView();
+		taskView = new TaskView( buildPath );
 		taskBrowser = new TaskBrowser( taskView );
 		splitPane = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, taskBrowser, taskView );
 		splitPane.setDividerLocation( 200 );
