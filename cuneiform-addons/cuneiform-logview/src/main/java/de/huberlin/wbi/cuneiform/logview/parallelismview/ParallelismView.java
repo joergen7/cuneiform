@@ -172,13 +172,13 @@ public class ParallelismView extends Visualizable {
 		}
 		
 		chart = ChartFactory.createStackedXYAreaChart(
-			"Parallelism",				// title
-			"Time ["+uname+"]",					// xAxisLabel
+			null,						// title
+			"Time ["+uname+"]",			// xAxisLabel
 			"N invocations",			// yAxisLabel
 			dataset,					// dataset
 			PlotOrientation.VERTICAL,	// orientation
 			true,						// legend
-			true,						// tooltips
+			false,						// tooltips
 			true						// urls
 		);
 		
