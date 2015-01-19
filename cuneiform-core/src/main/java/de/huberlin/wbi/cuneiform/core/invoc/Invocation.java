@@ -650,7 +650,7 @@ public abstract class Invocation {
 						callProcedure(
 							FUN_LOGFILE,
 							dereference( inputName ),
-							JsonReportEntry.KEY_FILE_SIZE_STAGEIN,
+							quote( JsonReportEntry.KEY_FILE_SIZE_STAGEIN ),
 							dereference( "SIZE" ) ) ).append( '\n' );
 					
 		
@@ -675,7 +675,7 @@ public abstract class Invocation {
 						+callFunction(
 							FUN_LOGFILE,
 							dereference( "CFI" ),
-							JsonReportEntry.KEY_FILE_SIZE_STAGEIN,
+							quote( JsonReportEntry.KEY_FILE_SIZE_STAGEIN ),
 							dereference( "SIZE" ) ) ) );				
 		
 		return buf.toString();
@@ -702,7 +702,7 @@ public abstract class Invocation {
 						callProcedure(
 							FUN_LOGFILE,
 							dereference( outputName ),
-							JsonReportEntry.KEY_FILE_SIZE_STAGEOUT,
+							quote( JsonReportEntry.KEY_FILE_SIZE_STAGEOUT ),
 							dereference( "SIZE" ) ) ).append( '\n' );
 					
 		
@@ -727,7 +727,7 @@ public abstract class Invocation {
 						+callFunction(
 							FUN_LOGFILE,
 							dereference( "CFI" ),
-							JsonReportEntry.KEY_FILE_SIZE_STAGEOUT,
+							quote( JsonReportEntry.KEY_FILE_SIZE_STAGEOUT ),
 							dereference( "SIZE" ) ) ) );				
 		
 		return buf.toString();

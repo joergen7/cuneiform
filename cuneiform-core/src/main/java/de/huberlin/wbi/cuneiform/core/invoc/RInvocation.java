@@ -66,7 +66,7 @@ public class RInvocation extends Invocation {
 			+JsonReportEntry.ATT_INVOCID+":"+getTicketId()+","
 			+JsonReportEntry.ATT_KEY+":\\\"\", key, \"\\\","
 			+JsonReportEntry.ATT_VALUE+":\", value, \"}\\n\", sep=\"\" ), "
-			+"file=\""+REPORT_FILENAME+"\" )" ) );
+			+"file=\""+REPORT_FILENAME+"\", append=TRUE )" ) );
 		
 		return buf.toString();
 	}
@@ -254,7 +254,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	protected String fileSize( String filename ) {
-		return "file.info( "+quote( filename )+" )$size/1024";
+		return "sprintf( \"%.0f\", file.info( "+filename+" )$size/1024 )";
 	}
 
 	@Override
@@ -309,7 +309,7 @@ public class RInvocation extends Invocation {
 			"if( mode( key ) != \"character\" )\n"
 			+"stop( \"Expected key to be of type 'character'.\" )\n"
 			+"if( mode( value ) != \"character\" )\n"
-			+"stop( \"Expected key to be of type 'value'.\" )\n"
+			+"stop( \"Expected value to be of type 'character'.\" )\n"
 			+"write( paste( \"{"
 			+JsonReportEntry.ATT_TIMESTAMP+":"+System.currentTimeMillis()+","
 			+JsonReportEntry.ATT_RUNID+":\\\""+getRunId()+"\\\","
@@ -320,7 +320,7 @@ public class RInvocation extends Invocation {
 			+JsonReportEntry.ATT_FILE+":\\\"\", file, \"\\\","
 			+JsonReportEntry.ATT_KEY+":\\\"\", key, \"\\\","
 			+JsonReportEntry.ATT_VALUE+":\", value, \"}\\n\", sep=\"\" ), "
-			+"file=\""+REPORT_FILENAME+"\" )" ) );
+			+"file=\""+REPORT_FILENAME+"\", append=TRUE )" ) );
 		
 		return buf.toString();
 	}
