@@ -38,9 +38,8 @@ import java.util.Map;
 
 import javax.swing.text.StyledDocument;
 
-public class StyleConf {
+public abstract class StyleConf {
 	
-	public static final Color COL_BACKGROUND = new Color( 0, 10, 30 );
 
 	public static final String KEY_KEYWORD = "keyword";
 	public static final String KEY_VARNAME = "varname";
@@ -58,6 +57,8 @@ public class StyleConf {
 	public StyleConf() {
 		styleMap = new HashMap<>();
 	}
+	
+	public abstract Color getBackgroundColor();
 	
 	public void setDoc( StyledDocument doc ) {
 
@@ -125,24 +126,4 @@ public class StyleConf {
 	public void setForeignStyle( SimpleStyle s ) {
 		setStyle( KEY_FOREIGN, s );
 	}
-	
-	public static StyleConf createDefaultStyleConf() {
-		
-		StyleConf sc;
-		
-		sc = new StyleConf();
-		
-		sc.setCommentStyle( SimpleStyle.createPlainStyle( new Color( 100, 200, 255 ) ) );
-		sc.setCallStyle( SimpleStyle.createItStyle() );
-		sc.setApplyStyle( SimpleStyle.createUlStyle() );
-		sc.setVarnameStyle( SimpleStyle.createPlainStyle( new Color( 100, 180, 140 ) ) );
-		sc.setStatStyle( SimpleStyle.createPlainStyle( Color.WHITE ) );
-		sc.setKeywordStyle( SimpleStyle.createBfStyle() );
-		sc.setDataStyle( SimpleStyle.createPlainStyle( new Color( 255, 255, 150 ) ) );
-		sc.setTypeStyle( SimpleStyle.createPlainStyle( new Color( 200, 255, 200 ) ) );
-		sc.setForeignStyle( SimpleStyle.createPlainStyle( Color.LIGHT_GRAY ) );
-		
-		return sc;
-	}
-
 }

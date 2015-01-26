@@ -49,6 +49,7 @@ public class SyntaxPanel extends JPanel {
 	private static final long serialVersionUID = -385807381349136708L;
 
 	private JTextPane editPane;
+	protected StyleConf sc;
 	
 	public SyntaxPanel() {
 		
@@ -57,10 +58,11 @@ public class SyntaxPanel extends JPanel {
 		
 		
 		setLayout( new BorderLayout() );
+		sc = new LightStyleConf();
 		
 		// edit pane
 		editPane = new JTextPane();
-		editPane.setBackground( StyleConf.COL_BACKGROUND );
+		editPane.setBackground( sc.getBackgroundColor() );
 		editPane.setFont( new Font( "Courier", Font.PLAIN, 14 ) );
 		editPane.setForeground( Color.WHITE );
 		editPane.setCaretColor( Color.WHITE );
@@ -101,7 +103,7 @@ public class SyntaxPanel extends JPanel {
 
 	public void setText( String text ) {
 		editPane.setText( text );
-		SyntaxListener.process( editPane, StyleConf.createDefaultStyleConf() );
+		SyntaxListener.process( editPane, sc );
 	}
 	
 	public void setEditable( boolean editable ) {

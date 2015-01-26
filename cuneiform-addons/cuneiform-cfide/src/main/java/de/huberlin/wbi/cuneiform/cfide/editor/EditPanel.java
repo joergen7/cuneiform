@@ -186,7 +186,7 @@ public class EditPanel extends SyntaxPanel implements KeyListener, CaretListener
 
 	@Override
 	public void keyReleased( KeyEvent arg0 ) {
-		SyntaxListener.process( getEditPane(), StyleConf.createDefaultStyleConf() );
+		SyntaxListener.process( getEditPane(), sc );
 		mainPanel.updateSelectedEditPanelTitle();
 	}
 
