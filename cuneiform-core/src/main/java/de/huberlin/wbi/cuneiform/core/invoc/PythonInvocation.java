@@ -26,7 +26,7 @@ public class PythonInvocation extends Invocation {
 			buf.append( inputName );
 		}
 		
-		buf.append( " )\n    " );
+		buf.append( " ):\n    " );
 		
 		buf.append( body.replace( "\n", "\n    " ) );
 		buf.append( "\n" );
@@ -71,7 +71,7 @@ public class PythonInvocation extends Invocation {
 
 	@Override
 	protected String clip( String varName ) {
-		return varName+"[1:]\n";
+		return varName+" = "+varName+"[1:]\n";
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public class PythonInvocation extends Invocation {
 
 	@Override
 	protected String defFunctionLogFile() throws NotDerivableException {
-		return defFunction( FUN_LOG, new String[] { "fx", "key", "value" },
+		return defFunction( FUN_LOGFILE, new String[] { "fx", "key", "value" },
 				"f = file(\""+REPORT_FILENAME+"\",\"a\")\nf.write("+"\"{"
 					+JsonReportEntry.ATT_TIMESTAMP+":"+System.currentTimeMillis()+","
 					+JsonReportEntry.ATT_RUNID+":\\\""+getRunId()+"\\\","
@@ -118,7 +118,7 @@ public class PythonInvocation extends Invocation {
 		return defFunction(
 				FUN_NORMALIZE,
 				new String[] { "channel", "f" },
-				"\""+getTicketId()+"_%d_%s\"%(channel,f)" );
+				"return \""+getTicketId()+"_%d_%s\"%(channel,f)" );
 	}
 
 	@Override
@@ -212,7 +212,7 @@ public class PythonInvocation extends Invocation {
 
 	@Override
 	protected String symlink( String src, String dest ) {
-		return "os.symlink("+src+","+"dest"+")\n";
+		return "os.symlink("+src+","+dest+")\n";
 	}
 
 	@Override

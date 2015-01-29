@@ -58,7 +58,7 @@ public class SyntaxPanel extends JPanel {
 		
 		
 		setLayout( new BorderLayout() );
-		sc = new LightStyleConf();
+		sc = new DarkStyleConf();
 		
 		// edit pane
 		editPane = new JTextPane();
