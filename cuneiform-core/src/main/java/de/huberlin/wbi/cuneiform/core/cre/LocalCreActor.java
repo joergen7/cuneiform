@@ -59,7 +59,7 @@ public class LocalCreActor extends BaseCreActor {
 		if( !Files.exists( buildDir ) )
 			throw new RuntimeException( "Build directory does not exist." );
 		
-		if( !Files.exists( buildDir ) )
+		if( !Files.isDirectory( buildDir ) )
 			throw new RuntimeException( "Directory expected." );
 		
 		if( nthread < 1 )

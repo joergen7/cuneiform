@@ -143,7 +143,7 @@ public class Main {
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
 
-					cre = new CondorCreActor();
+					cre = new CondorCreActor( sandbox );
 					
 					break;
 					
