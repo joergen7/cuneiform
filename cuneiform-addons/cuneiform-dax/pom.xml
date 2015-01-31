@@ -21,7 +21,7 @@
 			<plugin>
 				<groupId>org.antlr</groupId>
 				<artifactId>antlr4-maven-plugin</artifactId>
-				<version>4.2</version>
+				<version>4.5</version>
 				<configuration>
 					<sourceDirectory>${basedir}/src/main/antlr</sourceDirectory>
 					<listener>true</listener>

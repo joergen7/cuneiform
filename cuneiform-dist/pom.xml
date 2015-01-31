@@ -11,9 +11,6 @@
 	<artifactId>cuneiform-dist</artifactId>
 	<packaging>pom</packaging>
 
-	<name>Cuneiform-dist</name>
-	<url></url>
-
 	<dependencies>
 		<dependency>
 			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
