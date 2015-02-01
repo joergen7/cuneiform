@@ -1,0 +1,145 @@
+// tar
+deftask untar( <out( File )> : tar( File ) )in bash *{
+  tar xf $tar
+  if [ "$?" -ne "0" ]
+  then
+    echo untar returned error. >&2
+    exit -1
+  fi
+  out=`tar tf $tar`
+}*
+
+// gzip
+deftask gunzip( out( File ) : gz( File ) )in bash *{
+  gzip -c -d $gz > $out
+}*
+
+// bowtie2
+deftask bowtie2-build( idx( File ) : fa( File ) )
+in bash *{
+  bowtie2-build $fa bt2idx
+  if [ "$?" -ne "0" ]
+  then
+    echo Bowtie 2 build returned error. >&2
+    exit -1
+  fi
+  tar cf $idx --remove-files bt2idx.*
+}*
+
+deftask bowtie2-align( sam( File ) : idx( File ) [fastq1( File ) fastq2( File )] )in bash *{
+  tar xf $idx
+  if [ "$?" -ne "0" ]
+  then
+    echo bowtie2-align returned error on extraction step. >&2
+    exit -1
+  fi
+  bowtie2 -D 5 -R 1 -N 0 -L 22 -i S,0,2.50 \
+  -p 2 \
+  --no-unal -x bt2idx -1 $fastq1 -2 $fastq2 -S $sam
+  if [ "$?" -ne "0" ]
+  then
+    echo bowtie2-align returned error on alignment step. >&2
+    exit -1
+  fi
+  rm bt2idx.*
+}*
+
+deftask samtools-view( bam( File ) : sam( File ) )in bash *{
+  samtools view -bS $sam > $bam
+}*
+
+// samtools
+deftask samtools-faidx( fai( File ) : fa( File ) )in bash *{
+  samtools faidx $fa
+  fai=$fa.fai
+}*
+
+deftask samtools-sort( sortedbam( File ) : bam( File ) )in bash *{
+  sortedbam=alignment-sorted.bam
+  samtools sort -m 2G $bam alignment-sorted
+}*
+
+deftask samtools-mpileup( mpileup( File ) : sortedbam( File ) [fa( File ) fai( File )] )in bash *{
+  ln -s $fai $fa.fai
+  samtools mpileup -f $fa $sortedbam > $mpileup
+}*
+
+// varscan
+deftask varscan( vcf( File ) : mpileup( File ) )in bash *{
+  varscan mpileup2snp $mpileup --output-vcf --p-value 99e-02 > $vcf
+}*
+
+// annovar
+deftask annovar( fun( File ) exonicfun( File ) : <vcf( File )> db( File ) buildver )in bash *{
+  fun=table.variant_function
+  exonicfun=table.exonic_variant_function
+  tar xf $db
+  cat ${vcf[@]} > infile
+  convert2annovar.pl -format vcf4 infile | \
+  annotate_variation.pl -buildver $buildver -geneanno -outfile table - db/
+}*
+
+
+deftask per-chromosome(
+    vcf( File )
+  : fa( File ) [fastq1( File ) fastq2( File )] ) {
+
+  bt2idx = bowtie2-build( fa: fa );
+  fai = samtools-faidx( fa: fa );
+
+  sam = bowtie2-align(
+    idx:    bt2idx
+    fastq1: fastq1
+    fastq2: fastq2 );
+
+  bam = samtools-view( sam: sam );
+
+  sortedbam = samtools-sort( bam: bam );
+
+  mpileup = samtools-mpileup(
+    sortedbam: sortedbam
+    fa:        fa
+    fai:       fai );
+
+  vcf = varscan( mpileup: mpileup );
+}
+
+deftask per-sample(
+    fun exonicfun
+  : <fa( File )> [fastq1( File ) fastq2( File )] db( File ) ) {
+
+  vcf = per-chromosome(
+    fa:     fa
+    fastq1: fastq1
+    fastq2: fastq2 );
+
+  fun exonicfun = annovar(
+    vcf: vcf
+    db: db
+    buildver: 'hg38' );
+}
+
+// input files
+hg38-tar = 'hg38/hg38_4.tar';
+
+fastq1-gz = '1000genomes/SRR062634_1.filt.fastq.gz'
+            '1000genomes/SRR062635_1.filt.fastq.gz';
+fastq2-gz = '1000genomes/SRR062634_2.filt.fastq.gz'
+            '1000genomes/SRR062635_2.filt.fastq.gz';
+
+db = 'annodb/hg38db.tar';
+
+// workflow definition
+fa = untar( tar: hg38-tar );
+fastq1 = gunzip( gz: fastq1-gz );
+fastq2 = gunzip( gz: fastq2-gz );
+
+fun exonicfun = per-sample(
+  fa:     fa
+  fastq1: fastq1
+  fastq2: fastq2
+  db:     db );
+
+
+// query
+fun exonicfun;
