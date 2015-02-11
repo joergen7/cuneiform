@@ -12,5 +12,6 @@
   	<module>cuneiform-dax</module>
   	<module>cuneiform-cfide</module>
   	<module>cuneiform-logview</module>
+  	<module>cuneiform-htcondorcre</module>
   </modules>
 </project>

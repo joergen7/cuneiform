@@ -8,14 +8,6 @@
 	</parent>
 	<artifactId>cuneiform-cmdline</artifactId>
 	<name>cuneiform-cmdline</name>
-	
-	
-	<repositories>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/groups/public</url>
-		</repository>
-	</repositories>
 
 
 	<dependencies>
@@ -34,7 +26,7 @@
 
 		<dependency>
 			<groupId>de.hu-berlin.wbi.cuneiform</groupId>
-			<artifactId>htcondorcre</artifactId>
+			<artifactId>cuneiform-htcondorcre</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
