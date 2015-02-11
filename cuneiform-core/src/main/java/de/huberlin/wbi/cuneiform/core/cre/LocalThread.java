@@ -109,8 +109,9 @@ public class LocalThread implements Runnable {
 	@Override
 	public void run() {
 		
-		Path scriptFile, location, lockMarker, successMarker, reportFile,
+		Path scriptFile, location, successMarker, reportFile,
 			callLocation, stdErrFile, stdOutFile;
+		// Path lockMarker;
 		Process process;
 		int exitValue;
 		Set<JsonReportEntry> report;
@@ -142,7 +143,7 @@ public class LocalThread implements Runnable {
 		process = null;
 		stdOut = null;
 		stdErr = null;
-		lockMarker = null;
+		// lockMarker = null;
 		script = null;
 		successMarker = null;
 		cs = Charset.forName( "UTF-8" );
@@ -153,20 +154,20 @@ public class LocalThread implements Runnable {
 
 			callLocation = Paths.get( System.getProperty( "user.dir" ) );
 			location = buildDir.resolve( String.valueOf( invoc.getTicketId() ) );
-			lockMarker = location.resolve( Invocation.LOCK_FILENAME );
+			// lockMarker = location.resolve( Invocation.LOCK_FILENAME );
 			successMarker = location.resolve( Invocation.SUCCESS_FILENAME );
 			reportFile = location.resolve( Invocation.REPORT_FILENAME );
 			script = invoc.toScript();
 			
-			if( Files.exists( lockMarker ) )
-				throw new IOException( "Lock held on ticket "+invoc.getTicketId() );
+			// if( Files.exists( lockMarker ) )
+			//	throw new IOException( "Lock held on ticket "+invoc.getTicketId() );
 			
 			if( !Files.exists( successMarker ) ) {
 				
 				deleteIfExists( location );
 				Files.createDirectories( location );			
 				
-				Files.createFile( lockMarker );
+				// Files.createFile( lockMarker );
 							
 				scriptFile = invoc.getExecutablePath( location );
 				
@@ -189,31 +190,22 @@ public class LocalThread implements Runnable {
 					
 					
 					
-					if( filename.charAt( 0 ) == '/' ) {
+					if( filename.charAt( 0 ) == '/' )						
+						throw new UnsupportedOperationException( "Absolute path encountered '"+filename+"'." );
 						
+					srcPath = centralRepo.resolve( filename );
+					destPath = location.resolve( filename );
+					
+					if( !Files.exists( srcPath ) ) {
 						
-						srcPath = Paths.get( filename );
+						srcPath = callLocation.resolve( filename );
 						if( log.isTraceEnabled() )
-							log.trace( "Resolving absolute path '"+srcPath+"'." );
-						
-						destPath = location.resolve( srcPath.getFileName() );
+							log.trace( "Resolving relative path '"+srcPath+"'." );
 					}
-					else {
-						
-						srcPath = centralRepo.resolve( filename );
-						destPath = location.resolve( filename );
-						
-						if( !Files.exists( srcPath ) ) {
-							
-							srcPath = callLocation.resolve( filename );
-							if( log.isTraceEnabled() )
-								log.trace( "Resolving relative path '"+srcPath+"'." );
-						}
-						else
+					else
 
-							if( log.isTraceEnabled() )
-								log.trace( "Resolving path to central repository '"+srcPath+"'." );
-					}
+						if( log.isTraceEnabled() )
+							log.trace( "Resolving path to central repository '"+srcPath+"'." );
 					
 					if( log.isTraceEnabled() )
 						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
@@ -257,7 +249,7 @@ public class LocalThread implements Runnable {
 				if( process == null ) {
 					
 					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, null, null ) );
-					Files.delete( lockMarker );
+					// Files.delete( lockMarker );
 					return;
 				}
 					
@@ -312,7 +304,7 @@ public class LocalThread implements Runnable {
 					else {
 						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
-						Files.delete( lockMarker );
+						// Files.delete( lockMarker );
 						return;
 						
 					}
@@ -367,7 +359,7 @@ public class LocalThread implements Runnable {
 			if( log.isTraceEnabled() )
 				log.trace( "Local thread ran through without exception." );
 			
-			Files.deleteIfExists( lockMarker );
+			// Files.deleteIfExists( lockMarker );
 
 		}
 		catch( InterruptedException e ) {
