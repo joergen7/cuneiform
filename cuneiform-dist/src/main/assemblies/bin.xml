@@ -28,9 +28,9 @@
 			<useProjectArtifact>false</useProjectArtifact>
 			<useProjectAttachments>false</useProjectAttachments>
 			<excludes>
-				<exclude>de.huberlin.wbi.cuneiform:cuneiform-cmdline</exclude>
-				<exclude>de.huberlin.wbi.cuneiform:cuneiform-cfide</exclude>
-				<exclude>de.huberlin.wbi.cuneiform:cuneiform-logview</exclude>
+				<exclude>de.hu-berlin.wbi.cuneiform:cuneiform-cmdline</exclude>
+				<exclude>de.hu-berlin.wbi.cuneiform:cuneiform-cfide</exclude>
+				<exclude>de.hu-berlin.wbi.cuneiform:cuneiform-logview</exclude>
 			</excludes>
 		</dependencySet>
 
@@ -41,9 +41,9 @@
 			<useProjectArtifact>false</useProjectArtifact>
 			<useProjectAttachments>false</useProjectAttachments>
 			<includes>
-				<include>de.huberlin.wbi.cuneiform:cuneiform-cmdline</include>
-				<include>de.huberlin.wbi.cuneiform:cuneiform-cfide</include>
-				<include>de.huberlin.wbi.cuneiform:cuneiform-logview</include>
+				<include>de.hu-berlin.wbi.cuneiform:cuneiform-cmdline</include>
+				<include>de.hu-berlin.wbi.cuneiform:cuneiform-cfide</include>
+				<include>de.hu-berlin.wbi.cuneiform:cuneiform-logview</include>
 			</includes>
 		</dependencySet>
 
