@@ -56,7 +56,6 @@ public class JsonSummary {
 			
 			n = output.size();
 			first = output.get( 0 );
-			res = first.matches( "\\d+_\\d+_.+" );
 			comma = false;
 			
 			for( i = 0; i < n; i++ ) {
@@ -68,8 +67,10 @@ public class JsonSummary {
 				s = output.get( i );
 				candidate = buildDir.resolve( s );
 
-				if( Files.exists( candidate ) )
+				if( Files.exists( candidate ) ) {
 					s = candidate.toAbsolutePath().toString();
+					res = true;
+				}
 				
 				buf.append( '"' ).append( s ).append( '"' );
 			}
