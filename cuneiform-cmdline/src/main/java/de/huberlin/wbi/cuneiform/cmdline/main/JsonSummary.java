@@ -1,9 +1,7 @@
 package de.huberlin.wbi.cuneiform.cmdline.main;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +37,7 @@ public class JsonSummary {
 	public String toString() {
 		
 		StringBuffer buf;
-		String first, s, r;
+		String s;
 		int i, n;
 		boolean res, comma;
 		Path candidate;
@@ -55,7 +53,6 @@ public class JsonSummary {
 		if( !output.isEmpty() ) {
 			
 			n = output.size();
-			first = output.get( 0 );
 			comma = false;
 			
 			for( i = 0; i < n; i++ ) {
