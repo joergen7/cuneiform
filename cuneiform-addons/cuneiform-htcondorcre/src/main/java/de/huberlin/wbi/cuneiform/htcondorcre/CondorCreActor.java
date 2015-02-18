@@ -59,7 +59,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class CondorCreActor extends BaseCreActor {
-	public static final String VERSION = "2015-02-11-1";
+	public static final String VERSION = "2015-02-17-3";
 
 	private CondorWatcher watcher;
 
@@ -86,7 +86,7 @@ public class CondorCreActor extends BaseCreActor {
 			throw new RuntimeException("Build directory does not exist.");
 		}
 		if (!Files.isDirectory(buildDir)) {
-			throw new RuntimeException("Directory expected.");
+			throw new RuntimeException("Directory type expected.");
 		}
 		this.buildDir = buildDir;
 		centralRepo = buildDir.resolve(PATH_CENTRALREPO);
@@ -287,13 +287,14 @@ public class CondorCreActor extends BaseCreActor {
 		// Setup
 		Invocation invoc = Invocation.createInvocation(ticket);
 		Path location = buildDir.resolve(String.valueOf(invoc.getTicketId()));
+		Files.createDirectories( location );
 		if (log.isDebugEnabled()) {
 			log.debug("Build directory: " + location.toString());
 		}
 		Path submitFile = location.resolve("cfsubmitfile");
 		String script = invoc.toScript();
 		Charset cs = Charset.forName("UTF-8");
-		Path scriptFile = location.resolve(Invocation.SCRIPT_NAME);
+		Path scriptFile = invoc.getExecutablePath( location );
 		Path reportFile = location.resolve(Invocation.REPORT_FILENAME);
 		/**
 		 * Log created by the condor job, used to monitor the job. Each job
@@ -314,13 +315,14 @@ public class CondorCreActor extends BaseCreActor {
 		}
 
 		try {
-			Files.createFile(scriptFile,
-			// PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString(
-			// "rwxr-x---" ) ) );
-					PosixFilePermissions.asFileAttribute(PosixFilePermissions
-							.fromString("rwxr-x--x")));
+			Files.createFile(scriptFile, 
+					PosixFilePermissions.asFileAttribute(
+							PosixFilePermissions.fromString("rwxr-x---" ) ) );
 		} catch (FileAlreadyExistsException faee) {
 			// if file already exists do nothing
+			if (log.isDebugEnabled()) {
+				log.debug("Scriptfile for ticket " + invoc.getTicketId() + " already exists.");
+			}
 		}
 
 		// write executable script

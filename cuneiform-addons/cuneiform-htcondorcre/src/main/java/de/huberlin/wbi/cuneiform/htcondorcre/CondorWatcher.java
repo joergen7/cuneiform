@@ -11,7 +11,7 @@ import de.huberlin.wbi.cuneiform.core.actormodel.Message;
 
 
 public class CondorWatcher extends Actor {
-	public static final String VERSION = "2015-02-09-2";
+	public static final String VERSION = "2015-02-17-1";
 	
 	private CondorCreActor caller = null;
 	private ArrayList<StatusMessage> messages = new ArrayList<StatusMessage>();
@@ -49,7 +49,8 @@ public class CondorWatcher extends Actor {
 	protected void preRec(){
 		int result;
 		if(!messages.isEmpty()){
-			//debug( "Condor Watcher checking status of "+messages.size()+" jobs in line." );
+			//will hold all messages that are removable after the loop
+			ArrayList<StatusMessage> removable = new ArrayList<StatusMessage>();
 			//check all messages in waitline
 			for(StatusMessage sm : messages){
 				result = checkJobStatus(sm);
@@ -58,9 +59,14 @@ public class CondorWatcher extends Actor {
 					StatusMessage answer = new StatusMessage(this, sm.getQueryId(), sm.getJobpath(), sm.getTicket(), sm.getOriginalSender());
 					answer.setStatusCode(result);
 					caller.processMsg(answer);
-					messages.remove(sm);
+					removable.add(sm);
 				}
 			}
+			//remove finished jobs
+			for(StatusMessage sm : removable){
+				messages.remove(sm);
+			}
+			removable.clear();
 		}
 	}
 
