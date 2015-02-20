@@ -59,7 +59,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class CondorCreActor extends BaseCreActor {
-	public static final String VERSION = "2015-02-17-3";
+	public static final String VERSION = "2015-02-20-1";
 
 	private CondorWatcher watcher;
 
@@ -318,6 +318,9 @@ public class CondorCreActor extends BaseCreActor {
 			Files.createFile(scriptFile, 
 					PosixFilePermissions.asFileAttribute(
 							PosixFilePermissions.fromString("rwxr-x---" ) ) );
+			if (log.isDebugEnabled()) {
+				log.debug("Scriptfile for ticket " + invoc.getTicketId() + " has successfully been created at "+scriptFile.toString());
+			}
 		} catch (FileAlreadyExistsException faee) {
 			// if file already exists do nothing
 			if (log.isDebugEnabled()) {
@@ -361,10 +364,10 @@ public class CondorCreActor extends BaseCreActor {
 			writer.write("log = " + cjLogFile);
 			writer.write('\n');
 			writer.write("output = "
-					+ new File(Invocation.STDOUT_FILENAME).toPath());
+					+ location.resolve("__condor_stdout__.txt"));
 			writer.write('\n');
 			writer.write("error = "
-					+ new File(Invocation.STDERR_FILENAME).toPath());
+					+ location.resolve("__condor_stderr__.txt"));
 			writer.write('\n');
 			writer.write("should_transfer_files = YES \n when_to_transfer_output = ON_EXIT \n");
 			// inputfiles
@@ -392,10 +395,11 @@ public class CondorCreActor extends BaseCreActor {
 				command.toArray(new String[command.size()]));
 		processBuilder.directory(null);
 
-		processBuilder.redirectOutput(new File(location.resolve(
-				Invocation.STDOUT_FILENAME).toString()));
-		processBuilder.redirectError(new File(location.resolve(
-				Invocation.STDERR_FILENAME).toString()));
+		Path stdOutFile = location.resolve( Invocation.STDOUT_FILENAME );
+		Path stdErrFile = location.resolve( Invocation.STDERR_FILENAME );
+
+		processBuilder.redirectOutput( stdOutFile.toFile() );
+		processBuilder.redirectError( stdErrFile.toFile() );
 
 		int trial = 1;
 		boolean suc = false;
