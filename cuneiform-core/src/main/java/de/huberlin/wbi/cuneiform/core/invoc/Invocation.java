@@ -180,6 +180,17 @@ public abstract class Invocation {
 		}
 	}
 	
+	/** Get the union of all files that have been created by this invocation.
+	 * 
+	 * All the files created in the execution of the invocation are subsumed
+	 * independent of the channel in which they appear. This method assumes
+	 * that the method Invocation.evalReport() has been called with the report
+	 * created during execution of this invocation. Otherwise, a
+	 * NotBoundException will be rethrown as a RuntimeException.
+	 * 
+	 * @return A set of strings containing relative file names.
+	 * @throws NotDerivableException
+	 */
 	public Set<String> getStageOutList() throws NotDerivableException {
 		
 		CompoundExpr ce;
