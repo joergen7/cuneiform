@@ -31,11 +31,7 @@ package de.huberlin.wbi.cuneiform.htcondorcre;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -61,7 +57,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class CondorCreActor extends BaseCreActor {
-	public static final String VERSION = "2015-02-23-11";
+	public static final String VERSION = "2015-03-05-4";
 
 	private CondorWatcher watcher;
 
@@ -165,17 +161,21 @@ public class CondorCreActor extends BaseCreActor {
 
 		ticket = msg.getTicket();
 		ticketSrc = (TicketSrcActor) msg.getOriginalSender();
+		Set<JsonReportEntry> entry = this.gatherReport(msg);
 
 		if (msg.getStatusCode() == StatusMessage.CODEJobTerminated) {
 			// create link in central data repository
 			Invocation invoc = Invocation.createInvocation(ticket);
 			Path location = buildDir.resolve(String.valueOf(invoc.getTicketId()));
+			
 			try{
+				invoc.evalReport(entry);
 				if (log.isDebugEnabled()) {
 					// for testing purpose only, show the first staged file
 					for( NameExpr nameExpr : ticket.getOutputList()){
 						log.debug("Ticket "+ticket.getTicketId()+" has at least one output file: "+nameExpr.getId());
 						//only display the first file
+						log.debug("Total number of output files: "+ticket.getOutputList().size());
 						break;
 					}
 				}
@@ -205,7 +205,7 @@ public class CondorCreActor extends BaseCreActor {
 			}
 			
 			//notify of finished job
-			ticketSrc.sendMsg(new TicketFinishedMsg(this, ticket, this.gatherReport(msg)));
+			ticketSrc.sendMsg(new TicketFinishedMsg(this, ticket, entry));
 
 			return;
 		}
@@ -379,6 +379,8 @@ public class CondorCreActor extends BaseCreActor {
 				Files.createDirectories( destPath.getParent() );
 			
 			Files.createSymbolicLink( destPath, srcPath );
+			//add the path to the set to insert it in the submitfile later on
+			inputs.add(destPath.toString());
 		}
 
 		try {
@@ -454,13 +456,19 @@ public class CondorCreActor extends BaseCreActor {
 			writer.write("error = " + condorError.toString());
 			writer.write('\n');
 			//TODO: Transfer files or not?
-			writer.write("should_transfer_files = NO \n");
-			//writer.write("when_to_transfer_output = ON_EXIT \n");
+			writer.write("should_transfer_files = YES \n");
+			writer.write("when_to_transfer_output = ON_EXIT \n");
 			// inputfiles
 			if (!inputs.isEmpty()) {
 				writer.write("transfer_input_files = ");
+				boolean successor = false;
 				for (String file : inputs) {
-					writer.write(file + ",");
+					if(successor){
+						writer.write("," );
+					}else{
+						successor = true;
+					}
+					writer.write(file);
 				}
 				// TODO: is the ',' causing problems?
 				writer.write('\n');
