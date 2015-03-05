@@ -10,6 +10,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 
 public class JsonReportEntryTest {
 
+	@SuppressWarnings("static-method")
 	@Test
 	public void testRunIdIsParsed() throws JSONException {
 		
@@ -25,6 +26,7 @@ public class JsonReportEntryTest {
 			entry.getRunId() );
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testTaskIdCanBeNull() throws JSONException {
 		
@@ -38,6 +40,7 @@ public class JsonReportEntryTest {
 		Assert.assertNull( "Task id should be null.", entry.getTaskId() );
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testTaskIdCanBeMissing1() throws JSONException {
 		
@@ -51,6 +54,7 @@ public class JsonReportEntryTest {
 		Assert.assertNull( "Task id should be null.", entry.getTaskId() );
 	}
 	
+	@SuppressWarnings("static-method")
 	@Test
 	public void testTaskIdCanBeMissing2() throws JSONException {
 		

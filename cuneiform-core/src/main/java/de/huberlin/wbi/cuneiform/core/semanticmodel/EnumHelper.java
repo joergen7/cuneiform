@@ -49,15 +49,23 @@ public class EnumHelper {
 		
 		Set<Param> paramSet;
 		int i, n;
+		SingleExpr se;
 		
 		if( bindingBlock == null )
-			throw new NullPointerException( "Binding block must not be null." );
+			throw new IllegalArgumentException( "Binding block must not be null." );
 		
 		if( taskExpr == null )
-			throw new NullPointerException( "Task expression must not be null." );
+			throw new IllegalArgumentException( "Task expression must not be null." );
+		
+		if( taskExpr.getNumSingleExpr() < 1 )
+			throw new IllegalArgumentException( "Task expression should not be nil." );
+		
+		se = taskExpr.getSingleExpr( 0 );
+		if( !( se instanceof LambdaExpr ) )
+			throw new IllegalArgumentException( "Task expression must hold lambda expression." );
 		
 		this.taskExpr = taskExpr;		
-		this.prototype = ( ( LambdaExpr )taskExpr.getSingleExpr( 0 ) ).getPrototype();
+		this.prototype = ( ( LambdaExpr )se ).getPrototype();
 		this.bindingBlock = bindingBlock;
 		
 		// check if parameter bindings are consistent
@@ -73,7 +81,6 @@ public class EnumHelper {
 					+"' is unbound in task application." );
 		}
 
-		// impose order on parameter names
 		paramSet = prototype.getParamSet();
 		
 		n = paramSet.size();
