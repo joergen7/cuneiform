@@ -105,9 +105,10 @@ public class CondorCreActor extends BaseCreActor {
 	 * Decides whether the condor job should be submitted using the verbose
 	 * flag. The default option is false.
 	 * 
+	 * Verbose output - display the created job ClassAd
+	 *
 	 * @param value
 	 *            Adds the verbose flag if true, removes the flag if false
-	 * @see Verbose output - display the created job ClassAd
 	 */
 	public void setVerbose(boolean value) {
 		if (value) {
@@ -140,7 +141,7 @@ public class CondorCreActor extends BaseCreActor {
 	/**
 	 * Used for status messages received from the watcher
 	 * 
-	 * @param sm
+	 * @param msg
 	 */
 	protected void processMsg(StatusMessage msg) {
 

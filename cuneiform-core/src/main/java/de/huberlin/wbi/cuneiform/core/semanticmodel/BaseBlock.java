@@ -121,9 +121,6 @@ public abstract class BaseBlock implements CfNode, Cloneable {
 		return assignMap.isEmpty();
 	}
 	
-	/**
-	 * @throws NotDerivableException  
-	 */
 	public void pushRest( BaseBlock restBlock ) {
 		
 		try {

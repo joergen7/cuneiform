@@ -190,7 +190,7 @@ public abstract class Invocation {
 	 * Otherwise, a NotBoundException will be rethrown as a RuntimeException.
 	 * 
 	 * @return A set of strings containing relative file names.
-	 * @throws NotDerivableException
+	 * @throws NotDerivableException if normalization fails
 	 */
 	public Set<String> getStageOutList() throws NotDerivableException {
 		
