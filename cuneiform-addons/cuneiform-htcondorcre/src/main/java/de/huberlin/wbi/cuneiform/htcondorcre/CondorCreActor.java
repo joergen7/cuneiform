@@ -31,15 +31,12 @@ package de.huberlin.wbi.cuneiform.htcondorcre;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
@@ -53,13 +50,14 @@ import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.TicketReadyMsg;
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFailedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class CondorCreActor extends BaseCreActor {
-	public static final String VERSION = "2015-02-17-3";
+	public static final String VERSION = "2015-03-05-4";
 
 	private CondorWatcher watcher;
 
@@ -163,9 +161,51 @@ public class CondorCreActor extends BaseCreActor {
 
 		ticket = msg.getTicket();
 		ticketSrc = (TicketSrcActor) msg.getOriginalSender();
+		Set<JsonReportEntry> entry = this.gatherReport(msg);
 
 		if (msg.getStatusCode() == StatusMessage.CODEJobTerminated) {
-			ticketSrc.sendMsg(new TicketFinishedMsg(this, ticket, this.gatherReport(msg)));
+			// create link in central data repository
+			Invocation invoc = Invocation.createInvocation(ticket);
+			Path location = buildDir.resolve(String.valueOf(invoc.getTicketId()));
+			
+			try{
+				invoc.evalReport(entry);
+				if (log.isDebugEnabled()) {
+					// for testing purpose only, show the first staged file
+					for( NameExpr nameExpr : ticket.getOutputList()){
+						log.debug("Ticket "+ticket.getTicketId()+" has at least one output file: "+nameExpr.getId());
+						//only display the first file
+						log.debug("Total number of output files: "+ticket.getOutputList().size());
+						break;
+					}
+				}
+ 
+				for( String f : invoc.getStageOutList() ) {
+					
+					Path srcPath = location.resolve( f );
+					Path destPath = centralRepo.resolve( f );
+					
+					if( Files.exists( destPath ) )
+						continue;
+					
+					if( log.isTraceEnabled() )
+						log.trace( "Creating link from "+srcPath+" to "+destPath+"." );
+					
+					Files.createSymbolicLink( destPath, srcPath );
+				} 
+			}catch (Exception e){
+				if (log.isTraceEnabled()) {
+					log.trace("Something went wrong.");
+				}
+				if (log.isDebugEnabled()) {
+					// Show full stacktrace
+					log.debug(e.getMessage());
+				}
+				ticketSrc.sendMsg(new TicketFailedMsg(this, ticket, e, null, null, null));
+			}
+			
+			//notify of finished job
+			ticketSrc.sendMsg(new TicketFinishedMsg(this, ticket, entry));
 
 			return;
 		}
@@ -210,7 +250,7 @@ public class CondorCreActor extends BaseCreActor {
 		} catch (InterruptedException e) {
 
 			if (log.isTraceEnabled())
-				log.trace("Local thread has been interrupted.");
+				log.trace("CondorCRE has been interrupted.");
 		} catch (Exception e) {
 			Exception ex = e;
 			if (log.isTraceEnabled()) {
@@ -283,23 +323,26 @@ public class CondorCreActor extends BaseCreActor {
 		if (ticketSrc == null) {
 			throw new NullPointerException("Ticket source must not be null.");
 		}
+		if (ticket == null) {
+			throw new NullPointerException("Ticket must not be null.");
+		}
 
 		// Setup
 		Invocation invoc = Invocation.createInvocation(ticket);
 		Path location = buildDir.resolve(String.valueOf(invoc.getTicketId()));
 		Files.createDirectories( location );
 		if (log.isDebugEnabled()) {
-			log.debug("Build directory: " + location.toString());
+			log.debug("Build directory for ticket: " + location.toString());
 		}
 		Path submitFile = location.resolve("cfsubmitfile");
 		String script = invoc.toScript();
 		Charset cs = Charset.forName("UTF-8");
 		Path scriptFile = invoc.getExecutablePath( location );
 		Path reportFile = location.resolve(Invocation.REPORT_FILENAME);
+		
 		/**
 		 * Log created by the condor job, used to monitor the job. Each job
-		 * should have it's own log fiel for monitoring
-		 */
+		 * should have it's own log file for monitoring  */
 		java.util.Date date = new java.util.Date();
 		Path cjLogFile = location.resolve((date.getTime()) + "cjlog.txt");
 
@@ -311,13 +354,43 @@ public class CondorCreActor extends BaseCreActor {
 		// add input files
 		Set<String> inputs = new HashSet<>();
 		for (String filename : invoc.getStageInList()) {
-			// TODO: Add files to the list
+			if( filename.charAt( 0 ) == '/' ){						
+				throw new UnsupportedOperationException( "Absolute path encountered '"+filename+"'." );
+			}	
+			Path srcPath = centralRepo.resolve( filename );
+			Path destPath = location.resolve( filename );
+			Path callLocation = Paths.get( System.getProperty( "user.dir" ) );
+			
+			if( !Files.exists( srcPath ) ) {
+				
+				srcPath = callLocation.resolve( filename );
+				if( log.isTraceEnabled() )
+					log.trace( "Resolving relative path '"+srcPath+"'." );
+			}
+			else
+
+				if( log.isTraceEnabled() )
+					log.trace( "Resolving path to central repository '"+srcPath+"'." );
+			
+			if( log.isTraceEnabled() )
+				log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
+
+			if( !Files.exists( destPath.getParent() ) )
+				Files.createDirectories( destPath.getParent() );
+			
+			Files.createSymbolicLink( destPath, srcPath );
+			//add the path to the set to insert it in the submitfile later on
+			inputs.add(destPath.toString());
 		}
 
 		try {
 			Files.createFile(scriptFile, 
 					PosixFilePermissions.asFileAttribute(
-							PosixFilePermissions.fromString("rwxr-x---" ) ) );
+							PosixFilePermissions.fromString("rwxr-xrwx" ) ) );
+			if (log.isDebugEnabled()) {
+				log.debug("Scriptfile for ticket " + invoc.getTicketId() + " has successfully been created at "+scriptFile.toString());
+			}
+			scriptFile.toFile().setWritable(true, false);
 		} catch (FileAlreadyExistsException faee) {
 			// if file already exists do nothing
 			if (log.isDebugEnabled()) {
@@ -348,35 +421,61 @@ public class CondorCreActor extends BaseCreActor {
 						+ " already exists.");
 			}
 		}
-
+		
+		Path condorError = location.resolve("condor_stderr.txt");
+		Path condorOutput = location.resolve("condor_stdout.txt");
+		try {
+			condorError = Files.createFile(condorError, PosixFilePermissions
+					.asFileAttribute(PosixFilePermissions
+							.fromString("rwxr-xrw-")));
+			condorError.toFile().setWritable(true, false);
+			condorOutput = Files.createFile(condorOutput, PosixFilePermissions
+					.asFileAttribute(PosixFilePermissions
+							.fromString("rwxr-xrw-")));
+			condorOutput.toFile().setWritable(true, false);
+		} catch (FileAlreadyExistsException faee) {
+			if (log.isDebugEnabled()) {
+				log.debug("condorError or condorOutput for "+ ticket.getTicketId() +" already exists.");
+			}
+		}
+		
+		
 		try (BufferedWriter writer = Files.newBufferedWriter(submitFile, cs,
 				StandardOpenOption.CREATE)) {
 			// name of the executable script
-			writer.write("executable = " + scriptFile);
+			writer.write("executable = " + scriptFile.toString());
 			writer.write('\n');
 			writer.write("universe = vanilla");
 			writer.write('\n');
 			writer.write("run_as_owner = True");
 			writer.write('\n');
-			writer.write("log = " + cjLogFile);
+			writer.write("log = " + cjLogFile.toString());
 			writer.write('\n');
-			writer.write("output = "
-					+ new File(Invocation.STDOUT_FILENAME).toPath());
+			writer.write("output = " + condorOutput.toString());
 			writer.write('\n');
-			writer.write("error = "
-					+ new File(Invocation.STDERR_FILENAME).toPath());
+			writer.write("error = " + condorError.toString());
 			writer.write('\n');
-			writer.write("should_transfer_files = YES \n when_to_transfer_output = ON_EXIT \n");
+			//TODO: Transfer files or not?
+			writer.write("should_transfer_files = YES \n");
+			writer.write("when_to_transfer_output = ON_EXIT \n");
 			// inputfiles
 			if (!inputs.isEmpty()) {
 				writer.write("transfer_input_files = ");
+				boolean successor = false;
 				for (String file : inputs) {
-					writer.write(file + ",");
+					if(successor){
+						writer.write("," );
+					}else{
+						successor = true;
+					}
+					writer.write(file);
 				}
 				// TODO: is the ',' causing problems?
 				writer.write('\n');
 			}
 			// at last add the job to the queue
+			writer.write('\n');
+			writer.write("initialdir = "+location.toString());
 			writer.write('\n');
 			writer.write("queue");
 		}
@@ -390,12 +489,20 @@ public class CondorCreActor extends BaseCreActor {
 		}
 		ProcessBuilder processBuilder = new ProcessBuilder(
 				command.toArray(new String[command.size()]));
-		processBuilder.directory(null);
+		/*
+		 * Sets this process builder's working directory. 
+		 * Subprocesses subsequently started by this object's start() method will 
+		 * use this as their working directory. The argument may be null -- this 
+		 * means to use the working directory of the current Java process, usually the 
+		 * directory named by the system property user.dir, as the working directory 
+		 * of the child process. */
+		processBuilder.directory(location.toFile());
 
-		processBuilder.redirectOutput(new File(location.resolve(
-				Invocation.STDOUT_FILENAME).toString()));
-		processBuilder.redirectError(new File(location.resolve(
-				Invocation.STDERR_FILENAME).toString()));
+		Path stdOutFile = location.resolve( Invocation.STDOUT_FILENAME );
+		Path stdErrFile = location.resolve( Invocation.STDERR_FILENAME );
+
+		processBuilder.redirectOutput( stdOutFile.toFile() );
+		processBuilder.redirectError( stdErrFile.toFile() );
 
 		int trial = 1;
 		boolean suc = false;
