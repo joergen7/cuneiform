@@ -44,7 +44,7 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 
 public class LocalCreActor extends BaseCreActor {
 	
-	private static final String PATH_CENTRALREPO = "repo";
+	public static final String PATH_CENTRALREPO = "repo";
 
 
 	private final ExecutorService executor;

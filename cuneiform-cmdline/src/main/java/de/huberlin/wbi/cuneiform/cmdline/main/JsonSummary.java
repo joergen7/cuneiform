@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import de.huberlin.wbi.cuneiform.core.cre.LocalCreActor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 
@@ -62,7 +63,7 @@ public class JsonSummary {
 				comma = true;
 				
 				s = output.get( i );
-				candidate = buildDir.resolve( s );
+				candidate = buildDir.resolve( LocalCreActor.PATH_CENTRALREPO ).resolve( s );
 
 				if( Files.exists( candidate ) ) {
 					s = candidate.toAbsolutePath().toString();
