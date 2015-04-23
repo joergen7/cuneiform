@@ -3,3 +3,9 @@
 /.classpath
 /.settings
 /.project
+
+
+*.iml
+.idea
+/conf/**
+!/conf/applicationContext.*.properties
