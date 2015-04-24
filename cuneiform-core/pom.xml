@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr4</artifactId>
-			<version>4.3</version>
+			<version>4.5</version>
 		</dependency>
 
 		<dependency>
@@ -78,7 +78,7 @@
 			<plugin>
 				<groupId>org.antlr</groupId>
 				<artifactId>antlr4-maven-plugin</artifactId>
-				<version>4.3</version>
+				<version>4.5</version>
 				<configuration>
 					<sourceDirectory>${basedir}/src/main/antlr</sourceDirectory>
 					<listener>true</listener>
