@@ -8,4 +8,3 @@
 *.iml
 .idea
 /conf/**
-!/conf/applicationContext.*.properties
