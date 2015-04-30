@@ -181,20 +181,13 @@ public class SyntaxListener extends CuneiformBaseListener {
 	
 	@Override
 	public void enterForeignBody( @NotNull CuneiformParser.ForeignBodyContext ctx ) {
-		mark( ctx.IN(), StyleConf.KEY_KEYWORD );
-		mark( ctx.ID(), StyleConf.KEY_KEYWORD );
+		mark( ctx.INLANG(), StyleConf.KEY_KEYWORD );
 		mark( ctx.BODY(), StyleConf.KEY_FOREIGN );
 	}	
 	
 	@Override
-	public void enterForeignFnBodyErr1( @NotNull CuneiformParser.ForeignFnBodyErr1Context ctx ) {
-		mark( ctx.IN(), StyleConf.KEY_KEYWORD );		
-	}
-
-	@Override
 	public void enterForeignFnBodyErr2( @NotNull CuneiformParser.ForeignFnBodyErr2Context ctx ) {
-		mark( ctx.IN(), StyleConf.KEY_KEYWORD );		
-		mark( ctx.ID(), StyleConf.KEY_KEYWORD );
+		mark( ctx.INLANG(), StyleConf.KEY_KEYWORD );		
 	}
 
 	@Override

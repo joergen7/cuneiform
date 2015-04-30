@@ -372,7 +372,8 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 		if( !( prototype instanceof Prototype ) )
 			throw new RuntimeException( "Prototype expected." );
 		
-		langString = ctx.foreignBody().ID().getText();
+		langString = ctx.foreignBody().INLANG().getText();
+		langString = langString.substring( 2 ).replace( ",", "" ).trim();
 		
 		body = ctx.foreignBody().BODY().getText();
 		body = body.substring( 2, body.length()-2 );

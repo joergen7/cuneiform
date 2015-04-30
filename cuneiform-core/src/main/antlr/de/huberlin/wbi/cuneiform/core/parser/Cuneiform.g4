@@ -135,9 +135,7 @@ singleExpr       : ID                                                     # IdEx
                    { notifyErrorListeners( "Incomplete task application. Missing ')'." ); } # SingleExprErr3
                  | APPLY LPAREN ID COLON
                    { notifyErrorListeners( "Incomplete Parameter binding. Missing value." ); } # ParamBindErr1
-                 | LAMBDA prototype IN
-                   { notifyErrorListeners( "In foreign task definition: Expecting lang id (e.g. 'bash' or 'python')." ); } # ForeignFnBodyErr1
-                 | LAMBDA prototype IN ID OPENBODY
+                 | LAMBDA prototype INLANG OPENBODY
                    { notifyErrorListeners( "In foreign task definition: Missing '}*'." ); } # ForeignFnBodyErr2
                  ;
 
@@ -152,7 +150,7 @@ paramBind        : ID COLON expr ;
 
 target           : expr SEMICOLON ;
 
-foreignBody      : IN ID BODY ;
+foreignBody      : INLANG BODY ;
 
 // TERMINAL SYMBOLS
 
@@ -166,7 +164,9 @@ EQUAL            : '=' ;
 ELSE             : 'else' ;
 FROMSTACK        : '<' '-'+ '+' ;
 IF               : 'if' ;
-IN               : 'in' ;
+INLANG           : 'in' WSSYMB+ LANGSYMB ;
+fragment LANGSYMB: 'bash' | 'r' | 'lisp' | 'octave' | 'matlab' | 'perl'
+                 | 'pegasus' | 'python' ;
 IMPORT           : 'import' ;
 INCLUDE          : 'include' ;
 LAMBDA           : '\\' ;
@@ -201,5 +201,6 @@ COMMENT          : ( ( '#' | '//' | '%' ) ~'\n'*
                  | '<!--' .*? '-->'
                  | '|' ) -> skip
                  ;
-ID               : [a-zA-Z0-9\.\-_\+\*/]+ ;              
-WS               : [ \n\r\t,] -> channel( HIDDEN ) ;
+ID               : [a-zA-Z0-9\.\-_\+\*/]+ ;
+WS               : WSSYMB -> channel( HIDDEN ) ;
+fragment WSSYMB  : [ \n\r\t,] ;
