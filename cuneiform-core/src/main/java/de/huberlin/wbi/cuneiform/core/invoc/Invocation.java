@@ -296,11 +296,7 @@ public abstract class Invocation {
 		// insert function body
 		buf.append( comment( "insert function body" ) );
 		buf.append( ticket.getBody() ).append( '\n' );
-		
-		// check post
-		buf.append( comment( "check post" ) );
-		buf.append( getCheckPost() ).append( '\n' );
-		
+				
 		// rename output files
 		buf.append( comment( "rename output files" ) );
 		buf.append( getOutputRename() ).append( '\n' );
@@ -314,11 +310,6 @@ public abstract class Invocation {
 		buf.append( getStageOutCollect() ).append( '\n' );
 				
 		return buf.toString();
-	}
-	
-	@SuppressWarnings( "static-method" )
-	protected String getCheckPost() {
-		return "";
 	}
 	
 	@SuppressWarnings( "static-method" )
