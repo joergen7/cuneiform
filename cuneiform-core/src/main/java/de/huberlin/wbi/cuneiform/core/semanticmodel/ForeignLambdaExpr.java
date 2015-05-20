@@ -131,10 +131,13 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public static int labelToInt( String label ) {
 		
 		int i, n;
+		String l;
+		
+		l = label.toLowerCase();
 		
 		n = LABEL_LANG.length;
 		for( i = 0; i < n; i++ )
-			if( LABEL_LANG[ i ].equals( label ) )
+			if( LABEL_LANG[ i ].equals( l ) )
 				return i;
 		
 		throw new SemanticModelException( label, "Language '"+label+"' not recognized." );

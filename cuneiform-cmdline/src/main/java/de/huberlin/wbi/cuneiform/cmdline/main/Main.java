@@ -60,6 +60,7 @@ import de.huberlin.wbi.cuneiform.core.cre.LocalThread;
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.repl.InteractiveRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
@@ -158,7 +159,11 @@ public class Main {
 			switch( format ) {
 			
 				case FORMAT_CF :
-					repl = new CmdlineRepl( ticketSrc, statLog );
+					
+					if( cmd.hasOption( "i" ) )
+						repl = new InteractiveRepl( ticketSrc, statLog );
+					else
+						repl = new CmdlineRepl( ticketSrc, statLog );
 					break;
 					
 				case FORMAT_DAX :
@@ -172,7 +177,7 @@ public class Main {
 			if( cmd.hasOption( "i" ) ) {
 				
 				// run in interactive mode
-				CmdlineRepl.run( repl );
+				BaseRepl.run( repl );
 				
 				return;
 			}

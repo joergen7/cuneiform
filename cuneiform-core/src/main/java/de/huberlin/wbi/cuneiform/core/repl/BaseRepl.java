@@ -32,6 +32,10 @@
 
 package de.huberlin.wbi.cuneiform.core.repl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,7 +72,7 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0.1-SNAPSHOT";
-	public static final String LABEL_BUILD = "2015-05-13";
+	public static final String LABEL_BUILD = "2015-05-20";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -284,6 +288,59 @@ public abstract class BaseRepl {
 				statLog.debug( entry );
 	}
 	
+	public static void run( BaseRepl repl ) throws IOException {
+		
+		StringBuffer buf;
+		String line;
+		QueryParseCtlLexer lexer;
+		int ctl;
+		
+		System.out.println( BaseRepl.getLogo() );
+		
+		buf = new StringBuffer();
+		System.out.print( "> " );
+		
+		try( BufferedReader reader = new BufferedReader( new InputStreamReader( System.in, Charset.forName( "UTF-8" ) ) ) ) {
+			
+			while( ( line = reader.readLine() ) != null ) {
+				
+				buf.append( line ).append( '\n' );
+				
+				lexer = new QueryParseCtlLexer( new ANTLRInputStream( buf.toString() ) );
+				
+				
+				if( lexer.isReady() ) {
+					
+					try {
+						
+						ctl = repl.interpret( buf.toString() );
+						
+						if( ( ctl & BaseRepl.CTL_STATE ) != 0 )
+							System.out.print( repl.getState() );
+						
+						if( ( ctl & BaseRepl.CTL_QUERYSET ) != 0 )
+							System.out.print( repl.getRunningSet() );
+						
+						if( ( ctl & BaseRepl.CTL_TICKETSET ) != 0 )
+							System.out.print( repl.getTicketSet() );
+	
+						if( ( ctl & BaseRepl.CTL_QUIT ) != 0 )
+							break;
+					}
+					catch( ParseException e ) {
+						System.out.println( e );
+					}
+					
+					buf = new StringBuffer();	
+					System.out.print( "> " );
+				}
+				
+			}
+			
+		}
+		System.out.println( "Bye." );
+	}
+
 	public static String getLogo() {
 		
 		return "                              _\n"

@@ -165,7 +165,7 @@ ELSE             : 'else' ;
 FROMSTACK        : '<' '-'+ '+' ;
 IF               : 'if' ;
 INLANG           : 'in' WSSYMB+ LANGSYMB ;
-fragment LANGSYMB: 'bash' | 'r' | 'lisp' | 'octave' | 'matlab' | 'perl'
+fragment LANGSYMB: 'bash' | 'r' | 'R' | 'lisp' | 'octave' | 'matlab' | 'perl'
                  | 'pegasus' | 'python' ;
 IMPORT           : 'import' ;
 INCLUDE          : 'include' ;
