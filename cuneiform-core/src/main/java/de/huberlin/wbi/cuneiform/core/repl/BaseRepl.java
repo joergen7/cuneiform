@@ -72,7 +72,7 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0.1-SNAPSHOT";
-	public static final String LABEL_BUILD = "2015-05-20";
+	public static final String LABEL_BUILD = "2015-05-28";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -218,11 +218,11 @@ public abstract class BaseRepl {
 				s += ": \""+e.getMessage()+"\"";
 		}
 		
-		if( stdOut != null )
+		/* if( stdOut != null )
 			s += " Output channel: \""+stdOut.replace( '\n', ' ' )+"\"";
 
 		if( stdErr != null )
-			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\"";
+			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\""; */
 		
 		if( log.isErrorEnabled() )
 			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );

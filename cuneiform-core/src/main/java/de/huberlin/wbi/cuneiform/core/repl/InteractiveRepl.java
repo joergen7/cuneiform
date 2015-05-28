@@ -44,6 +44,8 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.ReplTicketSrc;
 
 public class InteractiveRepl extends BaseRepl {
 	
+	private static final int MAX_OUTPUT_LEN = 1000;
+	
 	public InteractiveRepl( ReplTicketSrc ticketSrc, Log statLog ) {
 		super( ticketSrc, statLog );
 	}
@@ -81,12 +83,26 @@ public class InteractiveRepl extends BaseRepl {
 		
 		if( stdOut != null ) {
 			System.out.println( "[out]" );
-			System.out.println( stdOut );
+			
+			i = stdOut.length();
+			if( i > MAX_OUTPUT_LEN )
+				line = "...\n"+stdOut.substring( i-MAX_OUTPUT_LEN );
+			else
+				line = stdOut;
+			
+			System.out.println( line );
 		}
 		
 		if( stdErr != null ) {
 			System.out.println( "[err]" );
-			System.out.println( stdErr );
+			
+			i = stdErr.length();
+			if( i > MAX_OUTPUT_LEN )
+				line = "...\n"+stdErr.substring( i-MAX_OUTPUT_LEN );
+			else
+				line = stdErr;
+
+			System.out.println( line );
 		}
 		
 		if( e != null ) {
