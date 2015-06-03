@@ -50,8 +50,9 @@ public class LocalCreActor extends BaseCreActor {
 	private final ExecutorService executor;
 	private final Path buildDir;
 	private final Path centralRepo;
+	private final Path workDir;
 	
-	public LocalCreActor( Path buildDir, int nthread ) throws IOException {
+	public LocalCreActor( Path buildDir, Path workDir, int nthread ) throws IOException {
 		
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
@@ -65,7 +66,19 @@ public class LocalCreActor extends BaseCreActor {
 		if( nthread < 1 )
 			throw new RuntimeException( "Number of threads must at least be 1. It was "+nthread+"." );
 		
+		if( workDir == null )
+			throw new IllegalArgumentException( "Working directory must not be null." );
+
+		if( !Files.exists( workDir ) )
+			throw new RuntimeException( "Working directory does not exist." );
+		
+		if( !Files.isDirectory( workDir ) )
+			throw new RuntimeException( "Working directory expected to be a directory." );
+
+		
 		this.buildDir = buildDir;
+		this.workDir = workDir;
+		
 		executor = Executors.newFixedThreadPool( nthread );
 		
 		centralRepo = buildDir.resolve( PATH_CENTRALREPO );
@@ -76,8 +89,8 @@ public class LocalCreActor extends BaseCreActor {
 			log.debug( "Local CRE actor created with "+nthread+" threads." );
 	}
 	
-	public LocalCreActor( Path buildDir ) throws IOException {
-		this( buildDir, Runtime.getRuntime().availableProcessors() );
+	public LocalCreActor( Path buildDir, Path workDir ) throws IOException {
+		this( buildDir, workDir, Runtime.getRuntime().availableProcessors() );
 	}
 	
 	@Override
@@ -103,7 +116,7 @@ public class LocalCreActor extends BaseCreActor {
 			throw new RuntimeException(
 				"Ticket "+ticket.getTicketId()+": Trying to evaluate ticket that has already been evaluated." );
 		
-		localThread = new LocalThread( ticketSrc, this, ticket, buildDir, centralRepo );
+		localThread = new LocalThread( ticketSrc, this, ticket, buildDir, centralRepo, workDir );
 		
 		executor.submit( localThread );
 		

@@ -91,6 +91,8 @@ public class Main {
 		JsonSummary summary;
 		Path summaryPath;
 		Log statLog;
+		int nthread;
+		Path workDir;
 		
 		statLog = LogFactory.getLog( "statLogger" );
 		
@@ -120,8 +122,23 @@ public class Main {
 			else
 				sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
 			
+			sandbox = sandbox.toAbsolutePath();
+			
 			if( cmd.hasOption( 'c' ) )
 				LocalThread.deleteIfExists( sandbox );
+			
+			if( cmd.hasOption( 't' ) )
+				nthread = Integer.valueOf( cmd.getOptionValue( 't' ) );
+			else
+				nthread = Runtime.getRuntime().availableProcessors();
+			
+			if( cmd.hasOption( 'w' ) )
+				workDir = Paths.get( cmd.getOptionValue( 'w' ) );
+			else
+				workDir = Paths.get( System.getProperty( "user.home" ) );
+			
+			workDir = workDir.toAbsolutePath();
+			
 			
 
 						
@@ -132,11 +149,8 @@ public class Main {
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
 					
-					if( cmd.hasOption( 't' ) )
-						cre = new LocalCreActor( sandbox, Integer.valueOf( cmd.getOptionValue( 't' ) ) );
-					else
-						cre = new LocalCreActor( sandbox );
 					
+					cre = new LocalCreActor( sandbox, workDir, nthread );
 					break;
 					
 				case PLATFORM_HTCONDOR :
@@ -201,6 +215,7 @@ public class Main {
 				
 				summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
 				summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
+				summaryPath = summaryPath.toAbsolutePath();
 				try( BufferedWriter writer = Files.newBufferedWriter( summaryPath, Charset.forName( "UTF-8" ) ) ) {
 					
 					writer.write( summary.toString() );
@@ -281,7 +296,9 @@ public class Main {
 		
 		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
 		
-		opt.addOption( "r", "r-lib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
+		opt.addOption( "r", "rlib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
+		
+		opt.addOption( "w", "workdir", true, "Optional. The working directory from which to look for local data. The default is the current working directory from which Cuneiform was called." );
 		
 		
 		return opt;
