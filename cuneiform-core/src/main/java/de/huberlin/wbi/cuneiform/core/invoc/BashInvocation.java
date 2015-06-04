@@ -397,7 +397,7 @@ public class BashInvocation extends Invocation {
 
 	@Override
 	protected String newList( String listName ) {
-		return listName+"=()\n";
+		return listName+"=\n";
 	}
 
 	@Override
