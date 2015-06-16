@@ -33,7 +33,6 @@
 package de.huberlin.wbi.cuneiform.core.repl;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.logging.Log;
@@ -161,6 +160,9 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		// try to reduce task expression
 		taskExpr1 = applyExpr.getTaskExpr().visit( this );
+		
+		if( log.isTraceEnabled() )
+			log.trace( "DynamicNodeVisitor accept ApplyExpr: Replacing task expression with "+taskExpr1+"." );
 		applyExpr1.setTaskExpr( taskExpr1 );
 		
 		if( log.isTraceEnabled() )
