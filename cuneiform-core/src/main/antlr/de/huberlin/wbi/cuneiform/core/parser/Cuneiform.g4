@@ -121,7 +121,7 @@ singleExpr       : ID                                                     # IdEx
                  | INT                                                    # IntExpr
                  | STRING                                                 # StringExpr
                  | FROMSTACK                                              # FromStackExpr
-                 | channel? IF prototype expr THEN block ELSE block       # CondExpr
+                 | IF expr THEN expr ELSE expr END                        # CondExpr
                  | channel? APPLY LPAREN paramBind+ TILDE? RPAREN         # ApplyExpr
                  | channel? ID LPAREN paramBind* TILDE? RPAREN            # CallExpr
                  | CURRY LPAREN paramBind+ RPAREN                         # CurryExpr
@@ -160,8 +160,9 @@ COMB             : 'comb' ;
 COMBR            : 'combr' ;
 CURRY            : 'curry' ;
 DEFTASK          : 'deftask' ;
-EQUAL            : '=' ;
 ELSE             : 'else' ;
+END              : 'end' ;
+EQUAL            : '=' ;
 FROMSTACK        : '<' '-'+ '+' ;
 IF               : 'if' ;
 INLANG           : 'in' WSSYMB+ LANGSYMB ;

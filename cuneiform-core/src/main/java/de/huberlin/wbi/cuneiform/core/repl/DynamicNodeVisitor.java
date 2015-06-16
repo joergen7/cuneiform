@@ -106,95 +106,35 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	@Override
 	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException {
 		
-		Block thenBlock, thenBlock1, elseBlock, elseBlock1;
-		CompoundExpr ce;
-		List<NameExpr> outputList;
-		CompoundExpr ifExpr;
-		boolean maybeNil;
+		CompoundExpr ifExpr, ifExpr1;
 		
-		// fetch the then-block of the conditional expression
-		thenBlock = condExpr.getThenBlock();
+		ifExpr = condExpr.getIfExpr();
+		if( ifExpr == null )
+			throw new NullPointerException( "Condition must not be null." );
 		
-		// prepare the then-block of the resulting conditional expression
-		thenBlock1 = new Block( thenBlock.getParent() );
-		
-		// fetch the output variables of this expression
-		outputList = condExpr.getPrototype().getOutputList();
-		
-		for( NameExpr nameExpr : outputList ) {
-			
-			try {
-				ce = thenBlock.getExpr( nameExpr );
-			}
-			catch( NotBoundException e ) {
-				throw new SemanticModelException( condExpr.toString(), e.getMessage() );
-			}
-			
-			ce = ce.visit( this );
-			
-			thenBlock1.putAssign( nameExpr, ce );
-		}
-		
-		elseBlock = condExpr.getElseBlock();
-		
-		elseBlock1 = new Block( elseBlock.getParent() );
-		
-		for( NameExpr nameExpr : outputList ) {
-			
-			try {
-				ce = elseBlock.getExpr( nameExpr );
-			}
-			catch( NotBoundException e ) {
-				throw new SemanticModelException( condExpr.toString(), e.getMessage() );
-			}
-			
-			ce = ce.visit( this );
-
-			elseBlock1.putAssign( nameExpr, ce );
-		}
-		
-		ifExpr = condExpr.getIfExpr().visit( this );
-		
-		if( ifExpr.getNumSingleExpr() == 0 ) {
-			
-			// the condition is nil
-			
-			try {
-				return elseBlock1.getExpr( condExpr.getOutputNameExpr() );
-			}
-			catch( NotBoundException e ) {
-				throw new SemanticModelException( condExpr.toString(), e.getMessage() );
-			}
-		}
-			
-		maybeNil = true;
-		for( SingleExpr se : ifExpr.getSingleExprList() )
-			try {
-				if( se.getNumAtom() > 0 )
-					maybeNil = false;
-			}
-			catch( NotDerivableException e ) {
-				// if we cannot tell the length, it may still be 0
-			}
-			
-		if( maybeNil )
-
-			// we cannot be sure
-			
-			return new CompoundExpr( new CondExpr(
-				condExpr.getChannel(),
-				condExpr.getPrototype(),
-				ifExpr,
-				thenBlock1,
-				elseBlock1 ) );
-		
-		// the condition is true
+		// try to reduce task expression
+		ifExpr1 = ifExpr.visit( this );
 		
 		try {
-			return thenBlock.getExpr( condExpr.getOutputNameExpr() );
+			
+			if( ifExpr1.isNormal() ) {
+				
+				// the result could be determined
+				
+				if( ifExpr1.getNumAtom() == 0 )
+					return condExpr.getElseExpr().visit( this );
+				
+				return condExpr.getThenExpr().visit( this );
+				
+			}
+			
+			// the result is still open
+			
+			condExpr.setIfExpr( ifExpr1 );
+			return new CompoundExpr( condExpr );
 		}
-		catch( NotBoundException e ) {
-			throw new SemanticModelException( condExpr.toString(), e.getMessage() );
+		catch( NotDerivableException e ) {
+			throw new RuntimeException( e );
 		}
 
 	}
@@ -582,6 +522,8 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Application parameters are in normal form." );
 
 						qt = ticketSrc.requestTicket( repl, queryId, singularApplyExpr );
+						if( qt == null )
+							throw new NullPointerException( "Qualified ticket must not be null." );
 						
 						if( log.isTraceEnabled() )
 							log.trace( "DynamicNodeVisitor combineParam ApplyExpr: Ticket requested. Appending qualified ticket: "+qt.toString().replace( '\n', ' ' ) );

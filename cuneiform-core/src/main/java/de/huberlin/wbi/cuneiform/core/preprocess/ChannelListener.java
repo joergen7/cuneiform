@@ -137,10 +137,7 @@ public class ChannelListener extends CuneiformBaseListener implements ANTLRError
 	public void enterCondExpr( @NotNull CuneiformParser.CondExprContext ctx ) {
 		
 		if( rewriter == null )
-			throw new NullPointerException( "Token stream has never been set." );
-		
-		if( ctx.channel() == null )
-			rewriter.insertBefore( ctx.getStart(), "[1]" );
+			throw new NullPointerException( "Token stream has never been set." );		
 	}
 	
 	@Override
@@ -232,12 +229,7 @@ public class ChannelListener extends CuneiformBaseListener implements ANTLRError
 			
 			if( ( ( CallExprContext )singleExpr ).channel() == null )
 				return true;
-		
-		if( singleExpr instanceof CondExprContext )
-			
-			if( ( ( CondExprContext )singleExpr ).channel() == null )
-				return true;
-		
+				
 		return false;
 	}
 

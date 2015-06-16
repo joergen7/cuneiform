@@ -255,7 +255,42 @@ public class CompoundExpr implements CfNode, Cloneable {
 	}
 	
 	@Override
+	public boolean equals( Object other ) {
+		
+		CompoundExpr ce;
+		int i, n;
+		
+		if( other == null )
+			return false;
+		
+		if( !( other instanceof CompoundExpr ) )
+			return false;
+		
+		ce = ( CompoundExpr )other;
+		
+		if( getNumSingleExpr() != ce.getNumSingleExpr() )
+			return false;
+		
+		n = ce.getNumSingleExpr();
+		for( i = 0; i < n; i++ )
+			if( !ce.getSingleExpr( i ).equals( getSingleExpr( i ) ) )
+				return false;
+			
+		
+		return true;
+	}
+	
+	@Override
 	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public int hashCode() {
+		
+		if( getNumSingleExpr() == 0 )
+			return 0;
+		
+		return getSingleExpr( 0 ).hashCode();
 	}
 }

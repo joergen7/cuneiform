@@ -35,72 +35,41 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class CondExpr implements SingleExpr {
 
-	private final Prototype prototype;
-	private final CompoundExpr ifExpr;
-	private final Block thenBlock;
-	private final Block elseBlock;
-	private final int channel;
+	private CompoundExpr ifExpr;
+	private final CompoundExpr thenExpr;
+	private final CompoundExpr elseExpr;
 	
-	public CondExpr( int channel, Prototype prototype, CompoundExpr ifExpr, Block thenBlock, Block elseBlock ) {
+	public CondExpr( CompoundExpr ifExpr, CompoundExpr thenBlock, CompoundExpr elseBlock ) {
 
-		if( prototype == null )
-			throw new NullPointerException( "Prototype must not be null." );
-		
-		if( !prototype.getParamSet().isEmpty() )
-			throw new SemanticModelException(
-				prototype.toString(),
-				"Prototype "+prototype+" is expected to not have any inputs." );
-		
-		if( ifExpr == null )
-			throw new NullPointerException( "Condition expression must not be null." );
-		
 		if( thenBlock == null )
-			throw new NullPointerException( "Then-block must not be null." );
-		
-		if( !thenBlock.hasParent() )
-			throw new RuntimeException( "Then-block is expected to have a parent scope." );
+			throw new IllegalArgumentException( "Then expression must not be null." );
 		
 		if( elseBlock == null )
-			throw new NullPointerException( "Block must not be null." );
+			throw new IllegalArgumentException( "Else expression must not be null." );
 		
-		if( !elseBlock.hasParent() )
-			throw new RuntimeException( "Block is expected to have a parent scope." );
-		
-		if( channel < 1 )
-			throw new SemanticModelException(
-				String.valueOf( channel ),
-				"Invalid channel "+channel+". Channel must be a positive integer." );
-		
-		this.channel = channel;
-		this.elseBlock = elseBlock;
-		this.thenBlock = thenBlock;
-		this.ifExpr = ifExpr;
-		this.prototype = prototype;
+		this.elseExpr = elseBlock;
+		this.thenExpr = thenBlock;
+		setIfExpr( ifExpr );
+	}
+	
+	public void setIfExpr( CompoundExpr expr ) {
 
+		if( expr == null )
+			throw new IllegalArgumentException( "Condition expression must not be null." );
+		
+		ifExpr = expr;
 	}
 	
-	public int getChannel() {
-		return channel;
-	}
-	
-	public Block getElseBlock() {
-		return elseBlock;
+	public CompoundExpr getElseExpr() {
+		return elseExpr;
 	}
 	
 	public CompoundExpr getIfExpr() {
 		return ifExpr;
 	}
 	
-	public NameExpr getOutputNameExpr() {
-		return prototype.getOutput( channel-1 );
-	}
-	
-	public Prototype getPrototype() {
-		return prototype;
-	}
-	
-	public Block getThenBlock() {
-		return thenBlock;
+	public CompoundExpr getThenExpr() {
+		return thenExpr;
 	}
 	
 	@Override
@@ -110,44 +79,17 @@ public class CondExpr implements SingleExpr {
 		
 		buf = new StringBuffer();
 		
-		buf.append( '[' ).append( channel ).append( "]if" );
-		buf.append( prototype ).append( '\n' );
-		buf.append( ifExpr ).append( '\n' );
-		buf.append( "then {\n" ).append( thenBlock );
-		buf.append( "}\nelse {\n" ).append( elseBlock ).append( "}\n" );
+		buf.append( "if " );
+		buf.append( ifExpr );
+		buf.append( " then " ).append( thenExpr );
+		buf.append( " else " ).append( elseExpr ).append( " end" );
 		
 		return buf.toString();
 	}
 
 	@Override
 	public int getNumAtom() throws NotDerivableException {
-		
-		NameExpr name;
-		
-		name = prototype.getOutput( channel-1 );
-		
-		if( name instanceof ReduceVar )
-			throw new NotDerivableException( "Cannot derive cardinality of reduce output variable." );
-		
-		return 1;
-	}
-	
-	public CompoundExpr getThenExpr() {
-		try {
-			return thenBlock.getExpr( prototype.getOutput( channel-1 ) );
-		}
-		catch( NotBoundException e ) {
-			throw new SemanticModelException( thenBlock.toString(), e.getMessage() );
-		}
-	}
-
-	public CompoundExpr getElseExpr() {
-		try {
-			return elseBlock.getExpr( prototype.getOutput( channel-1 ) );
-		}
-		catch (NotBoundException e) {
-			throw new RuntimeException( e.getMessage() );
-		}
+		throw new NotDerivableException( "Cannot derive cardinality of reduce output variable." );		
 	}
 	
 	@Override
