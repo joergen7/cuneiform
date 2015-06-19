@@ -18,6 +18,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.NodeVisitorTicketSrc;
 
@@ -29,9 +30,9 @@ public class ReferenceTest {
 	@Before
 	public void setUp() throws HasFailedException, NotDerivableException {
 		
+		QualifiedTicket qt;
 		NodeVisitorTicketSrc ticketSrc;
 		BaseRepl repl;
-		QualifiedTicket qt;
 		
 		
 		qt = mock( QualifiedTicket.class );
@@ -88,5 +89,33 @@ public class ReferenceTest {
 		result = dnv.accept( boundVar );
 		
 		assertEquals( content, result );
+	}
+	
+	@Test
+	public void defVarShouldCascadeBinding() throws HasFailedException, NotBoundException {
+		
+		CompoundExpr result, str;
+		
+		str = new CompoundExpr( new StringExpr( "blub" ) );
+		
+		tlc.putAssign( new NameExpr( "x" ), new CompoundExpr( new NameExpr( "y" ) ) );
+		tlc.putAssign( new NameExpr( "y" ), str );
+		
+		result = dnv.accept( new CompoundExpr( new NameExpr( "x" ) ) );
+		assertEquals( str, result );
+	}
+	
+	@Test
+	public void unfinishedTicketShouldEvalToItself() throws HasFailedException, NotBoundException {
+
+		CompoundExpr ce;
+		QualifiedTicket qt;
+		
+		qt =  mock( QualifiedTicket.class );
+		when( qt.visit( dnv ) ).thenReturn( dnv.accept( qt ) );
+		
+		ce = new CompoundExpr( );
+		
+		assertEquals( ce, dnv.accept( ce ) );
 	}
 }
