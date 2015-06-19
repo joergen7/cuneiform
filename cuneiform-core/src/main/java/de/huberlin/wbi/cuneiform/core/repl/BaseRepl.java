@@ -225,7 +225,10 @@ public abstract class BaseRepl {
 			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\""; */
 		
 		if( log.isErrorEnabled() )
-			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
+			if( ticketId == null )
+				log.error( "Query "+queryId+" failed."+s );
+			else
+				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
 		
 		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}

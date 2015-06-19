@@ -92,18 +92,12 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException {
-		
-		try {
-			return currentBlock.getExpr( nameExpr ).visit( this );
-		}
-		catch( NotBoundException e ) {
-			return new CompoundExpr( nameExpr );
-		}
+	public CompoundExpr accept( NameExpr nameExpr ) throws HasFailedException, NotBoundException {		
+		return currentBlock.getExpr( nameExpr ).visit( this );
 	}
 
 	@Override
-	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException {
+	public CompoundExpr accept( CondExpr condExpr ) throws HasFailedException, NotBoundException {
 		
 		CompoundExpr ifExpr, ifExpr1;
 		
@@ -139,7 +133,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, NotBoundException {
 		
 		ApplyExpr applyExpr1;
 		CompoundExpr taskExpr1;
@@ -250,7 +244,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	
 	
 	@Override
-	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException {
+	public CompoundExpr accept( CompoundExpr ce ) throws HasFailedException, NotBoundException {
 		
 		CompoundExpr result, intermediate;
 		
@@ -271,7 +265,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, NotBoundException {
 			
 			Prototype originalPrototype;
 			SingleExpr se;
@@ -454,8 +448,8 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 				
 			
 		}
-		catch( HasFailedException e ) {
-			// just drop out; we trust the error has been handled properly
+		catch( Exception e ) {
+			repl.queryFailed( queryId, null, e, null, null, null );
 		}
 	}
 	
@@ -590,7 +584,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		currentBlock = block;
 	}
 	
-	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException {
+	private CompoundExpr reducePotentiallyCorrelated( ApplyExpr applyExpr ) throws HasFailedException, NotBoundException {
 		
 		CompoundExpr taskExpr, ce, ce0;
 		SingleExpr se;
@@ -748,7 +742,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, NotBoundException {
 		
 		CompoundExpr result;
 		

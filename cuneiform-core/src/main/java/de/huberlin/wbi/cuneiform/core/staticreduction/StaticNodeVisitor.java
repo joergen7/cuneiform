@@ -79,7 +79,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException {
+	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, NotBoundException {
 		SingleExpr se;
 		NativeLambdaExpr lambda;
 		NameExpr targetNameExpr;
@@ -159,7 +159,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException {
+	public CompoundExpr accept(CompoundExpr ce) throws HasFailedException, NotBoundException {
 		CompoundExpr result, intermediate;
 		
 		if( ce == null )
@@ -181,7 +181,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException {
+	public CompoundExpr accept( CurryExpr curryExpr ) throws HasFailedException, NotBoundException {
 		
 		Prototype originalPrototype;
 		SingleExpr se;
@@ -330,7 +330,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 	}
 
 	@Override
-	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException {
+	public CompoundExpr accept( TopLevelContext tlc ) throws HasFailedException, NotBoundException {
 		
 		CompoundExpr result;
 		
@@ -369,7 +369,7 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 		return tlc;
 	}
 	
-	public static List<String> getFreeVarNameList( TopLevelContext tlc )throws HasFailedException {
+	public static List<String> getFreeVarNameList( TopLevelContext tlc )throws HasFailedException, NotBoundException {
 		
 		StaticNodeVisitor staticVisitor;
 		List<String> nameList;

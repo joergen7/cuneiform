@@ -55,6 +55,7 @@ import de.huberlin.wbi.cuneiform.core.preprocess.PreListener;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CfSemanticModelVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.TopLevelContext;
 import de.huberlin.wbi.cuneiform.core.staticreduction.DotNodeVisitor;
 import de.huberlin.wbi.cuneiform.core.staticreduction.StaticNodeVisitor;
@@ -207,6 +208,8 @@ public class StaticPanel extends JPanel implements Runnable {
 					e.printStackTrace();
 				}
 				catch( HasFailedException e ) {
+					e.printStackTrace();
+				} catch (NotBoundException e) {
 					e.printStackTrace();
 				}
 				finally {

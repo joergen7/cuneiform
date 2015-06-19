@@ -14,6 +14,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.StringExpr;
@@ -23,7 +24,6 @@ import de.huberlin.wbi.cuneiform.core.ticketsrc.NodeVisitorTicketSrc;
 public class ReferenceTest {
 
 	private DynamicNodeVisitor dnv;
-	private CompoundExpr x;
 	private TopLevelContext tlc;
 
 	@Before
@@ -33,7 +33,6 @@ public class ReferenceTest {
 		BaseRepl repl;
 		QualifiedTicket qt;
 		
-		x = new CompoundExpr( new StringExpr( "Z" ) );
 		
 		qt = mock( QualifiedTicket.class );
 		when( qt.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
@@ -44,13 +43,12 @@ public class ReferenceTest {
 		
 		repl = mock( BaseRepl.class );
 		tlc = new TopLevelContext();
-		tlc.putAssign( new NameExpr( "x" ), x );
 		
 		dnv = new DynamicNodeVisitor( ticketSrc, repl, tlc );
 	}
 	
 	@Test
-	public void nilShouldEvalItself() throws HasFailedException {
+	public void nilShouldEvalItself() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr nil, result;
 		
@@ -60,7 +58,7 @@ public class ReferenceTest {
 	}
 	
 	@Test
-	public void strShouldEvalItself() throws HasFailedException {
+	public void strShouldEvalItself() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr str, result;
 		
@@ -69,8 +67,8 @@ public class ReferenceTest {
 		assertEquals( str, result );
 	}
 	
-	@Test( expected=HasFailedException.class )
-	public void undefVarShouldFail() throws HasFailedException {
+	@Test( expected=NotBoundException.class )
+	public void undefVarShouldFail() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr freeVar;
 		
@@ -79,7 +77,7 @@ public class ReferenceTest {
 	}
 	
 	@Test
-	public void defVarShouldEvalToBoundValue() throws HasFailedException {
+	public void defVarShouldEvalToBoundValue() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr boundVar, result, content;
 		

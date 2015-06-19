@@ -88,7 +88,7 @@ public class CurryExpr extends BaseBlock implements SingleExpr {
 	}
 	
 	@Override
-	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException {
+	public <T> T visit(NodeVisitor<? extends T> visitor) throws HasFailedException, NotBoundException {
 		return visitor.accept( this );
 	}
 

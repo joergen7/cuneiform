@@ -17,6 +17,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.LambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.QualifiedTicket;
@@ -54,7 +55,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndFalseShouldEvalElseExpr() throws HasFailedException {
+	public void cndFalseShouldEvalElseExpr() throws HasFailedException, NotBoundException {
 		
 		CondExpr condExpr;
 		CompoundExpr thenExpr, elseExpr, result;
@@ -70,7 +71,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndEvaluatesConditionBeforeDecision1() throws HasFailedException {
+	public void cndEvaluatesConditionBeforeDecision1() throws HasFailedException, NotBoundException {
 		
 		Prototype sign;
 		Block body;
@@ -102,7 +103,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndEvaluatesConditionBeforeDecision2() throws HasFailedException {
+	public void cndEvaluatesConditionBeforeDecision2() throws HasFailedException, NotBoundException {
 		
 		Prototype sign;
 		Block body;
@@ -134,7 +135,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndEvaluatesOnlyOnFinalCondition() throws HasFailedException {
+	public void cndEvaluatesOnlyOnFinalCondition() throws HasFailedException, NotBoundException {
 		
 		Prototype sign;
 		Block body;
@@ -169,7 +170,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndEvaluatesThenExpression() throws HasFailedException {
+	public void cndEvaluatesThenExpression() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr e, thenExpr, elseExpr;
 		CondExpr condExpr;
@@ -187,7 +188,7 @@ public class DynamicNodeVisitorTest {
 	}
 	
 	@Test
-	public void cndEvaluatesElseExpression() throws HasFailedException {
+	public void cndEvaluatesElseExpression() throws HasFailedException, NotBoundException {
 		
 		CompoundExpr e, thenExpr, elseExpr;
 		CondExpr condExpr;
