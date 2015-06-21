@@ -15,6 +15,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Block;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CompoundExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CondExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.CorrelParam;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
@@ -488,5 +489,109 @@ public class ReferenceTest {
 		
 		e = new CompoundExpr( new CondExpr( ifExpr, thenExpr, elseExpr ) );
 		assertEquals( e1, dnv.accept( e ) );
+	}
+	
+	/*
+cnd_evaluates_condition_before_decision1( CreateTicket ) ->
+  Sign = {sign, [{param, "out", false, true}], [], []},
+  Body = {natbody, #{"out" => []}},
+  Lam = [{lam, ?LOC, Sign, Body}],
+  App = [{app, ?LOC, 1, Lam, #{}}],
+  E = [{cnd, App, [{str, "A"}], [{str, "B"}]}],
+  ?_assertEqual( [{str, "B"}], eval( E, #{}, CreateTicket ) ).
+	 */
+	
+	@Test
+	public void cndEvaluatesConditionBeforeDecision1() throws HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		Block body;
+		CompoundExpr lamList, e, a, b;
+		ApplyExpr ae;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		body = new Block();
+		body.putAssign( new NameExpr( "out" ), new CompoundExpr() );
+		
+		lamList = new CompoundExpr( new NativeLambdaExpr( sign, body ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( lamList );
+		
+		a = new CompoundExpr( new StringExpr( "A" ) );
+		b = new CompoundExpr( new StringExpr( "B" ) );
+		
+		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
+		
+		assertEquals( b, dnv.accept( e ) );
+	}
+	
+
+
+	@Test
+	public void cndEvaluatesConditionBeforeDecision2() throws HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		Block body;
+		CompoundExpr lamList, e, a, b, x;
+		ApplyExpr ae;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		x = new CompoundExpr( new StringExpr( "X" ) );
+		
+		body = new Block();
+		body.putAssign( new NameExpr( "out" ), x );
+		
+		lamList = new CompoundExpr( new NativeLambdaExpr( sign, body ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( lamList );
+		
+		a = new CompoundExpr( new StringExpr( "A" ) );
+		b = new CompoundExpr( new StringExpr( "B" ) );
+		
+		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
+		
+		assertEquals( a, dnv.accept( e ) );
+	}
+	
+	@Test
+	public void cndEvaluatesOnlyOnFinalCondition() throws HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		CompoundExpr lamList, e, a, b, x;
+		ApplyExpr ae;
+		CondExpr ce;
+		
+		sign = new Prototype();
+		sign.addOutput( new ReduceVar( "out", null ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		lamList = new CompoundExpr(
+			new ForeignLambdaExpr(
+				sign, ForeignLambdaExpr.LANGID_BASH, "blub" ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( lamList );
+		
+		a = new CompoundExpr( new StringExpr( "A" ) );
+		b = new CompoundExpr( new StringExpr( "B" ) );
+		
+		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
+		x = dnv.accept( e );
+		
+		assertTrue( x.getSingleExpr( 0 ) instanceof CondExpr );
+		
+		ce = ( CondExpr )x.getSingleExpr( 0 );
+		assertEquals( a, ce.getThenExpr() );
+		assertEquals( b, ce.getElseExpr() );
+		
+		assertTrue( ce.getIfExpr().getSingleExpr( 0 ) instanceof QualifiedTicket );
 	}
 }
