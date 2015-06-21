@@ -491,16 +491,6 @@ public class ReferenceTest {
 		assertEquals( e1, dnv.accept( e ) );
 	}
 	
-	/*
-cnd_evaluates_condition_before_decision1( CreateTicket ) ->
-  Sign = {sign, [{param, "out", false, true}], [], []},
-  Body = {natbody, #{"out" => []}},
-  Lam = [{lam, ?LOC, Sign, Body}],
-  App = [{app, ?LOC, 1, Lam, #{}}],
-  E = [{cnd, App, [{str, "A"}], [{str, "B"}]}],
-  ?_assertEqual( [{str, "B"}], eval( E, #{}, CreateTicket ) ).
-	 */
-	
 	@Test
 	public void cndEvaluatesConditionBeforeDecision1() throws HasFailedException, NotBoundException {
 		
@@ -580,10 +570,14 @@ cnd_evaluates_condition_before_decision1( CreateTicket ) ->
 		ae = new ApplyExpr( 1, false );
 		ae.setTaskExpr( lamList );
 		
-		a = new CompoundExpr( new StringExpr( "A" ) );
-		b = new CompoundExpr( new StringExpr( "B" ) );
+		a = new CompoundExpr( new NameExpr( "a" ) );
+		b = new CompoundExpr( new NameExpr( "b" ) );
 		
 		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
+		
+		tlc.putAssign( new NameExpr( "a" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		tlc.putAssign( new NameExpr( "b" ), new CompoundExpr( new StringExpr( "B" ) ) );
+		
 		x = dnv.accept( e );
 		
 		assertTrue( x.getSingleExpr( 0 ) instanceof CondExpr );
@@ -594,4 +588,41 @@ cnd_evaluates_condition_before_decision1( CreateTicket ) ->
 		
 		assertTrue( ce.getIfExpr().getSingleExpr( 0 ) instanceof QualifiedTicket );
 	}
+	
+	@Test
+	public void cndEvaluatesThenExpr() throws HasFailedException, NotBoundException {
+		
+		CompoundExpr e, f, x;
+		
+		e = new CompoundExpr( new CondExpr(
+			new CompoundExpr( new StringExpr( "Z" ) ),
+			new CompoundExpr( new NameExpr( "x" ) ),
+			new CompoundExpr( new StringExpr( "B" ) ) ) );
+		
+		f = new CompoundExpr( new StringExpr( "A" ) );
+		
+		tlc.putAssign( new NameExpr( "x" ), f );
+		x = dnv.accept( e );
+		
+		assertEquals( f, x );
+	}
+
+	@Test
+	public void cndEvaluatesElseExpr() throws HasFailedException, NotBoundException {
+		
+		CompoundExpr e, f, x;
+		
+		e = new CompoundExpr( new CondExpr(
+			new CompoundExpr(),
+			new CompoundExpr( new StringExpr( "A" ) ),
+			new CompoundExpr( new NameExpr( "x" ) ) ) );
+		
+		f = new CompoundExpr( new StringExpr( "B" ) );
+		
+		tlc.putAssign( new NameExpr( "x" ), f );
+		x = dnv.accept( e );
+		
+		assertEquals( f, x );
+	}
+
 }

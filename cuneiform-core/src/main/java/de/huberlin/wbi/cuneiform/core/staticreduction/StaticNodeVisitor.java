@@ -147,7 +147,9 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 				CompoundExpr expr = currentBlock.getExpr( targetNameExpr );
 				targetCompoundExpr =  expr.visit( this );
 			}
-			catch( NotBoundException e ) {}
+			catch( NotBoundException e ) {
+				// we rely on the parser to sort out whether the target is bound
+			}
 			
 			popBlock();
 			

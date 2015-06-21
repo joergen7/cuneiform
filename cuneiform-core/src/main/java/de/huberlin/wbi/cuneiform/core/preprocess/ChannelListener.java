@@ -59,7 +59,6 @@ import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.ApplyExprContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.CallExprContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.CompoundExprContext;
-import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.CondExprContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.ExprContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.NameContext;
 import de.huberlin.wbi.cuneiform.core.parser.CuneiformParser.NilExprContext;
