@@ -136,7 +136,7 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 	public CompoundExpr accept( ApplyExpr applyExpr ) throws HasFailedException, NotBoundException {
 		
 		ApplyExpr applyExpr1;
-		CompoundExpr taskExpr1;
+		CompoundExpr taskExpr1, paramExpr, paramExpr1;
 		boolean rest;
 		int channel;
 		SingleExpr se;
@@ -164,8 +164,13 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		// try to reduce the parameter list
 		try {
-			for( NameExpr nameExpr : applyExpr.getNameSet() )
-				applyExpr1.putAssign( nameExpr, applyExpr.getExpr( nameExpr ).visit( this ) );
+			for( NameExpr nameExpr : applyExpr.getNameSet() ) {
+				
+				paramExpr = applyExpr.getExpr( nameExpr );
+				paramExpr1 = paramExpr.visit( this );
+				
+				applyExpr1.putAssign( nameExpr, paramExpr1 );
+			}
 		}
 		catch( NotBoundException e ) {
 			throw new RuntimeException( e );

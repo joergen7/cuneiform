@@ -42,6 +42,7 @@ public class DynamicNodeVisitorTest {
 		
 		qt = mock( QualifiedTicket.class );
 		when( qt.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
+		when( qt.getNumAtom() ).thenThrow( new NotDerivableException( "blub" ) );
 		
 		ticketSrc = mock( NodeVisitorTicketSrc.class );
 		when( ticketSrc.requestTicket( any( BaseRepl.class ), any( UUID.class ), any( ApplyExpr.class ) ) ).

@@ -5,6 +5,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import static de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr.LANGID_BASH;
+
 import java.util.UUID;
 
 import org.junit.Before;
@@ -33,17 +35,18 @@ public class ReferenceTest {
 
 	private DynamicNodeVisitor dnv;
 	private TopLevelContext tlc;
+	private NodeVisitorTicketSrc ticketSrc;
 
 	@Before
 	public void setUp() throws HasFailedException, NotDerivableException {
 		
-		QualifiedTicket qt;
-		NodeVisitorTicketSrc ticketSrc;
 		BaseRepl repl;
+		QualifiedTicket qt;
 		
 		
 		qt = mock( QualifiedTicket.class );
 		when( qt.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
+		when( qt.getNumAtom() ).thenThrow( new NotDerivableException( "blub" ) );
 		
 		ticketSrc = mock( NodeVisitorTicketSrc.class );
 		when( ticketSrc.requestTicket( any( BaseRepl.class ), any( UUID.class ), any( ApplyExpr.class ) ) ).
@@ -526,7 +529,7 @@ public class ReferenceTest {
 		
 		Prototype sign;
 		Block body;
-		CompoundExpr lamList, e, a, b, x;
+		CompoundExpr lamList, e, a, b, x, y;
 		ApplyExpr ae;
 		
 		sign = new Prototype();
@@ -548,7 +551,9 @@ public class ReferenceTest {
 		
 		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
 		
-		assertEquals( a, dnv.accept( e ) );
+		y = dnv.accept( e );
+		
+		assertEquals( a, y );
 	}
 	
 	@Test
@@ -574,10 +579,9 @@ public class ReferenceTest {
 		b = new CompoundExpr( new NameExpr( "b" ) );
 		
 		e = new CompoundExpr( new CondExpr( new CompoundExpr( ae ), a, b ) );
-		
+				
 		tlc.putAssign( new NameExpr( "a" ), new CompoundExpr( new StringExpr( "A" ) ) );
-		tlc.putAssign( new NameExpr( "b" ), new CompoundExpr( new StringExpr( "B" ) ) );
-		
+		tlc.putAssign( new NameExpr( "b" ), new CompoundExpr( new StringExpr( "A" ) ) );
 		x = dnv.accept( e );
 		
 		assertTrue( x.getSingleExpr( 0 ) instanceof CondExpr );
@@ -625,4 +629,132 @@ public class ReferenceTest {
 		assertEquals( f, x );
 	}
 
+	
+	@Test
+	public void foreignAppWithCndParamIsLeftUntouched() throws HasFailedException, NotBoundException {
+		
+		CompoundExpr lamList, e, x;
+		Prototype sign;
+		ApplyExpr ae1, ae2, ae3;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		sign.addParam( new NameExpr( "p" ) );
+		
+		lamList = new CompoundExpr( new ForeignLambdaExpr(
+			sign, LANGID_BASH, "blub" ) );
+		
+		ae1 = new ApplyExpr( 1, false );
+		ae1.setTaskExpr( lamList );
+		ae1.putAssign(
+			new NameExpr( "p" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		
+		e = new CompoundExpr( new CondExpr(
+			new CompoundExpr( ae1 ), new CompoundExpr(), new CompoundExpr() ) );
+		
+		ae2 = new ApplyExpr( 1, false );
+		ae2.setTaskExpr( lamList );
+		ae2.putAssign( new NameExpr( "p" ), e );
+		
+		x = dnv.accept( new CompoundExpr( ae2 ) );
+				
+		assertTrue( x.getSingleExpr( 0 ) instanceof ApplyExpr );
+		
+		ae3 = ( ApplyExpr )x.getSingleExpr( 0 );
+		
+		assertEquals( lamList, ae3.getTaskExpr() );
+	}
+	
+	@Test
+	public void foreignAppWithSelectParamIsLeftUntouched() throws HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		CompoundExpr lamList, x;
+		ApplyExpr ae1, ae2, ae3;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		sign.addParam( new NameExpr( "p" ) );
+		
+		lamList = new CompoundExpr( new ForeignLambdaExpr(
+			sign, LANGID_BASH, "blub" ) );
+		
+		ae1 = new ApplyExpr( 1, false );
+		ae1.setTaskExpr( lamList );
+		ae1.putAssign( new NameExpr( "p" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		
+		ae2 = new ApplyExpr( 1, false );
+		ae2.setTaskExpr( lamList );
+		ae2.putAssign( new NameExpr( "p" ), new CompoundExpr( ae1 ) );
+		
+		x = dnv.accept( new CompoundExpr( ae2 ) );
+		
+		assertTrue( x.getSingleExpr( 0 ) instanceof ApplyExpr );
+		
+		ae3 = ( ApplyExpr )x.getSingleExpr( 0 );
+		
+		assertEquals( lamList, ae3.getTaskExpr() );
+	}
+	
+	@Test
+	public void cascadingAppDoesNotBreakEnum() throws HasFailedException, NotBoundException, NotDerivableException {
+		
+		Prototype sign1, sign2;
+		CompoundExpr lam1, lam2, out1, out2, x;
+		ApplyExpr ae1, ae2;
+		Block body2;
+		QualifiedTicket qt1;
+		
+		sign1 = new Prototype();
+		sign1.addOutput( new ReduceVar( "out", null ) );
+		sign1.addParam( new NameExpr( "task" ) );
+		
+		lam1 = new CompoundExpr( new ForeignLambdaExpr( sign1, LANGID_BASH, "out=(1 2 3)" ) );
+		
+		ae1 = new ApplyExpr( 1, false );
+		ae1.setTaskExpr( lam1 );
+		
+		sign2 = new Prototype();
+		sign2.addOutput( new NameExpr( "out" ) );
+		sign2.addParam( new NameExpr( "task" ) );
+		sign2.addParam( new NameExpr( "p1" ) );
+		sign2.addParam( new NameExpr( "p2" ) );
+		
+		out1 = new CompoundExpr();
+		out1.addSingleExpr( new NameExpr( "p1" ) );
+		out1.addSingleExpr( new NameExpr( "p2" ) );
+		
+		body2 = new Block();
+		body2.putAssign( new NameExpr( "out" ), out1 );
+		
+		lam2 = new CompoundExpr( new NativeLambdaExpr( sign2, body2 ) );
+		
+		ae2 = new ApplyExpr( 1, false );
+		ae2.setTaskExpr( lam2 );
+		ae2.putAssign( new NameExpr( "p1" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		ae2.putAssign( new NameExpr( "p2" ), new CompoundExpr( ae1 ) );
+		
+		out2 = new CompoundExpr();
+		out2.addSingleExpr( new StringExpr( "1" ) );
+		out2.addSingleExpr( new StringExpr( "2" ) );
+		
+		qt1 = mock( QualifiedTicket.class );
+		when( qt1.getChannel() ).thenReturn( 1 );
+		when( qt1.getNumAtom() ).thenReturn( 2 );
+		when( qt1.getOutputValue() ).thenReturn( out2 );
+		when( qt1.getStringExprValue( 0 ) ).thenReturn( new StringExpr( "1" ) );
+		when( qt1.getStringExprValue( 1 ) ).thenReturn( new StringExpr( "2" ) );
+		
+		when( ticketSrc.requestTicket(
+				any( BaseRepl.class ),
+				any( UUID.class ),
+				any( ApplyExpr.class ) ) )
+			.thenReturn( qt1 );
+		
+		x = dnv.accept( new CompoundExpr( ae2 ) );
+		
+		assertEquals( "'A' '1' 'A' '2'", x.toString() );
+	}
 }
