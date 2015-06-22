@@ -64,4 +64,18 @@ public class CompoundExprTest {
 		a = new CompoundExpr();
 		assertNotEquals( a, "blub" );
 	}
+	
+	@SuppressWarnings("static-method")
+	@Test
+	public void condIsNonNormal() {
+		
+		CondExpr cnd;
+		CompoundExpr ce;
+		
+		cnd = new CondExpr( new CompoundExpr(), new CompoundExpr(), new CompoundExpr() );		
+		ce = new CompoundExpr( cnd );
+		
+		assertFalse( ce.isNormal() );
+		
+	}
 }

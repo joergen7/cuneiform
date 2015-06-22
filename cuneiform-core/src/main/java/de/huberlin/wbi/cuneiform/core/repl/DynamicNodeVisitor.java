@@ -420,6 +420,11 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		
 		try {
 			tic = System.currentTimeMillis();
+			
+			if( log.isDebugEnabled() )
+				log.debug( ">>> Stepping expression >>>\n"+currentBlock );
+			
+			
 			ce = currentBlock.visit( this );
 			toc = System.currentTimeMillis();
 			
@@ -742,7 +747,12 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		if( log.isTraceEnabled() )
 			log.trace( "DynamicNodeVisitor reduceSingleNative ApplyExpr: Returning "+targetCompoundExpr.toString().replace( '\n', ' ' ) );
 
-		return targetCompoundExpr;
+		if( targetCompoundExpr.isNormal() )
+			return targetCompoundExpr;
+		
+		lambda.getBodyBlock().putAssign( targetNameExpr, targetCompoundExpr );
+		
+		return new CompoundExpr( applyExpr );
 
 	}
 

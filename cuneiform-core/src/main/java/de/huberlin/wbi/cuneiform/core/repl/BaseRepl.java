@@ -72,7 +72,7 @@ public abstract class BaseRepl {
 	public static final int CTL_TICKETSET = 8;
 
 	public static final String LABEL_VERSION = "2.0.1-SNAPSHOT";
-	public static final String LABEL_BUILD = "2015-06-16";
+	public static final String LABEL_BUILD = "2015-06-22";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -264,7 +264,9 @@ public abstract class BaseRepl {
 	
 	public abstract void queryStartedPost( UUID runId );
 	
-	public void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+	public synchronized void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+		
+		DynamicNodeVisitor dnv;
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query ID must not be null." );
@@ -272,7 +274,14 @@ public abstract class BaseRepl {
 		if( reportEntrySet == null )
 			throw new NullPointerException( "Report entry set must not be null." );
 		
-		runningMap.get( queryId ).step();
+		dnv = runningMap.get( queryId );
+		if( dnv == null )
+			throw new NullPointerException( "Dynamic node visitor must not be null." );
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Stepping expression in query "+queryId+"." );
+		
+		dnv.step();
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Ticket finished: "+ticketId+" part of query "+queryId );

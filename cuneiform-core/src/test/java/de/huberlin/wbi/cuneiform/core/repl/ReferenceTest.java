@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
 import static de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr.LANGID_BASH;
 
 import java.util.UUID;
@@ -21,6 +20,7 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
+import de.huberlin.wbi.cuneiform.core.semanticmodel.NodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
@@ -757,4 +757,64 @@ public class ReferenceTest {
 		
 		assertEquals( "'A' '1' 'A' '2'", x.toString() );
 	}
+	
+	@Test
+	public void appTaskParamIsEvaluated() throws HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		Block body;
+		CompoundExpr lamList, x;
+		ApplyExpr ae;
+		
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		body = new Block();
+		body.putAssign( new NameExpr( "out" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		
+		lamList = new CompoundExpr( new NativeLambdaExpr( sign, body ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( new CompoundExpr( new NameExpr( "f" ) ) );
+		
+		tlc.putAssign( new NameExpr( "f" ), lamList );
+		
+		x = dnv.accept( new CompoundExpr( ae ) );
+		
+		assertEquals( new CompoundExpr( new StringExpr( "A" ) ), x );
+	}
+	
+	@Test
+	public void appNonFinalResultPreservesApp() throws NotDerivableException, HasFailedException, NotBoundException {
+		
+		Prototype sign;
+		Block body;
+		QualifiedTicket qt1;
+		CompoundExpr lamList, x;
+		ApplyExpr ae;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		qt1 = mock( QualifiedTicket.class );
+		when( qt1.getNumAtom() ).thenThrow( new NotDerivableException( "blub" ) );
+		when( qt1.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
+		when( qt1.visit( dnv ) ).thenReturn( new CompoundExpr( qt1 ) );
+		
+		body = new Block();
+		body.putAssign( new NameExpr( "out" ), new CompoundExpr( qt1 ) );
+		
+		lamList = new CompoundExpr( new NativeLambdaExpr( sign, body ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( lamList );
+		
+		x = dnv.accept( new CompoundExpr( ae ) );
+		assertEquals( new CompoundExpr( ae ), x );
+	}
+	
+
 }
