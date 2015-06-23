@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class CompoundExpr implements CfNode, Cloneable {
+public class CompoundExpr implements CfNode {
 
 	private List<SingleExpr> singleExprList;
 	
@@ -49,6 +49,14 @@ public class CompoundExpr implements CfNode, Cloneable {
 		addSingleExpr( se );
 	}
 	
+	public CompoundExpr( CompoundExpr template ) {
+		
+		this();
+		
+		for( SingleExpr se : template.singleExprList )
+			singleExprList.add( copySingleExpr( se ) );
+	}
+
 	public void addCompoundExpr( CompoundExpr ce ) {
 		
 		if( ce == null )
@@ -63,18 +71,6 @@ public class CompoundExpr implements CfNode, Cloneable {
 			throw new NullPointerException( "Single expression must not be null." );
 		
 		singleExprList.add( singleExpr );
-	}
-	
-	@Override
-	public CompoundExpr clone() throws CloneNotSupportedException {
-		
-		CompoundExpr ce;
-		
-		ce = ( CompoundExpr )super.clone();
-		ce.singleExprList = new ArrayList<>();
-		ce.singleExprList.addAll( singleExprList );
-		
-		return ce;
 	}
 	
 	public int getNumAtom() throws NotDerivableException {
@@ -292,5 +288,34 @@ public class CompoundExpr implements CfNode, Cloneable {
 			return 0;
 		
 		return getSingleExpr( 0 ).hashCode();
+	}
+	
+	private static SingleExpr copySingleExpr( SingleExpr se ) {
+		
+		if( se == null )
+			throw new IllegalArgumentException( "Single expression to be copied must not be null." );
+				
+		if( se instanceof StringExpr )
+			return se;
+		
+		if( se instanceof ApplyExpr )
+			return new ApplyExpr( ( ApplyExpr )se );
+		
+		if( se instanceof NativeLambdaExpr )
+			return new NativeLambdaExpr( ( NativeLambdaExpr )se );
+		
+		if( se instanceof NameExpr )
+			return se;
+		
+		if( se instanceof ForeignLambdaExpr )
+			return new ForeignLambdaExpr( ( ForeignLambdaExpr )se );
+		
+		if( se instanceof CondExpr )
+			return new CondExpr( ( CondExpr )se );
+		
+		if( se instanceof QualifiedTicket )
+			return se;
+		
+		throw new UnsupportedOperationException( "Copy operation unsupported for expression of type "+se.getClass() );
 	}
 }

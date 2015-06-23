@@ -78,6 +78,18 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		this.lang = lang;
 	}
 	
+	public ForeignLambdaExpr(ForeignLambdaExpr template ) {
+		
+		super( template );
+
+		if( template == null )
+			throw new IllegalArgumentException( "Template foreign lambda expression must not be null." );
+		
+		lang = template.lang;
+		body = template.body;
+		name = template.name;
+	}
+
 	public String getBody() {
 		return body;
 	}

@@ -44,6 +44,17 @@ public abstract class LambdaExpr implements SingleExpr {
 		this.prototype = prototype;
 	}
 
+	public LambdaExpr( LambdaExpr template ) {
+		
+		if( template == null )
+			throw new IllegalArgumentException( "Template lambda expression must not be null." );
+		
+		if( template.prototype == null )
+			throw new IllegalArgumentException( "Template lambda expression must have non-null prototype." );
+		
+		prototype = new Prototype( template.prototype );
+	}
+
 	@Override
 	public int getNumAtom() throws NotDerivableException {
 		return 1;

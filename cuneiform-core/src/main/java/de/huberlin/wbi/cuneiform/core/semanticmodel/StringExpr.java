@@ -43,7 +43,7 @@ public class StringExpr implements SingleExpr {
 		
 		this.value = content;
 	}
-	
+
 	@Override
 	public boolean equals( Object obj ) {
 		
@@ -93,5 +93,5 @@ public class StringExpr implements SingleExpr {
 	@Override
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {
 		return visitor.accept( this );
-	}
+	}	
 }

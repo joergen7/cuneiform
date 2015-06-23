@@ -33,6 +33,7 @@
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 
+
 public class ApplyExpr extends BaseBlock implements SingleExpr {
 
 	private int channel;
@@ -51,18 +52,22 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 		setRest( inheritsExtra );
 	}
 	
-	@Override
-	public ApplyExpr clone() throws CloneNotSupportedException {
+	public ApplyExpr( ApplyExpr template ) {
 		
-		ApplyExpr ae;
+		if( template.taskExpr == null )
+			throw new IllegalArgumentException( "Template apply expression has no task expression: "+template+"." );
 		
-		ae = ( ApplyExpr )super.clone();
+		channel = template.channel;
+		rest = template.rest;		
+		taskExpr = new CompoundExpr( template.taskExpr );
 		
-		ae.setChannel( channel );
-		ae.setRest( rest );
-		ae.setTaskExpr( taskExpr );
-				
-		return ae;
+		try {
+			for( NameExpr ne : template.getFullNameSet() )
+				putAssign( ne, new CompoundExpr( template.getExpr( ne ) ) );				
+		}
+		catch( NotBoundException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 	
 	public String getBlockString() {

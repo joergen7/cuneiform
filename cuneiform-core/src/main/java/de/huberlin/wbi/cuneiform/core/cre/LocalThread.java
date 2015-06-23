@@ -138,6 +138,7 @@ public class LocalThread implements Runnable {
 		int trial;
 		boolean suc;
 		Exception ex;
+		Path parent;
 		
 		
 		if( log.isDebugEnabled() )
@@ -204,6 +205,8 @@ public class LocalThread implements Runnable {
 						
 					srcPath = centralRepo.resolve( filename );
 					destPath = location.resolve( filename );
+					if( destPath == null )
+						throw new NullPointerException( "Link destination path must not be null." );
 					
 					if( !Files.exists( srcPath ) ) {
 						
@@ -219,8 +222,12 @@ public class LocalThread implements Runnable {
 					if( log.isTraceEnabled() )
 						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
 
-					if( !Files.exists( destPath.getParent() ) )
-						Files.createDirectories( destPath.getParent() );
+					parent = destPath.getParent();
+					if( parent == null )
+						throw new NullPointerException( "Parent path of destination path must not be null." );
+					
+					if( !Files.exists( parent ) )
+						Files.createDirectories( parent );
 					
 					Files.createSymbolicLink( destPath, srcPath );
 					

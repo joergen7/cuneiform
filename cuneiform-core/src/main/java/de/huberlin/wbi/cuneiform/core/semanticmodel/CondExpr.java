@@ -35,7 +35,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 public class CondExpr implements SingleExpr {
 
-	private CompoundExpr ifExpr;
+	private final CompoundExpr ifExpr;
 	private final CompoundExpr thenExpr;
 	private final CompoundExpr elseExpr;
 	
@@ -47,18 +47,25 @@ public class CondExpr implements SingleExpr {
 		if( elseBlock == null )
 			throw new IllegalArgumentException( "Else expression must not be null." );
 		
-		this.elseExpr = elseBlock;
-		this.thenExpr = thenBlock;
-		setIfExpr( ifExpr );
-	}
-	
-	public void setIfExpr( CompoundExpr expr ) {
-
-		if( expr == null )
+		if( ifExpr == null )
 			throw new IllegalArgumentException( "Condition expression must not be null." );
 		
-		ifExpr = expr;
+		this.ifExpr = ifExpr;
+		this.elseExpr = elseBlock;
+		this.thenExpr = thenBlock;
+
 	}
+	
+	public CondExpr(CondExpr template ) {
+		
+		if( template == null )
+			throw new IllegalArgumentException( "Template conditional expression must not be null." );
+		
+		ifExpr = new CompoundExpr( template.ifExpr );
+		thenExpr = new CompoundExpr( template.thenExpr );
+		elseExpr = new CompoundExpr( template.elseExpr );
+	}
+
 	
 	public CompoundExpr getElseExpr() {
 		return elseExpr;

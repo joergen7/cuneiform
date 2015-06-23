@@ -41,13 +41,25 @@ public class TopLevelContext extends BaseBlock {
 	private List<CompoundExpr> targetList;
 
 	public TopLevelContext() {
-		this( null );
-	}
-	
-	public TopLevelContext( BaseBlock parent ) {
-		super( parent );
+		super( null );
 		targetList = new ArrayList<>();
 	}
+	
+	public TopLevelContext( TopLevelContext template ) {
+		
+		this();
+		
+		try {
+			for( CompoundExpr ce : template.targetList )
+				targetList.add( new CompoundExpr( ce ) );
+			
+			for( NameExpr ne : template.getFullNameSet() )
+				putAssign( ne, new CompoundExpr( template.getExpr( ne ) ) );
+		} catch (NotBoundException e) {
+			throw new RuntimeException( e );
+		}
+	}
+	
 	
 	public void addTarget( CompoundExpr target ) {
 		targetList.add( target );
@@ -55,20 +67,6 @@ public class TopLevelContext extends BaseBlock {
 	
 	public void clearTargetList() {
 		targetList.clear();
-	}
-	
-	@Override
-	public TopLevelContext clone() throws CloneNotSupportedException {
-		
-		TopLevelContext tlc;
-		
-		tlc = ( TopLevelContext )super.clone();
-		targetList = new ArrayList<>();
-		
-		for( CompoundExpr ce : targetList )
-			tlc.addTarget( ce );
-		
-		return tlc;
 	}
 	
 	public String getBlockString() {

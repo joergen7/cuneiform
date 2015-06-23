@@ -46,6 +46,20 @@ public class NativeLambdaExpr extends LambdaExpr {
 		this.bodyBlock = bodyBlock;
 	}
 	
+	public NativeLambdaExpr( NativeLambdaExpr template ) {
+		
+		super( template );
+		bodyBlock = new Block();
+		
+		try {
+			for( NameExpr ne : template.bodyBlock.getFullNameSet() )
+				bodyBlock.putAssign( ne, new CompoundExpr( template.getBodyBlock().getExpr( ne ) ) );
+		} catch (NotBoundException e) {
+			throw new RuntimeException( e );
+		} 
+		
+	}
+	
 	public Block getBodyBlock() {
 		return bodyBlock;
 	}

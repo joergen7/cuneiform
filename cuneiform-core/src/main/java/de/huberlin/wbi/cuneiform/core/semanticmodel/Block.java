@@ -40,16 +40,6 @@ public class Block extends BaseBlock {
 	public Block( BaseBlock parent ) {
 		super( parent );
 	}
-
-	@Override
-	public Block clone() throws CloneNotSupportedException {
-		
-		Block block1;
-		
-		block1 = ( Block )super.clone();
-			
-		return block1;
-	}
 	
 	@Override
 	public <T> T visit( NodeVisitor<? extends T> visitor ) {

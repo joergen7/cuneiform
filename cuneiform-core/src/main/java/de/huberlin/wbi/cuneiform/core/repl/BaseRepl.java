@@ -392,51 +392,46 @@ public abstract class BaseRepl {
 		ctl = 0;
 		removeCandidateList = new ArrayList<>();
 		
-		try {
-		
-			for( CompoundExpr ce : tlc.getTargetList() ) {
-				
-				cp = ce.clone();
-				
-				for( SingleExpr se : cp.getSingleExprList() )
-					if( se instanceof NameExpr ) {
-						
-						
-						if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
-							ctl += CTL_STATE;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
 	
-						if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
-							ctl += CTL_QUIT;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
-	
-						if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
-							ctl += CTL_QUERYSET;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
-						
-						if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
-							ctl += CTL_TICKETSET;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
+		for( CompoundExpr ce : tlc.getTargetList() ) {
+			
+			cp = new CompoundExpr( ce );
+			
+			for( SingleExpr se : cp.getSingleExprList() )
+				if( se instanceof NameExpr ) {
+					
+					
+					if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
+						ctl += CTL_STATE;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
 					}
-			}
+
+					if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
+						ctl += CTL_QUIT;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+
+					if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
+						ctl += CTL_QUERYSET;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+					
+					if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
+						ctl += CTL_TICKETSET;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+				}
 		}
-		catch( CloneNotSupportedException e ) {
-			throw new RuntimeException( e );
-		}
-		
-		
+
+	
 		for( CompoundExpr ce : removeCandidateList )
 			if( ce.getNumSingleExpr() == 0 )
 				tlc.removeTarget( ce );

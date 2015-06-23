@@ -48,6 +48,26 @@ public class Prototype extends LambdaType {
 		paramSet = new HashSet<>();
 	}
 	
+	public Prototype( Prototype template ) {
+		
+		this();
+		
+		if( template == null )
+			throw new IllegalArgumentException( "Template prototype must not be null." );
+		
+		if( template.outputList == null )
+			throw new IllegalArgumentException( "Template prototype must not have null output list." );
+		
+		if( template.paramSet == null )
+			throw new IllegalArgumentException( "Template prototype must not have null parameter set." );
+		
+		for( NameExpr output : template.outputList )
+			outputList.add( output );
+		
+		for( Param param : template.paramSet )
+			paramSet.add( copyParam( param ) );
+	}
+
 	public void addOutput( NameExpr output ) {
 		
 		if( output == null )
@@ -70,19 +90,6 @@ public class Prototype extends LambdaType {
 	
 	public void addParam( Set<Param> ps ) {
 		paramSet.addAll( ps );
-	}
-	
-	@Override
-	public Prototype clone() throws CloneNotSupportedException {
-		
-		Prototype child;
-		
-		child = ( Prototype )super.clone();
-		
-		child.addOutput( outputList );
-		child.addParam( paramSet );
-		
-		return child;
 	}
 	
 	public NameExpr getOutput( int i ) {
@@ -240,5 +247,13 @@ public class Prototype extends LambdaType {
 		buf.append( ')' );
 		
 		return buf.toString();
+	}
+	
+	private static Param copyParam( Param template ) {
+		
+		if( template instanceof NameExpr )
+			return template;
+		
+		throw new UnsupportedOperationException( "Copy operation not supported for parameter of type "+template.getClass() );
 	}
 }

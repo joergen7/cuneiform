@@ -17,7 +17,5 @@ public class StringExprTest {
 		
 		assertEquals( a, b );
 		assertEquals( b, a );
-		
-		
-	}
+	}	
 }

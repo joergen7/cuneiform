@@ -2,13 +2,13 @@ package de.huberlin.wbi.cuneiform.core.repl;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr.LANGID_BASH;
 
 import java.util.UUID;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ApplyExpr;
@@ -20,7 +20,6 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.HasFailedException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NameExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NativeLambdaExpr;
-import de.huberlin.wbi.cuneiform.core.semanticmodel.NodeVisitor;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotBoundException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Prototype;
@@ -45,6 +44,7 @@ public class ReferenceTest {
 		
 		
 		qt = mock( QualifiedTicket.class );
+		when( qt.getChannel() ).thenReturn( 1 );
 		when( qt.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
 		when( qt.getNumAtom() ).thenThrow( new NotDerivableException( "blub" ) );
 		
@@ -816,5 +816,247 @@ public class ReferenceTest {
 		assertEquals( new CompoundExpr( ae ), x );
 	}
 	
+	@Test
+	public void appNonFinalResultPreservesAppWithNewLam() throws HasFailedException, NotBoundException {
+		
+		Prototype cSign, sign;
+		CompoundExpr cLam, lam, cnd, x, val, varx;
+		ApplyExpr cAe, ae, ae1;
+		Block body, body1;
+		NativeLambdaExpr lam1;
+		CondExpr cnd1;
+		
+		
+		cSign = new Prototype();
+		cSign.addOutput( new ReduceVar( "out", null ) );
+		cSign.addParam( new NameExpr( "task" ) );
+		
+		cLam = new CompoundExpr( new ForeignLambdaExpr( cSign, LANGID_BASH, "blub" ) );
+		
+		cAe = new ApplyExpr( 1, false );
+		cAe.setTaskExpr( cLam );
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		varx = new CompoundExpr( new NameExpr( "x" ) );
+		
+		cnd = new CompoundExpr( new CondExpr( new CompoundExpr( cAe ), varx, varx ) );
+		
+		body = new Block();
+		body.putAssign( new NameExpr( "out" ), cnd );
+		body.putAssign( new NameExpr( "x" ), new CompoundExpr( new StringExpr( "A" ) ) );
+		
+		lam = new CompoundExpr( new NativeLambdaExpr( sign, body ) );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( lam );
+		
+		x = dnv.accept( new CompoundExpr( ae ) );
+		
+		assertEquals( 1, x.getNumSingleExpr() );
+		assertTrue( x.getSingleExpr( 0 ) instanceof ApplyExpr );
+		
+		ae1 = ( ApplyExpr )x.getSingleExpr( 0 );
+		
+		assertEquals( 1, ae1.getChannel() );
+		assertTrue( ae1.getTaskExpr().getSingleExpr( 0 ) instanceof NativeLambdaExpr );
+		
+		lam1 = ( NativeLambdaExpr )ae1.getTaskExpr().getSingleExpr( 0 );
+		
+		assertEquals( sign, lam1.getPrototype() );
+		
+		body1 = lam1.getBodyBlock();
+		val = body1.getExpr( new NameExpr( "out" ) );
+		
+		assertEquals( 1, val.getNumSingleExpr() );
+		assertTrue( val.getSingleExpr( 0 ) instanceof CondExpr );
+		
+		cnd1 = ( CondExpr )val.getSingleExpr( 0 );
+		
+		assertEquals( varx, cnd1.getThenExpr() );
+		assertEquals( varx, cnd1.getElseExpr() );
+		assertTrue( cnd1.getIfExpr().getSingleExpr( 0 ) instanceof QualifiedTicket );
+	}
+	
+	@Test
+	public void nestedAppUndergoesReduction() throws HasFailedException, NotBoundException, NotDerivableException {
+		
+		Prototype sign;
+		CompoundExpr lam1, lam2, x, y, a;
+		ApplyExpr ae1, ae2;
+		Block body2;
+		QualifiedTicket qt1;
+		
+		sign = new Prototype();
+		sign.addOutput( new NameExpr( "out" ) );
+		sign.addParam( new NameExpr( "task" ) );
+		
+		lam1 = new CompoundExpr( new ForeignLambdaExpr( sign, LANGID_BASH, "blub" ) );
+		
+		ae1 = new ApplyExpr( 1, false );
+		ae1.setTaskExpr( lam1 );
+		
+		body2 = new Block();
+		body2.putAssign( new NameExpr( "out" ), new CompoundExpr( ae1 ) );
+		
+		lam2 = new CompoundExpr( new NativeLambdaExpr( sign, body2 ) );
+		
+		ae2 = new ApplyExpr( 1, false );
+		ae2.setTaskExpr( lam2 );
+		
+		qt1 = mock( QualifiedTicket.class );
+		when( qt1.visit( dnv ) ).thenReturn( dnv.accept( qt1 ) );
+		when( qt1.getChannel() ).thenReturn( 1 );
+		when( qt1.getNumAtom() ).thenThrow( new NotDerivableException( "bla" ) );
+		when( qt1.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
+		
+		when( ticketSrc.requestTicket(
+			any( BaseRepl.class ),
+			any( UUID.class ),
+			any( ApplyExpr.class ) ) ).thenReturn( qt1 );
+		
+		x = dnv.accept( new CompoundExpr( ae2 ) );
+		
+		assertEquals( 1, x.getNumSingleExpr() );
+		assertTrue( x.getSingleExpr( 0 ) instanceof ApplyExpr );
+		
+		a = new CompoundExpr( new StringExpr( "A" ) );
+		
+		reset( qt1 );
+		when( qt1.visit( dnv ) ).thenReturn( dnv.accept( qt1 ) );
+		when( qt1.getChannel() ).thenReturn( 1 );
+		when( qt1.getNumAtom() ).thenReturn( 1 );
+		when( qt1.getOutputValue() ).thenReturn( a );
+		
+		y = dnv.accept( x );
+		assertEquals( a.normalize(), y.normalize() );
+	}
+	
+	/*recursion_terminates( CreateTicket ) ->
+	  DecSign = {sign, [{param, "i1", false, false},
+	                    {param, "converge", false, true}],
+	                   [],
+	                   [{param, "i", false, false}]},
+	  DecBody = {forbody, bash, "blub"},
+	  DecLam = [{lam, ?LOC, DecSign, DecBody}],
+	  RecSign = {sign, [{param, "out", false, true}],
+	                   [], [{param, "i", false, false}]},
+	  RecBody = {natbody,
+	             #{"i1"       => [{app, ?LOC, 1, DecLam, #{"i" => [{var, "i"}]}}],
+	               "converge" => [{app, ?LOC, 2, DecLam, #{"i" => [{var, "i"}]}}],
+	               "out"      => [{cnd, [{var, "converge"}],
+	                                    [{str, "last"}],
+	                                    [{str, "next to"},
+	                                     {app, ?LOC, 1, [{var, "rec"}],
+	                                           #{"i" => [{var, "i1"}]}}]}]}},
+	  RecLam = [{lam, ?LOC, RecSign, RecBody}],
+	  App = [{app, ?LOC, 1, [{var, "rec"}], #{"i" => [{str, "2"}]}}],
+	  Context0 = put( "rec", RecLam, #{} ),
+	  R = eval( App, Context0, CreateTicket ),
+	  [Ref0] = get_ticket_id_list( R ),
+	  Context1 = put( {2, Ref0}, [], Context0 ),
+	  S = eval( R, Context1, CreateTicket ),
+	  [Ref1] = get_ticket_id_list( S ),
+	  Context2 = put( {1, Ref1}, [{str, "1"}], Context1 ),
+	  T = eval( S, Context2, CreateTicket ),
+	  [Ref2] = get_ticket_id_list( T ),
+	  Context3 = put( {2, Ref2}, [{str, "true"}], Context2 ),
+	  U = eval( T, Context3, CreateTicket ),
+	  ?_assertEqual( [{str, "next to"}, {str, "last"}], U ). */
+	
+	@Ignore
+	@Test
+	public void recursionTerminates() throws HasFailedException, NotBoundException, NotDerivableException {
+		
+		Prototype decSign, recSign;
+		ForeignLambdaExpr decLam;
+		Block recBody;
+		ApplyExpr ae1, ae2, recCall, ae;
+		CondExpr cnd;
+		CompoundExpr nextToCall, r, s;
+		NativeLambdaExpr recLam;
+		QualifiedTicket qt1, qt2;
+		
+		decSign = new Prototype();
+		decSign.addOutput( new NameExpr( "i1" ) );
+		decSign.addOutput( new ReduceVar( "converge", null ) );
+		decSign.addParam( new NameExpr( "task" ) );
+		decSign.addParam( new NameExpr( "i" ) );
+		
+		decLam = new ForeignLambdaExpr( decSign, LANGID_BASH, "blub" );
+		
+		recSign = new Prototype();
+		recSign.addOutput( new ReduceVar( "out", null ) );
+		recSign.addParam( new NameExpr( "task" ) );
+		recSign.addParam( new NameExpr( "i" ) );
+		
+		ae1 = new ApplyExpr( 1, false );
+		ae1.setTaskExpr( new CompoundExpr( decLam ) );
+		ae1.putAssign( new NameExpr( "i" ), new CompoundExpr( new NameExpr( "i" ) ) );
+		
+		ae2 = new ApplyExpr( 2, false );
+		ae2.setTaskExpr( new CompoundExpr( decLam ) );
+		ae2.putAssign( new NameExpr( "i" ), new CompoundExpr( new NameExpr( "i" ) ) );
+		
+		recCall = new ApplyExpr( 1, false );
+		recCall.setTaskExpr( new CompoundExpr( new NameExpr( "rec" ) ) );
+		recCall.putAssign( new NameExpr( "i" ), new CompoundExpr( new NameExpr( "i1" ) ) );
+		
+		nextToCall = new CompoundExpr();
+		nextToCall.addSingleExpr( new StringExpr( "next to" ) );
+		nextToCall.addSingleExpr( recCall );
+		
+		cnd = new CondExpr(
+			new CompoundExpr( new NameExpr( "converge" ) ),
+			new CompoundExpr( new StringExpr( "last" ) ),
+			nextToCall );
+
+		recBody = new Block();
+		recBody.putAssign( new NameExpr( "i1" ), new CompoundExpr( ae1 ) );
+		recBody.putAssign( new NameExpr( "converge" ), new CompoundExpr( ae2 ) );
+		recBody.putAssign( new NameExpr( "out" ), new CompoundExpr( cnd ) );
+		
+		recLam = new NativeLambdaExpr( recSign, recBody );
+		
+		ae = new ApplyExpr( 1, false );
+		ae.setTaskExpr( new CompoundExpr( new NameExpr( "rec" ) ) );
+		ae.putAssign( new NameExpr( "i" ), new CompoundExpr( new StringExpr( "2" ) ) );
+		
+		tlc.putAssign( new NameExpr( "rec" ), new CompoundExpr( recLam ) );
+		System.out.println( tlc );
+		
+		qt1 = mock( QualifiedTicket.class );
+		when( qt1.visit( dnv ) ).thenReturn( dnv.accept( qt1 ) );
+		when( qt1.getChannel() ).thenReturn( 2 );
+		when( qt1.getNumAtom() ).thenThrow( new NotDerivableException( "bla" ) );
+		when( qt1.getOutputValue() ).thenThrow( new NotDerivableException( "blub" ) );
+		
+		reset( ticketSrc );
+		when( ticketSrc.requestTicket( any( BaseRepl.class ), any( UUID.class ), any( ApplyExpr.class ) ) )
+			.thenReturn( qt1 );
+
+		r = dnv.accept( new CompoundExpr( ae ) );
+		
+		reset( qt1 );
+		when( qt1.visit( dnv ) ).thenReturn( dnv.accept( qt1 ) );
+		when( qt1.getChannel() ).thenReturn( 2 );
+		when( qt1.getNumAtom() ).thenReturn( 0 );
+		when( qt1.getOutputValue() ).thenReturn( new CompoundExpr() );
+		
+		qt2 = mock( QualifiedTicket.class );
+		when( qt2.visit( dnv ) ).thenReturn( dnv.accept( qt2 ) );
+		when( qt2.getChannel() ).thenReturn( 1 );
+		when( qt2.getNumAtom() ).thenReturn( 1 );
+		when( qt2.getOutputValue() ).thenReturn( new CompoundExpr( new StringExpr( "1" ) ) );
+		
+		reset( ticketSrc );
+		when( ticketSrc.requestTicket( any( BaseRepl.class ), any( UUID.class ), any( ApplyExpr.class ) ) )
+			.thenReturn( qt2 );
+
+		s = dnv.accept( r );
+		System.out.println( s );
+	}
 
 }

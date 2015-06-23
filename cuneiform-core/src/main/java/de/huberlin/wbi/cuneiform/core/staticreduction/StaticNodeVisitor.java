@@ -194,75 +194,73 @@ public class StaticNodeVisitor extends BaseNodeVisitor {
 		Prototype curriedPrototype;
 		NativeLambdaExpr curriedLambdaExpr;
 		
-		try {
-		
-			if( !curryExpr.hasTaskExpr() )
-				throw new SemanticModelException(
-					curryExpr.toString(),
-					"Task parameter not bound." );
-			
-			if( curryExpr.getTaskExpr().getNumSingleExpr() == 0 )
-				throw new SemanticModelException(
-					curryExpr.toString(),
-					"Task expression must not be nil." );
-			
-			if( curryExpr.getTaskExpr().getNumSingleExpr() > 1 )
-				return new CompoundExpr( curryExpr );
-			
-			CompoundExpr taskExpr = curryExpr.getTaskExpr();
-			se = taskExpr.visit( this ).getSingleExpr( 0 );
-			
-			
-			if( se instanceof NameExpr )
-				return new CompoundExpr( curryExpr );
-			
-			if( !( se instanceof LambdaExpr ) )
-				throw new SemanticModelException( curryExpr.toString(), se+" is not a lambda expression." );
-			
-			lambdaExpr = ( LambdaExpr )se;
-					
-			originalPrototype = lambdaExpr.getPrototype();
-			
-			// the prototype of the curried lambda expression is derived from
-			// the original prototype
-			curriedPrototype = originalPrototype.clone();
-			
-			// from the prototype we remove all inputs that are bound by
-			// currying
-			for( NameExpr nameExpr : curryExpr.getNameSet() )
-				curriedPrototype.removeParam( nameExpr );
 	
-			if( !( lambdaExpr instanceof NativeLambdaExpr ) )
-				throw new RuntimeException( "Lambda expression type not recognized." );
+		if( !curryExpr.hasTaskExpr() )
+			throw new SemanticModelException(
+				curryExpr.toString(),
+				"Task parameter not bound." );
+		
+		if( curryExpr.getTaskExpr().getNumSingleExpr() == 0 )
+			throw new SemanticModelException(
+				curryExpr.toString(),
+				"Task expression must not be nil." );
+		
+		if( curryExpr.getTaskExpr().getNumSingleExpr() > 1 )
+			return new CompoundExpr( curryExpr );
+		
+		CompoundExpr taskExpr = curryExpr.getTaskExpr();
+		se = taskExpr.visit( this ).getSingleExpr( 0 );
+		
+		
+		if( se instanceof NameExpr )
+			return new CompoundExpr( curryExpr );
+		
+		if( !( se instanceof LambdaExpr ) )
+			throw new SemanticModelException( curryExpr.toString(), se+" is not a lambda expression." );
+		
+		lambdaExpr = ( LambdaExpr )se;
 				
-			nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
-			
-			originalBodyBlock = nativeLambdaExpr.getBodyBlock();
-						
-			// the body block of the curried lambda expression is derived from the
-			// body block of the original lambda expression
-			curriedBodyBlock = originalBodyBlock.clone();
-	
-			// with the curried expression's binding block merged in
-			try {
-				for( NameExpr nameExpr : curryExpr.getNameSet() )
-					curriedBodyBlock.putAssign(
-						nameExpr, curryExpr.getExpr( nameExpr ) );
-			}
-			catch( NotBoundException e ) {
-				throw new RuntimeException( e.getMessage() );
-			}			
-			
-			// from the curried prototype and body expression we form the
-			// resulting curried lambda expression
-			curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
-	
-			return new CompoundExpr( curriedLambdaExpr );
-		}
-		catch( CloneNotSupportedException e ) {
-			throw new RuntimeException( e );
-		}
+		originalPrototype = lambdaExpr.getPrototype();
 		
+		// the prototype of the curried lambda expression is derived from
+		// the original prototype
+		curriedPrototype = new Prototype( originalPrototype );
+		
+		// from the prototype we remove all inputs that are bound by
+		// currying
+		for( NameExpr nameExpr : curryExpr.getNameSet() )
+			curriedPrototype.removeParam( nameExpr );
+
+		if( !( lambdaExpr instanceof NativeLambdaExpr ) )
+			throw new RuntimeException( "Lambda expression type not recognized." );
+			
+		nativeLambdaExpr = ( NativeLambdaExpr )lambdaExpr;
+		
+		originalBodyBlock = nativeLambdaExpr.getBodyBlock();
+					
+		// the body block of the curried lambda expression is derived from the
+		// body block of the original lambda expression
+		curriedBodyBlock = new Block();
+		for( NameExpr ne : originalBodyBlock.getFullNameSet() )
+			curriedBodyBlock.putAssign( ne, new CompoundExpr( originalBodyBlock.getExpr( ne ) ) );
+
+		// with the curried expression's binding block merged in
+		try {
+			for( NameExpr nameExpr : curryExpr.getNameSet() )
+				curriedBodyBlock.putAssign(
+					nameExpr, curryExpr.getExpr( nameExpr ) );
+		}
+		catch( NotBoundException e ) {
+			throw new RuntimeException( e.getMessage() );
+		}			
+		
+		// from the curried prototype and body expression we form the
+		// resulting curried lambda expression
+		curriedLambdaExpr = new NativeLambdaExpr( curriedPrototype, curriedBodyBlock );
+
+		return new CompoundExpr( curriedLambdaExpr );
+
+	
 		// reuse this commented block when in dynamic reducer
 		/* if( lambdaExpr instanceof ForeignLambdaExpr ) {
 			

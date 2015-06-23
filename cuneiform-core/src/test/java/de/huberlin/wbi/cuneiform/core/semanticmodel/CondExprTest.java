@@ -62,39 +62,5 @@ public class CondExprTest {
 		
 		condExpr = new CondExpr( ifExpr, thenExpr, null );
 	}
-	
-	@SuppressWarnings("static-method")
-	@Test
-	public void setIfExprInjectsValue() {
-		
-		CondExpr condExpr;
-		CompoundExpr ifExpr1, ifExpr2, thenExpr, elseExpr;
-		
-		ifExpr1 = mock( CompoundExpr.class );
-		ifExpr2 = mock( CompoundExpr.class );		
-		thenExpr = mock( CompoundExpr.class );
-		elseExpr = mock( CompoundExpr.class );
-		
-		condExpr = new CondExpr( ifExpr1, thenExpr, elseExpr );
-		assertEquals( ifExpr1, condExpr.getIfExpr() );
-		
-		condExpr.setIfExpr( ifExpr2 );
-		assertEquals( ifExpr2, condExpr.getIfExpr() );
-	}
-	
-	@SuppressWarnings("static-method")
-	@Test( expected=IllegalArgumentException.class )
-	public void setIfExprThrowsIaeOnNull() {
-		
-		CondExpr condExpr;
-		CompoundExpr ifExpr, thenExpr, elseExpr;
-		
-		ifExpr = mock( CompoundExpr.class );
-		thenExpr = mock( CompoundExpr.class );
-		elseExpr = mock( CompoundExpr.class );
-		
-		condExpr = new CondExpr( ifExpr, thenExpr, elseExpr );
-		condExpr.setIfExpr( null );		
-	}
 
 }

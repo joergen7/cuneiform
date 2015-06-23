@@ -34,6 +34,7 @@ package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -55,27 +56,6 @@ public abstract class BaseBlock implements CfNode, Cloneable {
 	
 	public void clear() {
 		assignMap.clear();
-	}
-	
-	@Override
-	public BaseBlock clone() throws CloneNotSupportedException {
-		
-		BaseBlock block1;
-		
-		block1 = ( BaseBlock )super.clone();
-		block1.setParent( parent );
-
-		try {
-			
-			for( NameExpr key : getNameSet() )
-				block1.putAssign( key, getExpr( key ) );
-		}
-		catch( NotBoundException e ) {
-			throw new RuntimeException( e );
-		}
-		
-		return block1;
-		
 	}
 	
 	public boolean containsName( NameExpr nameExpr ) {
@@ -103,6 +83,19 @@ public abstract class BaseBlock implements CfNode, Cloneable {
 	
 	public Set<NameExpr> getNameSet() {
 		return assignMap.keySet();
+	}
+	
+	public Set<NameExpr> getFullNameSet() {
+		
+		Set<NameExpr> set;
+		
+		set = new HashSet<>();
+		set.addAll( assignMap.keySet() );
+		
+		if( parent != null )
+			set.addAll( parent.getFullNameSet() );
+		
+		return set;
 	}
 	
 	public Map<NameExpr,CompoundExpr> getParamBindMap() {
