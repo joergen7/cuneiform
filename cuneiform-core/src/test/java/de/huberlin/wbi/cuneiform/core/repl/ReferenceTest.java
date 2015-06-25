@@ -275,6 +275,7 @@ public class ReferenceTest {
 		dnv.accept( new CompoundExpr( ae ) );
 	}
 	
+	@Ignore
 	@Test
 	public void crossProductShouldBeDerivableFromSignature() throws HasFailedException, NotBoundException {
 		
