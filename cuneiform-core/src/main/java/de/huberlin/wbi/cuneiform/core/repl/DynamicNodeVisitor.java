@@ -415,15 +415,8 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		long tic, toc;
 		StringBuffer buf;
 		
-		if( log.isDebugEnabled() )
-			log.debug( "STILL THERE" );
-		
 		try {
 			tic = System.currentTimeMillis();
-			
-			if( log.isDebugEnabled() )
-				log.debug( ">>> Stepping expression >>>\n"+currentBlock );
-			
 			
 			ce = currentBlock.visit( this );
 			toc = System.currentTimeMillis();
@@ -775,16 +768,6 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 		} catch (NotBoundException e) {
 			throw new RuntimeException( e );
 		}
-		
-		if( log.isDebugEnabled() )
-			log.debug( "I DO LOG SOMETHING" );
-		
-		if( log.isDebugEnabled() ){
-			log.debug( "Replacing "+targetNameExpr );
-			log.debug( "With "+targetCompoundExpr );
-		}
-		
-		
 		
 		body.putAssign( targetNameExpr, targetCompoundExpr );
 					
