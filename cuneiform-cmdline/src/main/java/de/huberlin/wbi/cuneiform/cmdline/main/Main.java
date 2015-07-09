@@ -135,7 +135,7 @@ public class Main {
 			if( cmd.hasOption( 'w' ) )
 				workDir = Paths.get( cmd.getOptionValue( 'w' ) );
 			else
-				workDir = Paths.get( System.getProperty( "user.home" ) );
+				workDir = Paths.get( System.getProperty( "user.dir" ) );
 			
 			workDir = workDir.toAbsolutePath();
 			
