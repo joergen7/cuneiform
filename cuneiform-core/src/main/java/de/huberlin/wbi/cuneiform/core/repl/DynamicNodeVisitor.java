@@ -736,9 +736,6 @@ public class DynamicNodeVisitor extends BaseNodeVisitor {
 			if( log.isDebugEnabled() )
 				log.debug( "Visiting "+currentBlock.getExpr( targetNameExpr ) );
 			
-			System.out.println( currentBlock );
-			
-			
 			targetCompoundExpr = currentBlock.getExpr( targetNameExpr ).visit( this );
 			if( targetCompoundExpr == null )
 				throw new NullPointerException( "Evaluation of target expression must not result in null." );
