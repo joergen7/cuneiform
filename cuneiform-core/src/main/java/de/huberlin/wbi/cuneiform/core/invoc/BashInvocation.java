@@ -119,7 +119,7 @@ public class BashInvocation extends Invocation {
 		return ret;
 	}
 	
-	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\nset -euf -o pipefail\n";
+	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\nset -eu -o pipefail\n";
 	
 
 	public BashInvocation( Ticket ticket, String libPath ) {
