@@ -254,6 +254,9 @@ public class Prototype extends LambdaType {
 		if( template instanceof NameExpr )
 			return template;
 		
+		if( template instanceof CorrelParam )
+			return new CorrelParam( ( CorrelParam )template );
+		
 		throw new UnsupportedOperationException( "Copy operation not supported for parameter of type "+template.getClass() );
 	}
 }
