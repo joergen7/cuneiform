@@ -49,11 +49,20 @@ public class NativeLambdaExpr extends LambdaExpr {
 	public NativeLambdaExpr( NativeLambdaExpr template ) {
 		
 		super( template );
-		bodyBlock = new Block();
+		
+		CompoundExpr value, copiedValue;
+		
+		bodyBlock = new Block( template.bodyBlock.getParent() );
 		
 		try {
-			for( NameExpr ne : template.bodyBlock.getFullNameSet() )
-				bodyBlock.putAssign( ne, new CompoundExpr( template.getBodyBlock().getExpr( ne ) ) );
+			for( NameExpr ne : template.bodyBlock.getNameSet() ) {
+								
+				value = template.getBodyBlock().getExpr( ne );
+				copiedValue = new CompoundExpr( value );		
+				
+				bodyBlock.putAssign( ne, copiedValue );
+			}
+			
 		} catch (NotBoundException e) {
 			throw new RuntimeException( e );
 		} 
