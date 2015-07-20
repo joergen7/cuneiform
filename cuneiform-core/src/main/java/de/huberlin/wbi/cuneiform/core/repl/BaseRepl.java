@@ -377,7 +377,7 @@ public abstract class BaseRepl {
 			+"        \"MM##MP\"\"   q@BB@L\n"
 			+"                     \"\"\"`\n"
 			+"\nCUNEIFORM - A Functional Workflow Language\nVersion "
-			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJörgen Brandt    Marc Bux    Ulf Leser\n";
+			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJorgen Brandt    Marc Bux    Ulf Leser\n";
 	}
 
 	public static int fetchCtl( TopLevelContext tlc ) {
