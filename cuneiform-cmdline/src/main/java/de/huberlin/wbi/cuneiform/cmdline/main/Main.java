@@ -170,8 +170,6 @@ public class Main {
 			executor.submit( ticketSrc );
 			executor.shutdown();
 			
-			Thread.sleep( 10000 );
-			
 			switch( format ) {
 			
 				case FORMAT_CF :
