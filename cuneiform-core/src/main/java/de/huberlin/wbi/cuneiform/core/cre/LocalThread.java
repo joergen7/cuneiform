@@ -264,6 +264,9 @@ public class LocalThread implements Runnable {
 				
 				if( process == null ) {
 					
+					if( log.isInfoEnabled() )
+						log.info( "Sending ticket failed message because the received process object was null." );
+					
 					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, null, null ) );
 					// Files.delete( lockMarker );
 					return;
@@ -318,6 +321,9 @@ public class LocalThread implements Runnable {
 						Files.createFile( successMarker );
 					
 					else {
+						
+						if( log.isInfoEnabled() )
+							log.info( "Sending ticket failed message because exit value was non-zero." );
 						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
 						// Files.delete( lockMarker );
@@ -395,6 +401,9 @@ public class LocalThread implements Runnable {
 				catch( IOException e1 ) {
 					e1.printStackTrace();
 				}
+			
+			if( log.isInfoEnabled() )
+				log.info( "Sending ticket failed message because an exception was caught: "+e.getMessage() );
 			
 			msg = new TicketFailedMsg( cre, ticket, e, script, stdOut, stdErr );
 			
