@@ -269,11 +269,13 @@ public abstract class Invocation {
 		
 		// bind single output variables to default values
 		buf.append( comment( "bind single output variables to default values" ) );
-		for( String outputName : getSingleOutputNameSet() )
+		for( String outputName : getSingleOutputNameSet() ) {
+			buf.append( declareString( outputName ) );
 			buf.append(
 				varDef(
 					outputName,	
 					quote( outputName ) ) );
+		}
 		buf.append( '\n' );
 		
 		// bind input parameters
@@ -283,10 +285,14 @@ public abstract class Invocation {
 			if( paramName.equals( CfSemanticModelVisitor.LABEL_TASK ) )
 				continue;
 			
+			buf.append( declareString( paramName ) );
 			buf.append( varDef( paramName, quote( getResolveableBoundToSingleParam( paramName ) ) ) );
 		}
-		for( String paramName : getReduceParamNameSet() )
-			buf.append( varDef( paramName, getReduceParam( paramName ) ) );		
+		for( String paramName : getReduceParamNameSet() ) {
+			
+			buf.append( declareList( paramName ) );
+			buf.append( varDef( paramName, getReduceParam( paramName ) ) );
+		}
 		buf.append( '\n' );
 		
 		// report stage in file sizes and report error when something is missing
@@ -312,6 +318,16 @@ public abstract class Invocation {
 		return buf.toString();
 	}
 	
+	@SuppressWarnings({ "static-method", "unused" })
+	protected String declareList( String paramName ) {
+		return "";
+	}
+
+	@SuppressWarnings({ "static-method", "unused" })
+	protected String declareString( String outputName ) {
+		return "";
+	}
+
 	@SuppressWarnings( "static-method" )
 	protected String getImport() {
 		return "";
@@ -431,6 +447,8 @@ public abstract class Invocation {
 		
 		buf = new StringBuffer();
 		
+		buf.append( declareString( "CFSTR" ) );
+		
 		buf.append( varDef( "CFSTR", quote( "" ) ) );
 		for( String outputName : getSingleOutputNameSet() )
 			
@@ -445,7 +463,8 @@ public abstract class Invocation {
 						quote( "\"]" ) ) ) );
 			
 		
-		
+		buf.append( declareString( "CFSTR1" ) );
+		buf.append( declareString( "CFI" ) );
 		for( String outputName : getReduceOutputNameSet() ) {
 			
 			buf
@@ -753,6 +772,8 @@ public abstract class Invocation {
 			case ForeignLambdaExpr.LANGID_PYTHON : return new PythonInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_PEGASUS : return new PegasusInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_JAVA :
+			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket, libPath );
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
 	}

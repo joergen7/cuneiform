@@ -167,7 +167,7 @@ FROMSTACK        : '<' '-'+ '+' ;
 IF               : 'if' ;
 INLANG           : 'in' WSSYMB+ LANGSYMB ;
 fragment LANGSYMB: 'bash' | 'r' | 'R' | 'lisp' | 'octave' | 'matlab' | 'perl'
-                 | 'pegasus' | 'python' ;
+                 | 'pegasus' | 'python' | 'java' | 'scala' ;
 IMPORT           : 'import' ;
 INCLUDE          : 'include' ;
 LAMBDA           : '\\' ;
