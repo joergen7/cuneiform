@@ -519,6 +519,8 @@ public abstract class Invocation {
 		StringBuffer buf;
 		
 		buf = new StringBuffer();
+		
+		buf.append( declareString( "CFFILENAME" ) );
 
 		for( String outputName : getSingleOutputNameSet() )
 			
@@ -657,6 +659,8 @@ public abstract class Invocation {
 		
 		buf = new StringBuffer();
 		
+		buf.append( declareString( "SIZE" ) );
+		
 		
 		for( String inputName : getSingleParamNameSet() )
 			if( isParamStage( inputName ) )
@@ -773,6 +777,7 @@ public abstract class Invocation {
 			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_PEGASUS : return new PegasusInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_JAVA :
+			case ForeignLambdaExpr.LANGID_BEANSHELL : return new BeanshellInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket, libPath );
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}

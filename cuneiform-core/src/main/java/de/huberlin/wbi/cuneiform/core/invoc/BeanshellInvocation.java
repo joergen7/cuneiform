@@ -5,9 +5,9 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.JsonReportEntry;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 
-public class ScalaInvocation extends Invocation {
+public class BeanshellInvocation extends Invocation {
 
-	public ScalaInvocation( Ticket ticket, String libPath ) {
+	public BeanshellInvocation( Ticket ticket, String libPath ) {
 		super( ticket, libPath );
 	}
 
@@ -38,12 +38,12 @@ public class ScalaInvocation extends Invocation {
 
 	@Override
 	protected String callProcedure( String name, String... argValue ) {
-		return callFunction( name, argValue )+"\n";
+		return callFunction( name, argValue )+";\n";
 	}
 
 	@Override
 	protected String clip( String varName ) {
-		return varName+"="+varName+" substring(1)\n";
+		return varName+"="+varName+".substring(1);\n";
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class ScalaInvocation extends Invocation {
 
 	@Override
 	protected String copyArray( String from, String to ) {
-		return "val "+to+"="+from+"\n";
+		return to+"=new ArrayList();\nto.addAll("+from+");\n";
 	}
 
 	@Override
@@ -63,10 +63,10 @@ public class ScalaInvocation extends Invocation {
 		
 		buf = new StringBuffer();
 		
-		buf.append( "def "+FUN_LOG+"( key:String, value:String ) : Unit = {\n" );
+		buf.append( "void "+FUN_LOG+"( String key, String value ) {\n" );
 		
-		buf.append( "  val writer = new FileWriter(\""+REPORT_FILENAME+"\",true);\n" );
-		buf.append( "  writer write(\"{" );
+		buf.append( "  FileWriter writer = new FileWriter(\""+REPORT_FILENAME+"\",true);\n" );
+		buf.append( "  writer.write(\"{" );
 		
 		buf.append( JsonReportEntry.ATT_TIMESTAMP )
 		.append( ':' ).append( System.currentTimeMillis() ).append( ',' )
@@ -86,7 +86,7 @@ public class ScalaInvocation extends Invocation {
 		.append( JsonReportEntry.ATT_KEY ).append( ":\\\"\"+key+\"\\\"," )
 		.append( JsonReportEntry.ATT_VALUE ).append( ":\"+value+\"}\\n\"" );
 		
-		buf.append( ")\n  writer close\n" );
+		buf.append( ");\n  writer.close();\n" );
 		
 		buf.append( "}\n" );
 		
@@ -100,10 +100,10 @@ public class ScalaInvocation extends Invocation {
 		
 		buf = new StringBuffer();
 		
-		buf.append( "def "+FUN_LOGFILE+"( file:String, key:String, value:String ) : Unit = {\n" );
+		buf.append( "void "+FUN_LOGFILE+"( String file, String key, String value ) {\n" );
 		
-		buf.append( "  val writer = new FileWriter(\""+REPORT_FILENAME+"\",true);\n" );
-		buf.append( "  writer write(\"{" );
+		buf.append( "  FileWriter writer = new FileWriter(\""+REPORT_FILENAME+"\",true);\n" );
+		buf.append( "  writer.write(\"{" );
 		
 		buf.append( JsonReportEntry.ATT_TIMESTAMP )
 		.append( ':' ).append( System.currentTimeMillis() ).append( ',' )
@@ -124,7 +124,7 @@ public class ScalaInvocation extends Invocation {
 		.append( JsonReportEntry.ATT_KEY ).append( ":\\\"\"+key+\"\\\"," )
 		.append( JsonReportEntry.ATT_VALUE ).append( ":\"+value+\"}\\n\"" );
 		
-		buf.append( ")\n  writer close\n" );
+		buf.append( ");\n  writer.close();\n" );
 		
 		buf.append( "}\n" );
 		
@@ -138,9 +138,9 @@ public class ScalaInvocation extends Invocation {
 		
 		buf = new StringBuffer();
 		
-		buf.append( "def "+FUN_NORMALIZE+"(channel:Int,filename:String) : String = {" );
-		buf.append( "val p = Paths.get(filename)\n");
-		buf.append( "return \""+getTicketId()+"_\"+channel+\"_\"+p.getName(p.getNameCount-1)\n" );
+		buf.append( "String "+FUN_NORMALIZE+"(int channel, String filename) {" );
+		buf.append( "  Path p = Paths.get(filename, new String[] {});\n");
+		buf.append( "  return \""+getTicketId()+"_\"+channel+\"_\"+p.getName(p.getNameCount()-1);\n" );
 		buf.append( "}\n" );
 		
 		return buf.toString();
@@ -153,7 +153,7 @@ public class ScalaInvocation extends Invocation {
 
 	@Override
 	protected String fileSize( String filename ) {
-		return "Files.size(Paths.get("+filename+")).toString";
+		return "Files.size(Paths.get("+filename+")).toString()";
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class ScalaInvocation extends Invocation {
 
 	@Override
 	protected String getShebang() {
-		return "#!/bin/sh\nexec scala \"$0\" \"$@\"\n!#";
+		return "#!/usr/bin/env bsh";
 	}
 
 	@Override
@@ -173,12 +173,13 @@ public class ScalaInvocation extends Invocation {
 	
 	@Override
 	protected String getImport() {
-		return "import java.nio.file.Paths\nimport java.io.FileWriter\nimport java.nio.file.Files";
+		return "import java.nio.file.Paths;\nimport java.io.FileWriter;\n"
+			+"import java.nio.file.Files;\nimport java.nio.file.Path;\nimport java.nio.file.attribute.FileAttribute;\n";
 	}
 
 	@Override
 	protected String ifListIsNotEmpty(String listName, String body) {
-		return( "if(!"+listName+".isEmpty) {\n"+body+"\n}\n" );
+		return( "if(!"+listName+".isEmpty()) {\n"+body+"\n}\n" );
 	}
 
 	@Override
@@ -188,12 +189,12 @@ public class ScalaInvocation extends Invocation {
 		
 	@Override
 	protected String declareString( String outputName ) {
-		return "var "+outputName+"=\"\"\n";
+		return "String "+outputName+";\n";
 	}
 	
 	@Override
 	protected String declareList( String paramName ) {
-		return "var "+paramName+"=List()\n";
+		return "List "+paramName+";\n";
 	}
 
 	@Override
@@ -244,36 +245,27 @@ public class ScalaInvocation extends Invocation {
 
 	@Override
 	protected String symlink( String src, String dest ) {
-		return "Files.createSymbolicLink(Paths.get("+dest+"),Paths.get("+src+"))\n";
+		return "Files.createSymbolicLink(Paths.get("+dest+", new String[] {}),Paths.get("+src+", new String[] {}), new FileAttribute[] {});\n";
 	}
 
 	@Override
 	protected String varDef( String varname, String value ) {
-		return varname+"="+value+"\n";
+		return varname+"="+value+";\n";
 	}
 
 	@Override
 	protected String varDef( String varname, CompoundExpr ce ) throws NotDerivableException {
 		
 		StringBuffer buf;
-		boolean comma;
 		int i, n;
 		
 		buf = new StringBuffer();
 		
-		buf.append( "val "+varname+"=List(" );
+		buf.append( varname+"=new ArrayList();\n" );
 		
-		comma = false;
 		n = ce.getNumAtom();
-		for( i = 0; i < n; i++ ) {
-			
-			if( comma )
-				buf.append( ',' );
-			comma = true;
-			
-			buf.append( ce.getStringExprValue( i ) );
-		}
-		buf.append( ")\n" );
+		for( i = 0; i < n; i++ )			
+			buf.append( varname+".add(\""+ce.getStringExprValue( i )+"\");\n" );
 		
 		return buf.toString();
 	}
