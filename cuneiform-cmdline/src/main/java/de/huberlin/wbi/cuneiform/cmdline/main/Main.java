@@ -114,8 +114,11 @@ public class Main {
 				return;
 			}
 			
-			if( cmd.hasOption( "r" ) )
-				Invocation.putLibPath( ForeignLambdaExpr.LANGID_R, cmd.getOptionValue( "r" ) );
+			if( cmd.hasOption( 'r' ) )
+				Invocation.putLibPath( ForeignLambdaExpr.LANGID_R, cmd.getOptionValue( 'r' ) );
+			
+			if( cmd.hasOption( 'y' ) )
+				Invocation.putLibPath(  ForeignLambdaExpr.LANGID_PYTHON, cmd.getOptionValue( 'y' ) );
 			
 			if( cmd.hasOption( 'l' ) )
 				sandbox = Paths.get( cmd.getOptionValue( "l" ) );
@@ -277,28 +280,30 @@ public class Main {
 		
 		opt = new Options();
 		
+		opt.addOption( "c", "clean", false, "Clear local cache before start." );
+		
 		opt.addOption( "f", "format", true,
-			"The format of the input file. Must be either '"+FORMAT_CF+"' for Cuneiform or '"+FORMAT_DAX+"' for Pegasus DAX. Default is '"+FORMAT_CF+"'." );
-		
-		opt.addOption( "p", "platform", true,
-			"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
-		
+				"The format of the input file. Must be either '"+FORMAT_CF+"' for Cuneiform or '"+FORMAT_DAX+"' for Pegasus DAX. Default is '"+FORMAT_CF+"'." );
+			
 		opt.addOption( "h", "help", false, "Output help." );
-		
-		opt.addOption( "s", "summary", true,
-			"The name of a JSON summary file. No file is created if this parameter is not specified." );
 		
 		opt.addOption( "i", "interactive", false, "Start an interactive REPL." );
 		
 		opt.addOption( "l", "localcache", true, "Path to the local cache. Defaults to '~/.cuneiform'." );
 		
-		opt.addOption( "c", "clean", false, "Clear local cache before start." );
-		
-		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
-		
+		opt.addOption( "p", "platform", true,
+				"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
+			
 		opt.addOption( "r", "rlib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
 		
+		opt.addOption( "s", "summary", true,
+				"The name of a JSON summary file. No file is created if this parameter is not specified." );
+			
+		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
+		
 		opt.addOption( "w", "workdir", true, "Optional. The working directory from which to look for local data. The default is the current working directory from which Cuneiform was called." );
+		
+		opt.addOption( "y", "pylib", true, "Optional. The directory in which custom Python libraries are installed. If set, the directory is added to Python's system path list." );
 		
 		
 		return opt;

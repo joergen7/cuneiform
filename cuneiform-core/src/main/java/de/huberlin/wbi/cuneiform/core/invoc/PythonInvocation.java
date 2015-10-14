@@ -118,7 +118,7 @@ public class PythonInvocation extends Invocation {
 		return defFunction(
 				FUN_NORMALIZE,
 				new String[] { "channel", "f" },
-				"return \""+getTicketId()+"_%d_%s\"%(channel,f)" );
+				"return \""+getTicketId()+"_%d_%s\"%(channel,os.path.basename(f))" );
 	}
 
 	@Override
@@ -140,7 +140,7 @@ public class PythonInvocation extends Invocation {
 
 	@Override
 	protected String getImport() {
-		return "import copy, os\n";
+		return "import copy, os, sys\n";
 	}
 
 	@Override
@@ -249,7 +249,7 @@ public class PythonInvocation extends Invocation {
 
 	@Override
 	protected String getLibPath() {
-		throw new UnsupportedOperationException( "NYI" );
+		return callProcedure( "sys.path.append", quote( libPath ) );
 	}
 
 }

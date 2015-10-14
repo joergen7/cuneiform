@@ -254,14 +254,14 @@ public abstract class Invocation {
 		// insert shebang
 		buf.append( getShebang() ).append( '\n' );
 		
+		// import libraries
+		buf.append( comment( "import libraries" ) );
+		buf.append( getImport() ).append( '\n' );
+		
 		// modify library path
 		buf.append( comment( "modify library path" ) );
 		if( hasLibPath() )
 			buf.append( getLibPath() );
-		
-		// import libraries
-		buf.append( comment( "import libraries" ) );
-		buf.append( getImport() ).append( '\n' );
 		
 		// define necessary functions
 		buf.append( comment( "define necessary functions" ) );

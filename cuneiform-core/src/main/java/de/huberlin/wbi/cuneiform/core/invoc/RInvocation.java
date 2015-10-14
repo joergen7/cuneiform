@@ -327,7 +327,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	protected String getLibPath() {
-		return callProcedure( ".libPaths", quote( libPath.toString() ) );
+		return callProcedure( ".libPaths", quote( libPath ) );
 	}
 
 }
