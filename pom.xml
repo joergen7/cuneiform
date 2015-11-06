@@ -1,5 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<!--
+	
+	     To deploy with signature execute:
+	     
+	     mvn clean deploy -DperformRelease=true
+	     
+	     For signing to be sucessful you need the following content in the ~/.m2/settings.xml
+	     
+	     <servers>
+           <server>
+             <id>ossrh</id>
+             <username>joergen7</username>
+             <password>deployment123</password>
+           </server>
+         </servers>
+	     
+	 -->
+
+
+
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 	<artifactId>cuneiform</artifactId>
@@ -84,11 +105,6 @@ Data paralelism is expressed by applying map, cross-product, dot-product, or com
 	</build>
 
 
-	<!--
-	     To deploy with signature execute:
-	     
-	     mvn clean deploy -DperformRelease=true
-	 -->
 	<profiles>
 		<profile>
 			<id>release-sign-artifacts</id>
