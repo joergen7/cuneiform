@@ -93,11 +93,10 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 	public void actionPerformed( ActionEvent arg0 ) {
 		
 		int returnVal;
-		EditPanel editPanel;
-		StringBuffer buf;
-		String line;
 		File f;
 		String ac;
+		EditPanel editPanel;
+
 		
 		ac = arg0.getActionCommand();
 		
@@ -132,6 +131,7 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 			editTabbedPane.add( editPanel.getTitle(), editPanel );
 			editTabbedPane.setSelectedComponent( editPanel );
 			updateMenu();
+
 			return;
 		}
 		
@@ -142,24 +142,7 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 			if( returnVal == JFileChooser.APPROVE_OPTION ) {
 				
 				f = fc.getSelectedFile();
-				try( BufferedReader reader = new BufferedReader( new FileReader( f ) ) ) {
-				
-					buf = new StringBuffer();
-					
-					while( ( line = reader.readLine() ) != null )
-						buf.append( line ).append( '\n' );
-					
-					editPanel = new EditPanel( this, f, buf.toString() );
-					editTabbedPane.add( f.getName(), editPanel );
-					editTabbedPane.setSelectedComponent( editPanel );
-					updateMenu();
-				}
-				catch( IOException e ) {
-					JOptionPane.showMessageDialog( parent,
-						    e.getMessage(),
-						    "IOException",
-						    JOptionPane.ERROR_MESSAGE );
-				}
+				open( f );
 			}
 			
 			return;
@@ -338,6 +321,34 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 		closeItem.setEnabled( enabled );
 		revertItem.setEnabled( enabled );
 		
+	}
+	
+	
+	public void open( File f ) {
+		
+		EditPanel editPanel;
+		StringBuffer buf;
+		String line;
+		
+		
+		try( BufferedReader reader = new BufferedReader( new FileReader( f ) ) ) {
+		
+			buf = new StringBuffer();
+			
+			while( ( line = reader.readLine() ) != null )
+				buf.append( line ).append( '\n' );
+			
+			editPanel = new EditPanel( this, f, buf.toString() );
+			editTabbedPane.add( f.getName(), editPanel );
+			editTabbedPane.setSelectedComponent( editPanel );
+			updateMenu();
+		}
+		catch( IOException e ) {
+			JOptionPane.showMessageDialog( parent,
+				    e.getMessage(),
+				    "IOException",
+				    JOptionPane.ERROR_MESSAGE );
+		}
 	}
 	
 	@Override
