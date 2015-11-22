@@ -10,4 +10,7 @@ Cuneiform comes in the form of a functional programming language with a Foreign 
 
 Data paralelism is expressed by applying map, cross-product, dot-product, or combinations of the aforementioned algorithmic skeletons to collections of black-box data.
 
+Tutorials, a publication list, and example workflows including [Variant calling](https://github.com/joergen7/variant-call) and [Methylation](https://github.com/joergen7/methylation) can be found under [saasfee.io](http://www.saasfee.io).
+
+For a detailed description of the Cuneiform workflow language please refer to our publication [Cuneiform: A Functional Language for Large Scale Scientific Data Analysis](http://ceur-ws.org/Vol-1330/paper-03.pdf).
 
