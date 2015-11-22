@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
-
-# Cuneiform
+# Cuneiform [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
 A Functional Workflow Language
 
