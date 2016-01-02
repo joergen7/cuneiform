@@ -137,6 +137,11 @@ public class PythonInvocation extends Invocation {
 			"for "+elementName+" in "+listName+":\n    "
 			+body.replace( "\n", "\n    " )+"\n";
 	}
+	
+	@Override
+	protected String getBodyPrefix() {
+		return "if True:\n";
+	}
 
 	@Override
 	protected String getImport() {

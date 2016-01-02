@@ -298,7 +298,12 @@ public abstract class Invocation {
 		// report stage in file sizes and report error when something is missing
 		buf.append( comment( "report stage in file sizes and report error when something is missing" ) );
 		buf.append( getStageInCollect() ).append( '\n' );
-				
+		
+		// insert body prefix
+		buf.append( comment( "insert body prefix" ) );
+		buf.append( getBodyPrefix() ).append( '\n' );
+		
+		
 		// insert function body
 		buf.append( comment( "insert function body" ) );
 		buf.append( ticket.getBody() ).append( '\n' );
@@ -330,6 +335,11 @@ public abstract class Invocation {
 
 	@SuppressWarnings( "static-method" )
 	protected String getImport() {
+		return "";
+	}
+	
+	@SuppressWarnings("static-method")
+	protected String getBodyPrefix() {
 		return "";
 	}
 
