@@ -53,6 +53,9 @@ public class CompoundExpr implements CfNode {
 		
 		this();
 		
+		if( template == null )
+			throw new NullPointerException( "Template compound expression must not be null." );
+		
 		for( SingleExpr se : template.singleExprList )
 			singleExprList.add( copySingleExpr( se ) );
 	}
@@ -315,6 +318,9 @@ public class CompoundExpr implements CfNode {
 		
 		if( se instanceof QualifiedTicket )
 			return se;
+		
+		if( se instanceof CurryExpr )
+			return new CurryExpr( ( CurryExpr )se );
 		
 		throw new UnsupportedOperationException( "Copy operation unsupported for expression of type "+se.getClass() );
 	}

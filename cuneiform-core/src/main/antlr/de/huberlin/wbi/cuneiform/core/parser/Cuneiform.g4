@@ -122,16 +122,16 @@ singleExpr       : ID                                                     # IdEx
                  | STRING                                                 # StringExpr
                  | FROMSTACK                                              # FromStackExpr
                  | IF expr THEN expr ELSE expr END                        # CondExpr
-                 | channel? APPLY LPAREN paramBind+ TILDE? RPAREN         # ApplyExpr
-                 | channel? ID LPAREN paramBind* TILDE? RPAREN            # CallExpr
-                 | CURRY LPAREN paramBind+ RPAREN                         # CurryExpr
+                 | channel? APPLY LPAREN paramBind( COMMA paramBind )* TILDE? RPAREN         # ApplyExpr
+                 | channel? ID LPAREN( paramBind( COMMA paramBind )* )? TILDE? RPAREN            # CallExpr
+                 | CURRY LPAREN paramBind( COMMA paramBind )* RPAREN                         # CurryExpr
                  | LAMBDA prototype block                                 # NativeLambdaExpr
                  | LAMBDA prototype foreignBody                           # ForeignLambdaExpr
                  | APPLY
                    { notifyErrorListeners( "Incomplete task application. Missing '('." ); } # SingleExprErr1
                  | APPLY LPAREN
                    { notifyErrorListeners( "Incomplete task application. Missing Parameter bindings, e.g. 'param: value'." ); } # SingleExprErr2
-                 | APPLY LPAREN paramBind+
+                 | APPLY LPAREN paramBind( COMMA paramBind )*
                    { notifyErrorListeners( "Incomplete task application. Missing ')'." ); } # SingleExprErr3
                  | APPLY LPAREN ID COLON
                    { notifyErrorListeners( "Incomplete Parameter binding. Missing value." ); } # ParamBindErr1
@@ -156,6 +156,7 @@ foreignBody      : INLANG BODY ;
 
 APPLY            : 'apply' ;
 COLON            : ':' ;
+COMMA            : ',' ;
 COMB             : 'comb' ;
 COMBR            : 'combr' ;
 CURRY            : 'curry' ;
@@ -204,4 +205,4 @@ COMMENT          : ( ( '#' | '//' | '%' ) ~'\n'*
                  ;
 ID               : [a-zA-Z0-9\.\-_\+\*/]+ ;
 WS               : WSSYMB -> channel( HIDDEN ) ;
-fragment WSSYMB  : [ \n\r\t,] ;
+fragment WSSYMB  : [ \n\r\t] ;

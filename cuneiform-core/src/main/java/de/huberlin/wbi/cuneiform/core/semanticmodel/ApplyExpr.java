@@ -248,6 +248,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	public String toString() {
 		
 		StringBuffer buf;
+		boolean comma;
 		
 		try {
 		
@@ -258,8 +259,15 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 			if( hasTaskExpr() )
 				buf.append( " task: " ).append( taskExpr );
 			
-			for( NameExpr name : getNameSet() )
+			comma = false;
+			for( NameExpr name : getNameSet() ) {
+				
+				if( comma )
+					buf.append( ',' );
+				comma = true;
+				
 				buf.append( ' ' ).append( name.getId() ).append( ": " ).append( getExpr( name ) );
+			}
 			
 			if( rest )
 				buf.append( " ~" );

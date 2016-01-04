@@ -37,6 +37,18 @@ public class CurryExpr extends BaseBlock implements SingleExpr {
 
 	private CompoundExpr taskExpr;
 	
+	public CurryExpr() {
+		// do nothing
+	}
+	
+	public CurryExpr( CurryExpr se ) {
+		
+		if( se == null )
+			throw new NullPointerException( "Task expression must not be null." );
+		
+		taskExpr = new CompoundExpr( se.getTaskExpr() );
+	}
+
 	@Override
 	public int getNumAtom() throws NotDerivableException {
 		return 1;
@@ -67,15 +79,23 @@ public class CurryExpr extends BaseBlock implements SingleExpr {
 	public String toString() {
 		
 		StringBuffer buf;
+		boolean comma;
 		
 		buf = new StringBuffer();
 		
-		buf.append( "curry( task: " ).append( taskExpr );
+		buf.append( "curry( task: " ).append( taskExpr ).append( ',' );
 		
 		try {
 			
-			for( NameExpr nameExpr : getNameSet() )
+			comma = false;
+			for( NameExpr nameExpr : getNameSet() ) {
+
+				if( comma )
+					buf.append( ',' );
+				comma = true;
+				
 				buf.append( ' ' ).append( nameExpr.getId() ).append( ": " ).append( getExpr( nameExpr ) );
+			}
 		}
 		catch( NotBoundException e ) {
 			throw new RuntimeException( e.getMessage() );
