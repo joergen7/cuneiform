@@ -256,5 +256,10 @@ public class PythonInvocation extends Invocation {
 	protected String getLibPath() {
 		return callProcedure( "sys.path.append", quote( libPath ) );
 	}
+	
+	@Override
+	protected String postProcess( String body ) {
+		return body.replace( "\n", "\n " );
+	}
 
 }

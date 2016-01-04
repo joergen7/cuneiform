@@ -306,7 +306,7 @@ public abstract class Invocation {
 		
 		// insert function body
 		buf.append( comment( "insert function body" ) );
-		buf.append( ticket.getBody() ).append( '\n' );
+		buf.append( postProcess( ticket.getBody() ) ).append( '\n' );
 				
 		// rename output files
 		buf.append( comment( "rename output files" ) );
@@ -768,6 +768,9 @@ public abstract class Invocation {
 		
 		return buf.toString();
 	}
+	
+	@SuppressWarnings("static-method")
+	protected String postProcess( String body ) { return body; }
 	
 	public static Invocation createInvocation( Ticket ticket ) {
 		
