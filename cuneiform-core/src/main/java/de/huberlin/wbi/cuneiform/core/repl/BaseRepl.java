@@ -71,8 +71,8 @@ public abstract class BaseRepl {
 	public static final int CTL_QUERYSET = 4;
 	public static final int CTL_TICKETSET = 8;
 
-	public static final String LABEL_VERSION = "2.0.2-SNAPSHOT";
-	public static final String LABEL_BUILD = "2015-12-27";
+	public static final String LABEL_VERSION = "2.0.2-RELEASE";
+	public static final String LABEL_BUILD = "2016-01-05";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
