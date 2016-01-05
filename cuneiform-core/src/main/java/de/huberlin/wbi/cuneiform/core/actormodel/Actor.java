@@ -94,26 +94,37 @@ public abstract class Actor implements Runnable {
 			
 			while( true ) {
 				
-				try {
-					Thread.sleep( DELAY );
-				}
-				catch( InterruptedException e ) {
 					
-					if( log.isDebugEnabled() )
-						log.debug( this.getClass()+" caught InterruptedException. Shutting down." );
-					
-					break;
-				}
+				Thread.sleep( DELAY );
 				
+				if( log.isDebugEnabled() )
+					log.debug( getClass()+" is alive." );
+
 				preRec();
 				processQueue();
 				postRec();
-			}
+				
+			}			
+		}
+		catch( InterruptedException e ) {
+			
+			if( log.isDebugEnabled() )
+				log.debug( getClass()+" caught InterruptedException. Shutting down." );
+			
+		}
+		catch( Throwable e ) {
+			
+			if( log.isDebugEnabled() )
+				log.debug(  getClass()+" caught unexpected throwable: "+e.getMessage() );
+			
+			e.printStackTrace();
+		}
+		finally {
+			
+			if( log.isDebugEnabled() )
+				log.debug( "Downing "+getClass()+"." );
 			
 			shutdown();
-		}
-		catch( RuntimeException e ) {
-			e.printStackTrace();
 		}
 	}
 	

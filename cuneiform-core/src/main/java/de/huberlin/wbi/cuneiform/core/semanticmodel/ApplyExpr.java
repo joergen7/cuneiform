@@ -33,6 +33,7 @@
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
 
+
 public class ApplyExpr extends BaseBlock implements SingleExpr {
 
 	private int channel;
@@ -51,18 +52,22 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 		setRest( inheritsExtra );
 	}
 	
-	@Override
-	public ApplyExpr clone() throws CloneNotSupportedException {
+	public ApplyExpr( ApplyExpr template ) {
 		
-		ApplyExpr ae;
+		if( template.taskExpr == null )
+			throw new IllegalArgumentException( "Template apply expression has no task expression: "+template+"." );
 		
-		ae = ( ApplyExpr )super.clone();
+		channel = template.channel;
+		rest = template.rest;		
+		taskExpr = new CompoundExpr( template.taskExpr );
 		
-		ae.setChannel( channel );
-		ae.setRest( rest );
-		ae.setTaskExpr( taskExpr );
-				
-		return ae;
+		try {
+			for( NameExpr ne : template.getFullNameSet() )
+				putAssign( ne, new CompoundExpr( template.getExpr( ne ) ) );				
+		}
+		catch( NotBoundException e ) {
+			throw new RuntimeException( e );
+		}
 	}
 	
 	public String getBlockString() {
@@ -243,6 +248,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	public String toString() {
 		
 		StringBuffer buf;
+		boolean comma;
 		
 		try {
 		
@@ -253,8 +259,15 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 			if( hasTaskExpr() )
 				buf.append( " task: " ).append( taskExpr );
 			
-			for( NameExpr name : getNameSet() )
+			comma = false;
+			for( NameExpr name : getNameSet() ) {
+				
+				if( comma )
+					buf.append( ',' );
+				comma = true;
+				
 				buf.append( ' ' ).append( name.getId() ).append( ": " ).append( getExpr( name ) );
+			}
 			
 			if( rest )
 				buf.append( " ~" );
@@ -304,7 +317,7 @@ public class ApplyExpr extends BaseBlock implements SingleExpr {
 	}
 
 	@Override
-	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException {
+	public <T> T visit( NodeVisitor<? extends T> visitor ) throws HasFailedException, NotBoundException {
 		return visitor.accept( this );
 	}
 

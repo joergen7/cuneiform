@@ -180,7 +180,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 
 
 	@Override
-	public String accept(CondExpr condExpr) throws HasFailedException {
+	public String accept(CondExpr condExpr) throws HasFailedException, NotBoundException {
 		
 		String nodeId;
 		String parentId;
@@ -216,7 +216,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 
 
 	@Override
-	public String accept(ApplyExpr applyExpr) throws HasFailedException {
+	public String accept(ApplyExpr applyExpr) throws HasFailedException, NotBoundException {
 		
 		String taskNodeId, refNodeId;
 		SingleExpr se;
@@ -275,7 +275,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 
 
 	@Override
-	public String accept( CompoundExpr compoundExpr ) throws HasFailedException {
+	public String accept( CompoundExpr compoundExpr ) throws HasFailedException, NotBoundException {
 		
 		String nodeId;
 		int n;
@@ -344,7 +344,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 
 
 	@Override
-	public String accept(CurryExpr curryExpr) throws HasFailedException {
+	public String accept(CurryExpr curryExpr) throws HasFailedException, NotBoundException {
 		
 		String curryNodeId, refNodeId;
 		
@@ -395,7 +395,7 @@ public class DotNodeVisitor implements NodeVisitor<String> {
 	}
 
 	@Override
-	public String accept( TopLevelContext tlc ) throws HasFailedException {
+	public String accept( TopLevelContext tlc ) throws HasFailedException, NotBoundException {
 		
 		for( CompoundExpr ce : tlc.getTargetList() )
 			ce.visit( this );

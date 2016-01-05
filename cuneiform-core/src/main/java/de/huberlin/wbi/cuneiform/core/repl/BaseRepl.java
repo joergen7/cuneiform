@@ -32,6 +32,10 @@
 
 package de.huberlin.wbi.cuneiform.core.repl;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,8 +71,8 @@ public abstract class BaseRepl {
 	public static final int CTL_QUERYSET = 4;
 	public static final int CTL_TICKETSET = 8;
 
-	public static final String LABEL_VERSION = "2.0.1-SNAPSHOT";
-	public static final String LABEL_BUILD = "2015-03-09";
+	public static final String LABEL_VERSION = "2.0.2-SNAPSHOT";
+	public static final String LABEL_BUILD = "2015-12-27";
 
 	private final CfSemanticModelVisitor state;
 	private final Map<UUID,DynamicNodeVisitor> runningMap;
@@ -214,14 +218,17 @@ public abstract class BaseRepl {
 				s += ": \""+e.getMessage()+"\"";
 		}
 		
-		if( stdOut != null )
+		/* if( stdOut != null )
 			s += " Output channel: \""+stdOut.replace( '\n', ' ' )+"\"";
 
 		if( stdErr != null )
-			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\"";
+			s += " Error channel: \""+stdErr.replace( '\n', ' ' )+"\""; */
 		
 		if( log.isErrorEnabled() )
-			log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
+			if( ticketId == null )
+				log.error( "Query "+queryId+" failed."+s );
+			else
+				log.error( "Query "+queryId+" failed while executing ticket "+ticketId+"."+s );
 		
 		queryFailedPost( queryId, ticketId, e, script, stdOut, stdErr );
 	}
@@ -257,7 +264,9 @@ public abstract class BaseRepl {
 	
 	public abstract void queryStartedPost( UUID runId );
 	
-	public void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+	public synchronized void ticketFinished( UUID queryId, long ticketId, Set<JsonReportEntry> reportEntrySet ) {
+		
+		DynamicNodeVisitor dnv;
 		
 		if( queryId == null )
 			throw new NullPointerException( "Query ID must not be null." );
@@ -265,7 +274,14 @@ public abstract class BaseRepl {
 		if( reportEntrySet == null )
 			throw new NullPointerException( "Report entry set must not be null." );
 		
-		runningMap.get( queryId ).step();
+		dnv = runningMap.get( queryId );
+		if( dnv == null )
+			throw new NullPointerException( "Dynamic node visitor must not be null." );
+		
+		if( log.isDebugEnabled() )
+			log.debug( "Stepping expression in query "+queryId+"." );
+		
+		dnv.step();
 		
 		if( log.isDebugEnabled() )
 			log.debug( "Ticket finished: "+ticketId+" part of query "+queryId );
@@ -284,6 +300,59 @@ public abstract class BaseRepl {
 				statLog.debug( entry );
 	}
 	
+	public static void run( BaseRepl repl ) throws IOException {
+		
+		StringBuffer buf;
+		String line;
+		QueryParseCtlLexer lexer;
+		int ctl;
+		
+		System.out.println( BaseRepl.getLogo() );
+		
+		buf = new StringBuffer();
+		System.out.print( "> " );
+		
+		try( BufferedReader reader = new BufferedReader( new InputStreamReader( System.in, Charset.forName( "UTF-8" ) ) ) ) {
+			
+			while( ( line = reader.readLine() ) != null ) {
+				
+				buf.append( line ).append( '\n' );
+				
+				lexer = new QueryParseCtlLexer( new ANTLRInputStream( buf.toString() ) );
+				
+				
+				if( lexer.isReady() ) {
+					
+					try {
+						
+						ctl = repl.interpret( buf.toString() );
+						
+						if( ( ctl & BaseRepl.CTL_STATE ) != 0 )
+							System.out.print( repl.getState() );
+						
+						if( ( ctl & BaseRepl.CTL_QUERYSET ) != 0 )
+							System.out.print( repl.getRunningSet() );
+						
+						if( ( ctl & BaseRepl.CTL_TICKETSET ) != 0 )
+							System.out.print( repl.getTicketSet() );
+	
+						if( ( ctl & BaseRepl.CTL_QUIT ) != 0 )
+							break;
+					}
+					catch( ParseException e ) {
+						System.out.println( e );
+					}
+					
+					buf = new StringBuffer();	
+					System.out.print( "> " );
+				}
+				
+			}
+			
+		}
+		System.out.println( "Bye." );
+	}
+
 	public static String getLogo() {
 		
 		return "                              _\n"
@@ -308,7 +377,7 @@ public abstract class BaseRepl {
 			+"        \"MM##MP\"\"   q@BB@L\n"
 			+"                     \"\"\"`\n"
 			+"\nCUNEIFORM - A Functional Workflow Language\nVersion "
-			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJörgen Brandt    Marc Bux    Ulf Leser\n";
+			+LABEL_VERSION+" build "+LABEL_BUILD+"\n\nJorgen Brandt    Marc Bux    Ulf Leser\n";
 	}
 
 	public static int fetchCtl( TopLevelContext tlc ) {
@@ -323,51 +392,46 @@ public abstract class BaseRepl {
 		ctl = 0;
 		removeCandidateList = new ArrayList<>();
 		
-		try {
-		
-			for( CompoundExpr ce : tlc.getTargetList() ) {
-				
-				cp = ce.clone();
-				
-				for( SingleExpr se : cp.getSingleExprList() )
-					if( se instanceof NameExpr ) {
-						
-						
-						if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
-							ctl += CTL_STATE;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
 	
-						if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
-							ctl += CTL_QUIT;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
-	
-						if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
-							ctl += CTL_QUERYSET;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
-						
-						if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
-							ctl += CTL_TICKETSET;
-							ce.remove( se );
-							removeCandidateList.add( ce );
-							continue;
-						}
+		for( CompoundExpr ce : tlc.getTargetList() ) {
+			
+			cp = new CompoundExpr( ce );
+			
+			for( SingleExpr se : cp.getSingleExprList() )
+				if( se instanceof NameExpr ) {
+					
+					
+					if( ( ( NameExpr )se ).getId().equals( "state" ) ) {
+						ctl += CTL_STATE;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
 					}
-			}
+
+					if( ( ( NameExpr )se ).getId().equals( "quit" ) ) {
+						ctl += CTL_QUIT;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+
+					if( ( ( NameExpr )se ).getId().equals( "queries" ) ) {
+						ctl += CTL_QUERYSET;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+					
+					if( ( ( NameExpr )se ).getId().equals( "tickets" ) ) {
+						ctl += CTL_TICKETSET;
+						ce.remove( se );
+						removeCandidateList.add( ce );
+						continue;
+					}
+				}
 		}
-		catch( CloneNotSupportedException e ) {
-			throw new RuntimeException( e );
-		}
-		
-		
+
+	
 		for( CompoundExpr ce : removeCandidateList )
 			if( ce.getNumSingleExpr() == 0 )
 				tlc.removeTarget( ce );

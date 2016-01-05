@@ -228,34 +228,9 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 		CfNode ifExpr;
 		CfNode thenBlock;
 		CfNode elseBlock;
-		CfNode prototype;
-		int channel;
 		
-		if( ctx.channel() == null )
-			throw new NullPointerException( "No channel information in conditional expression." );
-		
-		channel = Integer.parseInt( ctx.channel().INT().getText() );
-		
-		prototype = visit( ctx.prototype() );
-		
-		if( prototype == null )
-			throw new NullPointerException( "Prototype must not be null." );
-		
-		if( !( prototype instanceof Prototype ) )
-			throw new RuntimeException( "Prototype expected." );
-		
-		if( ( ( Prototype )prototype ).getNumParam() > 0 )
-			throw new SemanticModelException(
-				prototype,
-				"Conditional prototype must not define input parameters." );
-		
-		for( NameExpr output : ( ( Prototype )prototype ).getOutputList() )
-			if( !( output instanceof ReduceVar ) )
-				throw new SemanticModelException(
-					prototype,
-					"Non-reduce output in conditional prototype." );
-		
-		ifExpr = visit( ctx.expr() );
+				
+		ifExpr = visit( ctx.expr( 0 ) );
 		
 		if( ifExpr == null )
 			throw new NullPointerException( "If expression must not be null." );
@@ -263,25 +238,25 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 		if( !( ifExpr instanceof CompoundExpr ) )
 			throw new RuntimeException( "Compound expression expected." );
 		
-		thenBlock = visit( ctx.block( 0 ) );
+		
+		
+		thenBlock = visit( ctx.expr( 1 ) );
 		
 		if( thenBlock == null )
 			throw new NullPointerException( "Then block must not be null." );
 		
-		if( !( thenBlock instanceof Block ) )
-			throw new RuntimeException( "Block expected." );
+		if( !( thenBlock instanceof CompoundExpr ) )
+			throw new RuntimeException( "Compound expression expected." );
 		
-		elseBlock = visit( ctx.block( 1 ) );
+		elseBlock = visit( ctx.expr( 2 ) );
 		
 		if( elseBlock == null )
 			throw new NullPointerException( "Then block must not be null." );
 		
-		if( !( elseBlock instanceof Block ) )
-			throw new RuntimeException( "Block expected." );
+		if( !( elseBlock instanceof CompoundExpr ) )
+			throw new RuntimeException( "Compound expression expected." );
 		
-		return new CondExpr( channel,
-			( Prototype )prototype, ( CompoundExpr )ifExpr,
-			( Block )thenBlock, ( Block )elseBlock );
+		return new CondExpr( ( CompoundExpr )ifExpr, ( CompoundExpr )thenBlock, ( CompoundExpr )elseBlock );
 	}
 
 	

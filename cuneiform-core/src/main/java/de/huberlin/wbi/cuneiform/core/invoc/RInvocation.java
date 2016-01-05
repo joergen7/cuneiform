@@ -275,7 +275,7 @@ public class RInvocation extends Invocation {
 				null,
 				new String[] { "channel", "f" },
 				"sprintf( \""+getTicketId()
-				+"_%d_%s\", channel, f )\n" );
+				+"_%d_%s\", channel, basename( f ) )\n" );
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class RInvocation extends Invocation {
 
 	@Override
 	protected String getLibPath() {
-		return callProcedure( ".libPaths", quote( libPath.toString() ) );
+		return callProcedure( ".libPaths", quote( libPath ) );
 	}
 
 }

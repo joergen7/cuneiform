@@ -46,11 +46,12 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public static final String LANGID_ERLANG = "erlang";
 	public static final String LANGID_HASKELL = "haskell";
 	public static final String LANGID_PEGASUS = "pegasus";
+	public static final String LANGID_BEANSHELL = "beanshell";
 
 	private static final String[] LABEL_LANG = {
 		LANGID_BASH, LANGID_LISP, LANGID_OCTAVE, LANGID_MATLAB, LANGID_R,
 		LANGID_PYTHON, LANGID_PERL, LANGID_JAVA, LANGID_SCALA, LANGID_ERLANG,
-		LANGID_HASKELL, LANGID_PEGASUS
+		LANGID_HASKELL, LANGID_PEGASUS, LANGID_BEANSHELL
 	};
 	
 	private final int lang;
@@ -78,6 +79,18 @@ public class ForeignLambdaExpr extends LambdaExpr {
 		this.lang = lang;
 	}
 	
+	public ForeignLambdaExpr(ForeignLambdaExpr template ) {
+		
+		super( template );
+
+		if( template == null )
+			throw new IllegalArgumentException( "Template foreign lambda expression must not be null." );
+		
+		lang = template.lang;
+		body = template.body;
+		name = template.name;
+	}
+
 	public String getBody() {
 		return body;
 	}
@@ -131,10 +144,13 @@ public class ForeignLambdaExpr extends LambdaExpr {
 	public static int labelToInt( String label ) {
 		
 		int i, n;
+		String l;
+		
+		l = label.toLowerCase();
 		
 		n = LABEL_LANG.length;
 		for( i = 0; i < n; i++ )
-			if( LABEL_LANG[ i ].equals( label ) )
+			if( LABEL_LANG[ i ].equals( l ) )
 				return i;
 		
 		throw new SemanticModelException( label, "Language '"+label+"' not recognized." );

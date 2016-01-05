@@ -60,6 +60,7 @@ import de.huberlin.wbi.cuneiform.core.cre.LocalThread;
 import de.huberlin.wbi.cuneiform.core.invoc.Invocation;
 import de.huberlin.wbi.cuneiform.core.repl.BaseRepl;
 import de.huberlin.wbi.cuneiform.core.repl.CmdlineRepl;
+import de.huberlin.wbi.cuneiform.core.repl.InteractiveRepl;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
@@ -90,6 +91,8 @@ public class Main {
 		JsonSummary summary;
 		Path summaryPath;
 		Log statLog;
+		int nthread;
+		Path workDir;
 		
 		statLog = LogFactory.getLog( "statLogger" );
 		
@@ -111,16 +114,34 @@ public class Main {
 				return;
 			}
 			
-			if( cmd.hasOption( "r" ) )
-				Invocation.putLibPath( ForeignLambdaExpr.LANGID_R, cmd.getOptionValue( "r" ) );
+			if( cmd.hasOption( 'r' ) )
+				Invocation.putLibPath( ForeignLambdaExpr.LANGID_R, cmd.getOptionValue( 'r' ) );
+			
+			if( cmd.hasOption( 'y' ) )
+				Invocation.putLibPath(  ForeignLambdaExpr.LANGID_PYTHON, cmd.getOptionValue( 'y' ) );
 			
 			if( cmd.hasOption( 'l' ) )
 				sandbox = Paths.get( cmd.getOptionValue( "l" ) );
 			else
 				sandbox = Paths.get( System.getProperty( "user.home" ) ).resolve( ".cuneiform" );
 			
+			sandbox = sandbox.toAbsolutePath();
+			
 			if( cmd.hasOption( 'c' ) )
 				LocalThread.deleteIfExists( sandbox );
+			
+			if( cmd.hasOption( 't' ) )
+				nthread = Integer.valueOf( cmd.getOptionValue( 't' ) );
+			else
+				nthread = Runtime.getRuntime().availableProcessors();
+			
+			if( cmd.hasOption( 'w' ) )
+				workDir = Paths.get( cmd.getOptionValue( 'w' ) );
+			else
+				workDir = Paths.get( System.getProperty( "user.dir" ) );
+			
+			workDir = workDir.toAbsolutePath();
+			
 			
 
 						
@@ -131,11 +152,8 @@ public class Main {
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
 					
-					if( cmd.hasOption( 't' ) )
-						cre = new LocalCreActor( sandbox, Integer.valueOf( cmd.getOptionValue( 't' ) ) );
-					else
-						cre = new LocalCreActor( sandbox );
 					
+					cre = new LocalCreActor( sandbox, workDir, nthread );
 					break;
 					
 				case PLATFORM_HTCONDOR :
@@ -158,7 +176,11 @@ public class Main {
 			switch( format ) {
 			
 				case FORMAT_CF :
-					repl = new CmdlineRepl( ticketSrc, statLog );
+					
+					if( cmd.hasOption( "i" ) )
+						repl = new InteractiveRepl( ticketSrc, statLog );
+					else
+						repl = new CmdlineRepl( ticketSrc, statLog );
 					break;
 					
 				case FORMAT_DAX :
@@ -172,7 +194,7 @@ public class Main {
 			if( cmd.hasOption( "i" ) ) {
 				
 				// run in interactive mode
-				CmdlineRepl.run( repl );
+				BaseRepl.run( repl );
 				
 				return;
 			}
@@ -196,6 +218,7 @@ public class Main {
 				
 				summary = new JsonSummary( ticketSrc.getRunId(), sandbox, repl.getAns() );
 				summaryPath = Paths.get( cmd.getOptionValue( "s" ) );
+				summaryPath = summaryPath.toAbsolutePath();
 				try( BufferedWriter writer = Files.newBufferedWriter( summaryPath, Charset.forName( "UTF-8" ) ) ) {
 					
 					writer.write( summary.toString() );
@@ -257,26 +280,30 @@ public class Main {
 		
 		opt = new Options();
 		
+		opt.addOption( "c", "clean", false, "Clear local cache before start." );
+		
 		opt.addOption( "f", "format", true,
-			"The format of the input file. Must be either '"+FORMAT_CF+"' for Cuneiform or '"+FORMAT_DAX+"' for Pegasus DAX. Default is '"+FORMAT_CF+"'." );
-		
-		opt.addOption( "p", "platform", true,
-			"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
-		
+				"The format of the input file. Must be either '"+FORMAT_CF+"' for Cuneiform or '"+FORMAT_DAX+"' for Pegasus DAX. Default is '"+FORMAT_CF+"'." );
+			
 		opt.addOption( "h", "help", false, "Output help." );
-		
-		opt.addOption( "s", "summary", true,
-			"The name of a JSON summary file. No file is created if this parameter is not specified." );
 		
 		opt.addOption( "i", "interactive", false, "Start an interactive REPL." );
 		
 		opt.addOption( "l", "localcache", true, "Path to the local cache. Defaults to '~/.cuneiform'." );
 		
-		opt.addOption( "c", "clean", false, "Clear local cache before start." );
+		opt.addOption( "p", "platform", true,
+				"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
+			
+		opt.addOption( "r", "rlib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
 		
+		opt.addOption( "s", "summary", true,
+				"The name of a JSON summary file. No file is created if this parameter is not specified." );
+			
 		opt.addOption( "t", "threads", true, "The number of threads to use. Defaults to the number of CPU cores available on this machine. Takes effect only if the platform is '"+PLATFORM_LOCAL+"'." );
 		
-		opt.addOption( "r", "r-lib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
+		opt.addOption( "w", "workdir", true, "Optional. The working directory from which to look for local data. The default is the current working directory from which Cuneiform was called." );
+		
+		opt.addOption( "y", "pylib", true, "Optional. The directory in which custom Python libraries are installed. If set, the directory is added to Python's system path list." );
 		
 		
 		return opt;

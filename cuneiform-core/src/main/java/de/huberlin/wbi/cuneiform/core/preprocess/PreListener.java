@@ -142,7 +142,7 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 		
 		rewriter.replace( id, "apply" );
 		
-		rewriter.insertAfter( lparen, " task: "+id.getText()+" " );
+		rewriter.insertAfter( lparen, " task: "+id.getText()+", " );
 	}
 	
 	@Override

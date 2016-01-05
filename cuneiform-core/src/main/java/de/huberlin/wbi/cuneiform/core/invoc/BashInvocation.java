@@ -119,7 +119,7 @@ public class BashInvocation extends Invocation {
 		return ret;
 	}
 	
-	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\n";
+	private static final String BASH_SHEBANG = "#!/usr/bin/env bash\nset -eu -o pipefail\n";
 	
 
 	public BashInvocation( Ticket ticket, String libPath ) {
@@ -335,14 +335,6 @@ public class BashInvocation extends Invocation {
 	}
 
 	@Override
-	protected String getCheckPost() {
-		return bashIfNotEquals(
-			"$?",
-			"0",
-			"echo Task invocation returned non-zero exit value. >&2\nexit -1" );		
-	}
-
-	@Override
 	protected String getImport() {
 		return "";
 	}
@@ -405,7 +397,7 @@ public class BashInvocation extends Invocation {
 
 	@Override
 	protected String newList( String listName ) {
-		return listName+"=()\n";
+		return listName+"=\"\"\n";
 	}
 
 	@Override

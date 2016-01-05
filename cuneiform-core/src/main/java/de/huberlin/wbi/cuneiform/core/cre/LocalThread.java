@@ -40,7 +40,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
@@ -69,9 +68,10 @@ public class LocalThread implements Runnable {
 	private final TicketSrcActor ticketSrc;
 	private final BaseCreActor cre;
 	private final Path centralRepo;
+	private final Path workDir;
 
 	public LocalThread(TicketSrcActor ticketSrc, BaseCreActor cre,
-			Ticket ticket, Path buildDir, Path centralRepo ) {
+			Ticket ticket, Path buildDir, Path centralRepo, Path workDir ) {
 
 		if( buildDir == null )
 			throw new NullPointerException( "Build directory must not be null." );
@@ -96,11 +96,21 @@ public class LocalThread implements Runnable {
 		
 		if( !Files.isDirectory( centralRepo ) )
 			throw new RuntimeException( "Central repository path expected to be a directory." );
+		
+		if( workDir == null )
+			throw new IllegalArgumentException( "Working directory must not be null." );
+
+		if( !Files.exists( workDir ) )
+			throw new RuntimeException( "Working directory does not exist." );
+		
+		if( !Files.isDirectory( workDir ) )
+			throw new RuntimeException( "Working directory expected to be a directory." );
 
 		this.ticketSrc = ticketSrc;
 		this.cre = cre;
 		this.buildDir = buildDir;
 		this.centralRepo = centralRepo;
+		this.workDir = workDir;
 
 		invoc = Invocation.createInvocation( ticket );
 		log = LogFactory.getLog( LocalThread.class );
@@ -109,8 +119,7 @@ public class LocalThread implements Runnable {
 	@Override
 	public void run() {
 		
-		Path scriptFile, location, successMarker, reportFile,
-			callLocation, stdErrFile, stdOutFile;
+		Path scriptFile, location, successMarker, reportFile, stdErrFile, stdOutFile;
 		// Path lockMarker;
 		Process process;
 		int exitValue;
@@ -129,6 +138,7 @@ public class LocalThread implements Runnable {
 		int trial;
 		boolean suc;
 		Exception ex;
+		Path parent;
 		
 		
 		if( log.isDebugEnabled() )
@@ -152,7 +162,7 @@ public class LocalThread implements Runnable {
 					
 
 
-			callLocation = Paths.get( System.getProperty( "user.dir" ) );
+			// callLocation = Paths.get( System.getProperty( "user.dir" ) );
 			location = buildDir.resolve( String.valueOf( invoc.getTicketId() ) );
 			// lockMarker = location.resolve( Invocation.LOCK_FILENAME );
 			successMarker = location.resolve( Invocation.SUCCESS_FILENAME );
@@ -195,10 +205,12 @@ public class LocalThread implements Runnable {
 						
 					srcPath = centralRepo.resolve( filename );
 					destPath = location.resolve( filename );
+					if( destPath == null )
+						throw new NullPointerException( "Link destination path must not be null." );
 					
 					if( !Files.exists( srcPath ) ) {
 						
-						srcPath = callLocation.resolve( filename );
+						srcPath = workDir.resolve( filename );
 						if( log.isTraceEnabled() )
 							log.trace( "Resolving relative path '"+srcPath+"'." );
 					}
@@ -210,8 +222,12 @@ public class LocalThread implements Runnable {
 					if( log.isTraceEnabled() )
 						log.trace( "Trying to create symbolic link from '"+srcPath+"' to '"+destPath+"'." );
 
-					if( !Files.exists( destPath.getParent() ) )
-						Files.createDirectories( destPath.getParent() );
+					parent = destPath.getParent();
+					if( parent == null )
+						throw new NullPointerException( "Parent path of destination path must not be null." );
+					
+					if( !Files.exists( parent ) )
+						Files.createDirectories( parent );
 					
 					Files.createSymbolicLink( destPath, srcPath );
 					
@@ -247,6 +263,9 @@ public class LocalThread implements Runnable {
 				} while( suc == false && trial <= MAX_TRIALS );
 				
 				if( process == null ) {
+					
+					if( log.isInfoEnabled() )
+						log.info( "Sending ticket failed message because the received process object was null." );
 					
 					ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, ex, script, null, null ) );
 					// Files.delete( lockMarker );
@@ -302,6 +321,9 @@ public class LocalThread implements Runnable {
 						Files.createFile( successMarker );
 					
 					else {
+						
+						if( log.isInfoEnabled() )
+							log.info( "Sending ticket failed message because exit value was non-zero." );
 						
 						ticketSrc.sendMsg( new TicketFailedMsg( cre, ticket, null, script, stdOut, stdErr ) );
 						// Files.delete( lockMarker );
@@ -379,6 +401,9 @@ public class LocalThread implements Runnable {
 				catch( IOException e1 ) {
 					e1.printStackTrace();
 				}
+			
+			if( log.isInfoEnabled() )
+				log.info( "Sending ticket failed message because an exception was caught: "+e.getMessage() );
 			
 			msg = new TicketFailedMsg( cre, ticket, e, script, stdOut, stdErr );
 			

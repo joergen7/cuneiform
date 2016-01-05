@@ -121,17 +121,17 @@ singleExpr       : ID                                                     # IdEx
                  | INT                                                    # IntExpr
                  | STRING                                                 # StringExpr
                  | FROMSTACK                                              # FromStackExpr
-                 | channel? IF prototype expr THEN block ELSE block       # CondExpr
-                 | channel? APPLY LPAREN paramBind+ TILDE? RPAREN         # ApplyExpr
-                 | channel? ID LPAREN paramBind* TILDE? RPAREN            # CallExpr
-                 | CURRY LPAREN paramBind+ RPAREN                         # CurryExpr
+                 | IF expr THEN expr ELSE expr END                        # CondExpr
+                 | channel? APPLY LPAREN paramBind( COMMA paramBind )* TILDE? RPAREN         # ApplyExpr
+                 | channel? ID LPAREN( paramBind( COMMA paramBind )* )? TILDE? RPAREN            # CallExpr
+                 | CURRY LPAREN paramBind( COMMA paramBind )* RPAREN                         # CurryExpr
                  | LAMBDA prototype block                                 # NativeLambdaExpr
                  | LAMBDA prototype foreignBody                           # ForeignLambdaExpr
                  | APPLY
                    { notifyErrorListeners( "Incomplete task application. Missing '('." ); } # SingleExprErr1
                  | APPLY LPAREN
                    { notifyErrorListeners( "Incomplete task application. Missing Parameter bindings, e.g. 'param: value'." ); } # SingleExprErr2
-                 | APPLY LPAREN paramBind+
+                 | APPLY LPAREN paramBind( COMMA paramBind )*
                    { notifyErrorListeners( "Incomplete task application. Missing ')'." ); } # SingleExprErr3
                  | APPLY LPAREN ID COLON
                    { notifyErrorListeners( "Incomplete Parameter binding. Missing value." ); } # ParamBindErr1
@@ -156,17 +156,19 @@ foreignBody      : INLANG BODY ;
 
 APPLY            : 'apply' ;
 COLON            : ':' ;
+COMMA            : ',' ;
 COMB             : 'comb' ;
 COMBR            : 'combr' ;
 CURRY            : 'curry' ;
 DEFTASK          : 'deftask' ;
-EQUAL            : '=' ;
 ELSE             : 'else' ;
+END              : 'end' ;
+EQUAL            : '=' ;
 FROMSTACK        : '<' '-'+ '+' ;
 IF               : 'if' ;
 INLANG           : 'in' WSSYMB+ LANGSYMB ;
-fragment LANGSYMB: 'bash' | 'r' | 'lisp' | 'octave' | 'matlab' | 'perl'
-                 | 'pegasus' | 'python' ;
+fragment LANGSYMB: 'bash' | 'r' | 'R' | 'lisp' | 'octave' | 'matlab' | 'perl'
+                 | 'pegasus' | 'python' | 'java' | 'scala' | 'beanshell' ;
 IMPORT           : 'import' ;
 INCLUDE          : 'include' ;
 LAMBDA           : '\\' ;
@@ -203,4 +205,4 @@ COMMENT          : ( ( '#' | '//' | '%' ) ~'\n'*
                  ;
 ID               : [a-zA-Z0-9\.\-_\+\*/]+ ;
 WS               : WSSYMB -> channel( HIDDEN ) ;
-fragment WSSYMB  : [ \n\r\t,] ;
+fragment WSSYMB  : [ \n\r\t] ;

@@ -254,14 +254,14 @@ public abstract class Invocation {
 		// insert shebang
 		buf.append( getShebang() ).append( '\n' );
 		
+		// import libraries
+		buf.append( comment( "import libraries" ) );
+		buf.append( getImport() ).append( '\n' );
+		
 		// modify library path
 		buf.append( comment( "modify library path" ) );
 		if( hasLibPath() )
 			buf.append( getLibPath() );
-		
-		// import libraries
-		buf.append( comment( "import libraries" ) );
-		buf.append( getImport() ).append( '\n' );
 		
 		// define necessary functions
 		buf.append( comment( "define necessary functions" ) );
@@ -269,11 +269,13 @@ public abstract class Invocation {
 		
 		// bind single output variables to default values
 		buf.append( comment( "bind single output variables to default values" ) );
-		for( String outputName : getSingleOutputNameSet() )
+		for( String outputName : getSingleOutputNameSet() ) {
+			buf.append( declareString( outputName ) );
 			buf.append(
 				varDef(
 					outputName,	
 					quote( outputName ) ) );
+		}
 		buf.append( '\n' );
 		
 		// bind input parameters
@@ -283,24 +285,29 @@ public abstract class Invocation {
 			if( paramName.equals( CfSemanticModelVisitor.LABEL_TASK ) )
 				continue;
 			
+			buf.append( declareString( paramName ) );
 			buf.append( varDef( paramName, quote( getResolveableBoundToSingleParam( paramName ) ) ) );
 		}
-		for( String paramName : getReduceParamNameSet() )
-			buf.append( varDef( paramName, getReduceParam( paramName ) ) );		
+		for( String paramName : getReduceParamNameSet() ) {
+			
+			buf.append( declareList( paramName ) );
+			buf.append( varDef( paramName, getReduceParam( paramName ) ) );
+		}
 		buf.append( '\n' );
 		
 		// report stage in file sizes and report error when something is missing
 		buf.append( comment( "report stage in file sizes and report error when something is missing" ) );
 		buf.append( getStageInCollect() ).append( '\n' );
-				
+		
+		// insert body prefix
+		buf.append( comment( "insert body prefix" ) );
+		buf.append( getBodyPrefix() ).append( '\n' );
+		
+		
 		// insert function body
 		buf.append( comment( "insert function body" ) );
-		buf.append( ticket.getBody() ).append( '\n' );
-		
-		// check post
-		buf.append( comment( "check post" ) );
-		buf.append( getCheckPost() ).append( '\n' );
-		
+		buf.append( postProcess( ticket.getBody() ) ).append( '\n' );
+				
 		// rename output files
 		buf.append( comment( "rename output files" ) );
 		buf.append( getOutputRename() ).append( '\n' );
@@ -316,13 +323,23 @@ public abstract class Invocation {
 		return buf.toString();
 	}
 	
+	@SuppressWarnings({ "static-method", "unused" })
+	protected String declareList( String paramName ) {
+		return "";
+	}
+
+	@SuppressWarnings({ "static-method", "unused" })
+	protected String declareString( String outputName ) {
+		return "";
+	}
+
 	@SuppressWarnings( "static-method" )
-	protected String getCheckPost() {
+	protected String getImport() {
 		return "";
 	}
 	
-	@SuppressWarnings( "static-method" )
-	protected String getImport() {
+	@SuppressWarnings("static-method")
+	protected String getBodyPrefix() {
 		return "";
 	}
 
@@ -440,6 +457,8 @@ public abstract class Invocation {
 		
 		buf = new StringBuffer();
 		
+		buf.append( declareString( "CFSTR" ) );
+		
 		buf.append( varDef( "CFSTR", quote( "" ) ) );
 		for( String outputName : getSingleOutputNameSet() )
 			
@@ -454,7 +473,8 @@ public abstract class Invocation {
 						quote( "\"]" ) ) ) );
 			
 		
-		
+		buf.append( declareString( "CFSTR1" ) );
+		buf.append( declareString( "CFI" ) );
 		for( String outputName : getReduceOutputNameSet() ) {
 			
 			buf
@@ -509,6 +529,8 @@ public abstract class Invocation {
 		StringBuffer buf;
 		
 		buf = new StringBuffer();
+		
+		buf.append( declareString( "CFFILENAME" ) );
 
 		for( String outputName : getSingleOutputNameSet() )
 			
@@ -647,6 +669,8 @@ public abstract class Invocation {
 		
 		buf = new StringBuffer();
 		
+		buf.append( declareString( "SIZE" ) );
+		
 		
 		for( String inputName : getSingleParamNameSet() )
 			if( isParamStage( inputName ) )
@@ -745,6 +769,9 @@ public abstract class Invocation {
 		return buf.toString();
 	}
 	
+	@SuppressWarnings("static-method")
+	protected String postProcess( String body ) { return body; }
+	
 	public static Invocation createInvocation( Ticket ticket ) {
 		
 		String label, libPath;
@@ -759,13 +786,12 @@ public abstract class Invocation {
 			case ForeignLambdaExpr.LANGID_PERL : return new PerlInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_MATLAB : return new MatlabInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_OCTAVE : return new OctaveInvocation( ticket, libPath );
-			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket, libPath );
-			case ForeignLambdaExpr.LANGID_JAVA : return new ScalaInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_PYTHON : return new PythonInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_LISP : return new LispInvocation( ticket, libPath );
-			case ForeignLambdaExpr.LANGID_ERLANG : return new ErlangInvocation( ticket, libPath );
-			case ForeignLambdaExpr.LANGID_HASKELL : return new HaskellInvocation( ticket, libPath );
 			case ForeignLambdaExpr.LANGID_PEGASUS : return new PegasusInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_JAVA :
+			case ForeignLambdaExpr.LANGID_BEANSHELL : return new BeanshellInvocation( ticket, libPath );
+			case ForeignLambdaExpr.LANGID_SCALA : return new ScalaInvocation( ticket, libPath );
 			default : throw new RuntimeException( "Language label '"+label+"' not recognized." );
 		}
 	}

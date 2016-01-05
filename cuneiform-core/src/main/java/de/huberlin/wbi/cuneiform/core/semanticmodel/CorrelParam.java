@@ -44,6 +44,12 @@ public class CorrelParam implements Param {
 		nameExprSet = new HashSet<>();
 	}
 	
+	public CorrelParam( CorrelParam template ) {
+		
+		this();
+		nameExprSet.addAll( template.nameExprSet );
+	}
+	
 	public void addName( NameExpr nameExpr ) {
 		
 		if( nameExpr == null )

@@ -32,6 +32,8 @@
 
 package de.huberlin.wbi.cuneiform.cfide.main;
 
+import java.io.File;
+
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.SwingUtilities;
@@ -40,15 +42,26 @@ import javax.swing.WindowConstants;
 import de.huberlin.wbi.cuneiform.cfide.editor.MainPanel;
 
 public class Main implements Runnable {
+	
+	private String[] loadList;
 
 	public static void main( String[] args )  {
 		
 		Main m;
 		
-		m = new Main();
+		m = new Main( args );
 		
 		SwingUtilities.invokeLater( m );
 	}
+	
+	public Main( String[] args ) {
+		
+		if( args == null )
+			throw new IllegalArgumentException( "Argument vector must not be null." );
+		
+		loadList = args;
+	}
+	
 
 	@Override
 	public void run() {
@@ -56,19 +69,40 @@ public class Main implements Runnable {
 		JFrame frame;
 		JMenuBar menuBar;
 		MainPanel editRunPanel;
+		
 				
+		// prepare frame
 		frame = new JFrame( "Cuneiform Editor" );
 		frame.setSize( 1000, 750 );
 		frame.setLocation( 0, 50 );
 		frame.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE );
 		
+		// add main panel
 		editRunPanel = new MainPanel( frame );
 		frame.addWindowListener( editRunPanel );
-		
-		menuBar = editRunPanel.getMenuBar();
-		
-		frame.setJMenuBar( menuBar );
 		frame.add( editRunPanel );
+
+		// add menu bar
+		menuBar = editRunPanel.getMenuBar();
+		frame.setJMenuBar( menuBar );
+
+		// load designated files
+		for( String filename : loadList )
+			editRunPanel.open( new File( filename ) );
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		frame.setVisible( true );
 	}
 }
