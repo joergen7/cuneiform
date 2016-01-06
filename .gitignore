@@ -4,3 +4,7 @@
 /.settings
 /.project
 *~
+
+*.iml
+.idea
+/conf/**
