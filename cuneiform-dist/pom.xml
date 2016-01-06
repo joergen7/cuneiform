@@ -29,6 +29,16 @@
 	</dependencies>
 
 	<build>
+
+		<resources>
+			<resource>
+				<directory>src/main/scripts</directory>
+				<includes>
+					<include>log4j.properties</include>
+				</includes>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -73,11 +83,11 @@
 				<version>2.4.2</version>
 				<configuration>
 					<transformers>
-						<!-- TODO bundling the log4j.properties in a jar is not good practice
-							@see: http://www.mkyong.com/maven/maven-exclude-log4j-properties-in-jar-file/
-							@see: http://stackoverflow.com/questions/5132389/if-using-maven-usually-you-put-log4j-properties-under-java-or-resources
-						-->
-						<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+						<!-- TODO bundling the log4j.properties in a jar is not good practice 
+							@see: http://www.mkyong.com/maven/maven-exclude-log4j-properties-in-jar-file/ 
+							@see: http://stackoverflow.com/questions/5132389/if-using-maven-usually-you-put-log4j-properties-under-java-or-resources -->
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
 							<resource>src/main/scripts/log4j.properties</resource>
 							<file>log4j.properties</file>
 						</transformer>
