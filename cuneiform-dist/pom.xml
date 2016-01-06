@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>de.hu-berlin.wbi.cuneiform</groupId>
 		<artifactId>cuneiform</artifactId>
-		<version>2.0.2-SNAPSHOT</version>
+		<version>2.0.3-RELEASE</version>
 	</parent>
 
 	<artifactId>cuneiform-dist</artifactId>
@@ -29,6 +29,7 @@
 	</dependencies>
 
 	<build>
+
 		<resources>
 			<resource>
 				<directory>src/main/scripts</directory>
@@ -37,6 +38,7 @@
 				</includes>
 			</resource>
 		</resources>
+
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -83,13 +85,14 @@
 					<transformers>
 						<!-- TODO bundling the log4j.properties in a jar is not good practice
 							@see: http://www.mkyong.com/maven/maven-exclude-log4j-properties-in-jar-file/
-							@see: http://stackoverflow.com/questions/5132389/if-using-maven-usually-you-put-log4j-properties-under-java-or-resources
-						-->
-						<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+							@see: http://stackoverflow.com/questions/5132389/if-using-maven-usually-you-put-log4j-properties-under-java-or-resources -->
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
 							<resource>src/main/scripts/log4j.properties</resource>
 							<file>log4j.properties</file>
 						</transformer>
 					</transformers>
+					<createDependencyReducedPom>false</createDependencyReducedPom>
 				</configuration>
 				<executions>
 					<execution>
