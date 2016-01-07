@@ -83,8 +83,8 @@
 				<version>2.4.2</version>
 				<configuration>
 					<transformers>
-						<!-- TODO bundling the log4j.properties in a jar is not good practice 
-							@see: http://www.mkyong.com/maven/maven-exclude-log4j-properties-in-jar-file/ 
+						<!-- TODO bundling the log4j.properties in a jar is not good practice
+							@see: http://www.mkyong.com/maven/maven-exclude-log4j-properties-in-jar-file/
 							@see: http://stackoverflow.com/questions/5132389/if-using-maven-usually-you-put-log4j-properties-under-java-or-resources -->
 						<transformer
 							implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
@@ -93,25 +93,13 @@
 						</transformer>
 					</transformers>
 					<createDependencyReducedPom>false</createDependencyReducedPom>
+					<createSourcesJar>true</createSourcesJar>
 				</configuration>
 				<executions>
 					<execution>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>2.4</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -128,9 +116,14 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<includeDependencySources>true</includeDependencySources>
+					<dependencySourceIncludes>
+						<dependencySourceInclude>de.hu-berlin.wbi.cuneiform:*</dependencySourceInclude>
+					</dependencySourceIncludes>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
-
 </project>
 
