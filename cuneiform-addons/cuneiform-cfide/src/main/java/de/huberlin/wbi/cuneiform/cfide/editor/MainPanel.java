@@ -152,7 +152,7 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 
 			editPanel = ( EditPanel )editTabbedPane.getSelectedComponent();
 			
-			if( editPanel.hasChanged() )
+			if( editPanel.hasChanged() ) {
 				
 
 				if( editPanel.hasFile() ) {
@@ -186,10 +186,14 @@ public class MainPanel extends JPanel implements ActionListener, WindowListener 
 	
 				}
 			
-
+				if( returnVal == JOptionPane.CANCEL_OPTION )
+					return;
+			}
 			
+
 			editTabbedPane.remove( editTabbedPane.getSelectedComponent() );
 			updateMenu();
+			
 			return;
 		}
 		
