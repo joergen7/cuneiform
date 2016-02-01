@@ -128,11 +128,6 @@ public class ChannelListener extends CuneiformBaseListener implements ANTLRError
 	}
 	
 	@Override
-	public void enterCallExpr( @NotNull CuneiformParser.CallExprContext ctx ) {
-		throw new RuntimeException( "Call expression should have been removed." );
-	}
-	
-	@Override
 	public void enterCondExpr( @NotNull CuneiformParser.CondExprContext ctx ) {
 		
 		if( rewriter == null )

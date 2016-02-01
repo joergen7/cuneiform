@@ -132,20 +132,6 @@ public class PreListener extends CuneiformBaseListener implements ANTLRErrorList
 	}
 	
 	@Override
-	public void enterCallExpr( @NotNull CuneiformParser.CallExprContext ctx ) {
-
-		Token id;
-		Token lparen;
-		
-		id = ctx.ID().getSymbol();
-		lparen = ctx.LPAREN().getSymbol();
-		
-		rewriter.replace( id, "apply" );
-		
-		rewriter.insertAfter( lparen, " task: "+id.getText()+", " );
-	}
-	
-	@Override
 	public void enterForeignDefTask( @NotNull CuneiformParser.ForeignDefTaskContext ctx ) {
 		
 		Token deftask;

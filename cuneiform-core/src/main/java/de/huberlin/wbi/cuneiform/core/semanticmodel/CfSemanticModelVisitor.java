@@ -186,8 +186,51 @@ public class CfSemanticModelVisitor extends CuneiformBaseVisitor<CfNode> impleme
 	
 	@Override
 	public CfNode visitCallExpr( @NotNull CuneiformParser.CallExprContext ctx ) {
-		// sorted out in the pre-phase
-		throw new RuntimeException( "Illegal call expression encountered." );
+
+		ApplyExpr applyExpr;
+		int channel;
+		NameExpr name;
+		CfNode compoundExpr;
+		String id;
+		boolean rest;
+		
+		if( ctx.channel() == null )
+			channel = 1;
+		else
+			channel = Integer.parseInt( ctx.channel().INT().getText() );
+		
+		rest = ctx.TILDE() != null;
+		applyExpr = new ApplyExpr( channel, rest );
+		
+		id = ctx.ID().getText();
+		applyExpr.setTaskExpr( new CompoundExpr( new NameExpr( id ) ) );
+		
+		
+		for( ParamBindContext pbc : ctx.paramBind() ) {
+			
+			id = pbc.ID().getText();
+			name = new NameExpr( id );
+			compoundExpr = visit( pbc.expr() );
+			
+			if( compoundExpr == null )
+				throw new NullPointerException( "Compound expression must not be null." );
+			
+			if( !( compoundExpr instanceof CompoundExpr ) )
+				throw new RuntimeException( "Compound expression expected." );
+			
+			if( id.equals( LABEL_TASK ) )
+				applyExpr.setTaskExpr( ( CompoundExpr )compoundExpr );
+			else
+				applyExpr.putAssign( name, ( CompoundExpr )compoundExpr );
+			
+		}
+		
+		if( !applyExpr.hasTaskExpr() )
+			throw new SemanticModelException(
+				applyExpr.toString(),
+				"Task parameter not bound." );
+		
+		return applyExpr;
 	}
 	
 	@Override
