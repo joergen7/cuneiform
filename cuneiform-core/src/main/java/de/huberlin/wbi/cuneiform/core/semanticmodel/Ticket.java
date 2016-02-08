@@ -32,7 +32,6 @@
 
 package de.huberlin.wbi.cuneiform.core.semanticmodel;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -163,32 +162,10 @@ public class Ticket extends Block {
 	public long getTicketId() {
 		
 		long h;
-		int i, n;
-		List<String> nameList;
 		
-		h = 0;
-		
-		try {
-			
-			h = HashHelper.add( h, lambdaExpr.getBody() );
-			
-			nameList = new ArrayList<>();
-			for( NameExpr name : getNameSet() )
-				nameList.add( name.getId() );
-			
-			Collections.sort( nameList );
-			n = nameList.size();
-
-			for( i = 0; i < n; i++ )
-				for( String s : getExpr( nameList.get( i ) ).normalize() )
-					h = HashHelper.add( h, s );
-		}
-		catch( NotBoundException e ) {
-			throw new RuntimeException( e );
-		}
-		catch( NotDerivableException e ) {
-			throw new RuntimeException( e );
-		}
+		h = toString().hashCode();
+		if( h < 0 )
+			h = -h;
 		
 		return h;
 		
