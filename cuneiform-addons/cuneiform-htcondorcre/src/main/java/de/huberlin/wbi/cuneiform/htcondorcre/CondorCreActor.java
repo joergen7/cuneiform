@@ -29,22 +29,6 @@
 
 package de.huberlin.wbi.cuneiform.htcondorcre;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
 import de.huberlin.wbi.cuneiform.core.cre.TicketReadyMsg;
@@ -55,6 +39,18 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.Ticket;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFailedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketFinishedMsg;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CondorCreActor extends BaseCreActor {
 	public static final String VERSION = "2015-03-05-4";
@@ -70,6 +66,42 @@ public class CondorCreActor extends BaseCreActor {
 
 	private final Path buildDir;
 	private final Path centralRepo;
+	private ExecutorService executor;
+
+	private long maxTransferBytes = Unit.G.bytes;
+
+	//htcondor max file transfer size, T isn't even here because transfering Terabytes of data makes no sense.
+	public static enum Unit{
+		G(1073741824),
+		M(1048576),
+		K(1024);
+
+		private final long bytes;
+
+		Unit(long bytes){
+			this.bytes = bytes;
+		}
+
+		protected long convert(double numUnits){
+				return Math.round(numUnits * this.bytes);
+		}
+
+		protected static long convertToBytes(String in){
+			try{
+				return Long.valueOf(in);
+			}
+			catch(Exception e) {
+				Unit u = valueOf(in.substring(in.length() - 1).toUpperCase());
+				double numUnits = Double.valueOf(in.substring(0, in.length() - 1));
+				return u.convert(numUnits);
+			}
+		}
+	}
+
+	public CondorCreActor(Path buildDir, String maxTransferBytes) throws Exception{
+		this(buildDir);
+		this.maxTransferBytes = Unit.convertToBytes(maxTransferBytes);
+	}
 
 	public CondorCreActor(Path buildDir) throws IOException {
 		// creates an actor for default jobs
@@ -92,7 +124,7 @@ public class CondorCreActor extends BaseCreActor {
 			Files.createDirectories(centralRepo);
 		}
 
-		ExecutorService executor;
+
 		executor = Executors.newCachedThreadPool();
 		// create a new condor watcher to watch for job status changes
 		watcher = new CondorWatcher(this);
@@ -271,7 +303,7 @@ public class CondorCreActor extends BaseCreActor {
 
 	@Override
 	protected void shutdown() {
-		// nothing
+		executor.shutdownNow();
 	}
 
 	private Set<JsonReportEntry> gatherReport(StatusMessage msg) {
@@ -354,6 +386,7 @@ public class CondorCreActor extends BaseCreActor {
 
 		// add input files
 		Set<String> inputs = new HashSet<>();
+		long total_size = 0;
 		for (String filename : invoc.getStageInList()) {
 			if( filename.charAt( 0 ) == '/' ){						
 				throw new UnsupportedOperationException( "Absolute path encountered '"+filename+"'." );
@@ -382,6 +415,14 @@ public class CondorCreActor extends BaseCreActor {
 			Files.createSymbolicLink( destPath, srcPath );
 			//add the path to the set to insert it in the submitfile later on
 			inputs.add(destPath.toString());
+
+			Path target = srcPath;
+			int infLoopGuard = 10; // I think symbolic links can get self-referential
+			while(Files.isSymbolicLink(target) && infLoopGuard > 0){
+				infLoopGuard--;
+				target = Files.readSymbolicLink(target);
+;			}
+			total_size += Files.size(target);
 		}
 
 		try {
@@ -439,14 +480,23 @@ public class CondorCreActor extends BaseCreActor {
 				log.debug("condorError or condorOutput for "+ ticket.getTicketId() +" already exists.");
 			}
 		}
-		
-		
+
+		String universe="vanilla";
+		String should_transfer_files="YES";
+		String when_to_transfer_output = "when_to_transfer_output = ON_EXIT \n";
+		if (total_size >= maxTransferBytes){
+			log.info("Total size of files to be transferred exceeds the max transfer limit of " + maxTransferBytes + ". Running in the local universe...");
+			universe="local";
+			should_transfer_files="NO";
+			when_to_transfer_output = "\n";
+		}
+
 		try (BufferedWriter writer = Files.newBufferedWriter(submitFile, cs,
 				StandardOpenOption.CREATE)) {
 			// name of the executable script
 			writer.write("executable = " + scriptFile.toString());
 			writer.write('\n');
-			writer.write("universe = vanilla");
+			writer.write("universe = " + universe);
 			writer.write('\n');
 			writer.write("run_as_owner = True");
 			writer.write('\n');
@@ -457,10 +507,10 @@ public class CondorCreActor extends BaseCreActor {
 			writer.write("error = " + condorError.toString());
 			writer.write('\n');
 			//TODO: Transfer files or not?
-			writer.write("should_transfer_files = YES \n");
-			writer.write("when_to_transfer_output = ON_EXIT \n");
+			writer.write("should_transfer_files = " + should_transfer_files + " \n");
+			writer.write(when_to_transfer_output);
 			// inputfiles
-			if (!inputs.isEmpty()) {
+			if (!inputs.isEmpty() && total_size < maxTransferBytes) {
 				writer.write("transfer_input_files = ");
 				boolean successor = false;
 				for (String file : inputs) {
@@ -515,8 +565,8 @@ public class CondorCreActor extends BaseCreActor {
 				suc = true;
 			} catch (IOException e) {
 				ex = e;
-				if (log.isWarnEnabled())
-					log.warn("Unable to start process on trial " + (trial++)
+				if (log.isWarnEnabled() && trial > 1)
+					log.warn("Retrying " + (++trial) + "th time."
 							+ " Waiting " + WAIT_INTERVAL + "ms: "
 							+ e.getMessage());
 				Thread.sleep(WAIT_INTERVAL);

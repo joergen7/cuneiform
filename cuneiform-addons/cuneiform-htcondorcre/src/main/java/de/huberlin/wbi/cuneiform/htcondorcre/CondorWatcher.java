@@ -1,13 +1,13 @@
 package de.huberlin.wbi.cuneiform.htcondorcre;
 
+import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
+import de.huberlin.wbi.cuneiform.core.actormodel.Message;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-
-import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
-import de.huberlin.wbi.cuneiform.core.actormodel.Message;
 
 
 public class CondorWatcher extends Actor {
@@ -72,7 +72,7 @@ public class CondorWatcher extends Actor {
 
 	@Override
 	protected void shutdown() {
-		// nothing
+		System.exit(0);
 	}
 	
 	private int checkJobStatus(StatusMessage sm){		
@@ -113,8 +113,8 @@ public class CondorWatcher extends Actor {
 			}
 			catch( IOException e ) {
 				ex = e;
-				if( log.isWarnEnabled() ) {
-					log.warn( "Unable to start process on trial "+( trial++ )+" Waiting "+WAIT_INTERVAL+"ms: "+ex.getMessage() );
+				if( log.isWarnEnabled() && trial > 1) {
+					log.warn( "Retrying "+( ++trial )+"th time. Waiting "+WAIT_INTERVAL+"ms: "+ex.getMessage() );
 				}
 				try {
 					Thread.sleep( WAIT_INTERVAL );

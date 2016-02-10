@@ -32,26 +32,6 @@
 
 package de.huberlin.wbi.cuneiform.cmdline.main;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import de.huberlin.cuneiform.dax.repl.DaxRepl;
 import de.huberlin.wbi.cuneiform.core.actormodel.Actor;
 import de.huberlin.wbi.cuneiform.core.cre.BaseCreActor;
@@ -65,6 +45,17 @@ import de.huberlin.wbi.cuneiform.core.semanticmodel.ForeignLambdaExpr;
 import de.huberlin.wbi.cuneiform.core.semanticmodel.NotDerivableException;
 import de.huberlin.wbi.cuneiform.core.ticketsrc.TicketSrcActor;
 import de.huberlin.wbi.cuneiform.htcondorcre.CondorCreActor;
+import org.apache.commons.cli.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Main {
 	
@@ -72,8 +63,10 @@ public class Main {
 	private static final String FORMAT_DAX = "dax";
 	private static final String PLATFORM_LOCAL = "local";
 	private static final String PLATFORM_HTCONDOR = "htcondor";
-	
-	
+
+
+	public static final int MAX_TRANSFER = 1073741824; // no more than 1G of total transfer
+
 	private static String platform;
 	private static String format;
 	private static Path[] inputFileVector;
@@ -161,7 +154,24 @@ public class Main {
 					if( !Files.exists( sandbox ) )
 						Files.createDirectories( sandbox );
 
-					cre = new CondorCreActor( sandbox );
+					if (cmd.hasOption('m')) {  // MAX_TRANSFER SIZE
+						String maxTransferSize = cmd.getOptionValue('m');
+						try {
+							cre = new CondorCreActor(sandbox, maxTransferSize);
+						} catch (Exception e) {
+							System.out.println(
+									"INVALID '-m' option value: " + maxTransferSize +
+									"\n\nCUNEIFORM - A Functional Workflow Language\nversion "
+											+ BaseRepl.LABEL_VERSION + " build " + BaseRepl.LABEL_BUILD);
+							new HelpFormatter().printHelp(
+									"java -jar cuneiform.jar [OPTION]*", opt);
+
+							return;
+						}
+					}
+					else{
+						cre = new CondorCreActor(sandbox);
+					}
 					
 					break;
 					
@@ -293,7 +303,10 @@ public class Main {
 		
 		opt.addOption( "p", "platform", true,
 				"The platform to run. Currently available platforms are '"+PLATFORM_LOCAL+"' and '"+PLATFORM_HTCONDOR+"'. Default is '"+PLATFORM_LOCAL+"'." );
-			
+
+		opt.addOption("m", "maxtransfer", true,
+				"Optional. Takes effect only if the platform is '"+PLATFORM_HTCONDOR+"'. Default is 1G. Controls max input file transfer.  If total input files exceed this limit, condor job is run in the local universe. Takes a number in bytes by default or specified units [G|M|K], i.e. 250000000 or 2G or 1000M or 234K");
+
 		opt.addOption( "r", "rlib", true, "Optional. The directory in which custom R libraries are installed. If set, the directory is added to R's libPath list." );
 		
 		opt.addOption( "s", "summary", true,
