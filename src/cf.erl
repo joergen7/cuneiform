@@ -25,7 +25,7 @@
 -export( [start/2, stop/1] ).
 
 % API
--export( [start/0] ).
+-export( [start/0, string/1] ).
 
 %% =============================================================================
 %% Application callbacks
@@ -43,5 +43,17 @@ stop( _State ) ->
 
 start() ->
   start( normal, [] ).
+
+
+string( S ) ->
+  {Query, Rho, Gamma} = cf_parser:parse_string( S ),
+  cf_sem:eval( Query, {Rho, fun get_future/1, Gamma, #{}} ).
+
+%% =============================================================================
+%% Internal Functions
+%% =============================================================================
+
+get_future( App ) ->
+  gen_server:call( cre, {submit, App} ).
 
 

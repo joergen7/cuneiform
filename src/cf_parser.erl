@@ -50,10 +50,10 @@ set_channel( E, 1 ) -> [E];
 set_channel( E, _ ) -> error( {parser, cannot_set_channel_on_nonapp_expr, element( 1, E ), element( 2, E )} ).
   
 mk_natlam( {deftask, Line, _}, {id, _, Name}, Sign, Block ) ->
-  #{Name => [{lam, Line, Name, Sign, {natbody, Block}}]}.
+  #{Name => {lam, Line, Name, Sign, {natbody, Block}}}.
   
 mk_forlam( {deftask, Line, _}, {id, _, Name}, Sign, Lang, {body, _, Code} ) ->
-  #{Name => [{lam, Line, Name, Sign, {forbody, Lang, Code}}]}.
+  #{Name => {lam, Line, Name, Sign, {forbody, Lang, Code}}}.
   
 
 %% =============================================================================
@@ -105,40 +105,40 @@ assign_should_be_recognized_test() ->
    ?assertError( {parser, nonvar_expr_left_of_eq, str, 1}, parse_string( "\"a\" = \"A\";" ) )].
    
 native_deftask_should_be_recognized_test() ->
-  ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+  ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                            {sign, [{param, {name, "out", false}, false}],
                                                   []},
-                                           {natbody, #{"out" => [{str, 1, "A"}]}}}]}},
+                                           {natbody, #{"out" => [{str, 1, "A"}]}}}}},
                  parse_string( "deftask f( out : ) { out = \"A\"; }" ) ).
                  
 foreign_deftask_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
-                                            {forbody, bash, "out=A"}}]}},
+                                            {forbody, bash, "out=A"}}}},
                   parse_string( "deftask f( out : )in bash *{out=A}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
-                                            {forbody, r, "out=\"A\""}}]}},
+                                            {forbody, r, "out=\"A\""}}}},
                   parse_string( "deftask f( out : )in R *{out=\"A\"}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
-                                            {forbody, python, ""}}]}},
+                                            {forbody, python, ""}}}},
                   parse_string( "deftask f( out : )in python *{}*" ) )].
 
 sign_with_inparam_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "inp", false}, false}]},
-                                            {forbody, python, "(defparameter out \"A\")"}}]}},
+                                            {forbody, python, "(defparameter out \"A\")"}}}},
                   parse_string( "deftask f( out : inp )in python *{(defparameter out \"A\")}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "a", false}, false},
                                                     {param, {name, "b", false}, false}]},
-                                            {forbody, python, "(defparameter out \"A\")"}}]}},
+                                            {forbody, python, "(defparameter out \"A\")"}}}},
                   parse_string( "deftask f( out : a b )in python *{(defparameter out \"A\")}*" ) )].
                   
 %% =============================================================================
@@ -146,45 +146,45 @@ sign_with_inparam_should_be_recognized_test() ->
 %% =============================================================================
 
 param_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "inp", false}, false}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( out( String ) : inp( String ) )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, false}],
                                                    [{param, {name, "inp", true}, false}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( out( File ) : inp( File ) )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
                                                    [{param, {name, "inp", false}, true}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( <out> : <inp> )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
                                                    [{param, {name, "inp", false}, true}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( <out( String )> : <inp( String )> )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, true}],
                                                    [{param, {name, "inp", true}, true}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( <out( File )> : <inp( File )> )in bash *{blub}*" ) )].
                     
 correl_inparam_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( out : [a( File ) b( File )] )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]},
                                                     {param, {name, "c", false}, false}]},
-                                            {forbody, bash, "blub"}}]}},
+                                            {forbody, bash, "blub"}}}},
                   parse_string( "deftask f( out : [a( File ) b( File )] c )in bash *{blub}*" ) )].
 
 -endif.
