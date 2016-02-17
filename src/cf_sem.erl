@@ -3,7 +3,7 @@
 -module( cf_sem ).
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
--export( [eval/2] ).
+-export( [eval/2, pfinal/1] ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
@@ -18,19 +18,19 @@
 %% Expression %% ===============================================================
 
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
--type str()     :: {str, Line::pos_integer(), S::string()}.                        % (2)
--type var()     :: {var, Line::pos_integer(), N::string()}.                        % (3)
--type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.      % (4)
--type fut()     :: {fut, Line::pos_integer(), Name::string(), R::pos_integer(),       % (5)
-                         Lp::[boolean()]}.
--type cnd()     :: {cnd, Line::pos_integer(),                                      % (6)
+-type str()     :: {str, S::string()}.                                          % (2)
+-type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
+-type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
+-type fut()     :: {fut, Name::string(), R::pos_integer(), Lp::[boolean()]}.    % (5)
+-type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
--type app()     :: {app, Line::pos_integer(), C::pos_integer(),                    % (7)
+-type app()     :: {app, Line::pos_integer(), C::pos_integer(),                 % (7)
                          Lambda::lam() | var(), Fa::#{string() => [expr()]}}.
 
 %% Lambda %% ===================================================================
 
--type lam()     :: {lam, Line::pos_integer(), Name::string(), S::sign(), B::body()}.  % (8)
+-type lam()     :: {lam, Line::pos_integer(), Name::string(),                   % (8)
+                         S::sign(), B::body()}.
 
 % Task Signature
 -type sign()    :: {sign, Lo::[param()], Li::[inparam()]}.                      % (9)
@@ -53,7 +53,7 @@
 -type ctx()     :: {Rho   :: #{string() => [expr()]},                           % (18)
                     Mu    :: fun( ( app() ) -> fut() ),
                     Gamma :: #{string() => lam()},
-                    Omega :: #{select() => [expr()]}}.
+                    Omega :: #{{pos_integer(), pos_integer()} => [expr()]}}.
 
 
 %% =============================================================================
@@ -65,10 +65,10 @@
 -spec pfinal( X ) -> boolean()                                                  % (19)
 when X :: #{string() => [expr()]} | [expr()] | expr().
 
-pfinal( F ) when is_map( F )   -> pfinal( maps:values( F ) );                   % (20)
-pfinal( L ) when is_list( L )  -> lists:all( fun pfinal/1, L );                 % (21,22)
-pfinal( {str, _, _S} )         -> true;                                         % (23)
-pfinal( _T )                   -> false.
+pfinal( F ) when is_map( F )  -> pfinal( maps:values( F ) );                    % (20)
+pfinal( L ) when is_list( L ) -> lists:all( fun pfinal/1, L );                  % (21,22)
+pfinal( {str, _S} )           -> true;                                          % (23)
+pfinal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
 
@@ -93,7 +93,7 @@ psing_argpair( _Z ) -> false.
 -spec pen( X::expr()|[expr()] ) -> boolean().                                   % (30)
 
 pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (31,32)
-pen( {str, _, _S} ) -> true;                                                    % (33)
+pen( {str, _S} ) -> true;                                                    % (33)
 pen( {cnd, _, _Xc, Xt, Xe} )when length( Xt ) =:= 1, length( Xe ) =:= 1 ->      % (34)
   pen( Xt ) andalso pen( Xe );
 pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (35)
@@ -103,7 +103,7 @@ pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  
       {param, _N, Pl} = lists:nth( C, Lo ),
       not Pl
   end;
-pen( {select, _, C, {fut, _, _, _R, Lp}} ) -> not lists:nth( C, Lp );                 % (36)
+pen( {select, _, C, {fut, _, _R, Lp}} ) -> not lists:nth( C, Lp );                 % (36)
 pen( _T ) -> false.
 
 %% =============================================================================
@@ -141,15 +141,15 @@ step( X, Theta ) when is_list( X ) ->                                           
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
   
 % String Literal
-step( X={str, _, _S}, _Theta ) -> [X];                                          % (45)
+step( X={str, _S}, _Theta ) -> [X];                                          % (45)
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
   maps:get( N, Rho );
   
 % Future Channel Selection
-step( S={select, _, _C, _Fut}, {_Rho, _Mu, _Gamma, Omega} ) ->                  % (47,48)
-  maps:get( S, Omega, [S] );
+step( S={select, _, C, {fut, _, R, _}}, {_Rho, _Mu, _Gamma, Omega} ) ->                  % (47,48)
+  maps:get( {C, R}, Omega, [S] );
 
 % Conditional
 step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (49)
@@ -297,7 +297,7 @@ enum_app_without_app_does_nothing_test() ->
 
 can_aug_argpair_with_param_test() ->
   L0 = [{param, "b", false}, {param, "c", false}],
-  F = #{"a" => [{str, 1, "1"}], "b" => [{str, 2, "2"}], "c" => [{str, 3, "3"}]},
+  F = #{"a" => [{str, "1"}], "b" => [{str, "2"}], "c" => [{str, "3"}]},
   Pair = {L0, F},
   I = {param, "a", false},
   L1 = [I|L0],
@@ -305,18 +305,18 @@ can_aug_argpair_with_param_test() ->
 
 can_aug_argpair_with_correl_test() ->
   L0 = [{param, "b", false}, {param, "c", false}],
-  F = #{"a1" => [{str, 1, "11"}],
-        "a2" => [{str, 2, "12"}],
-        "b" => [{str, 3, "2"}],
-        "c" => [{str, 4, "3"}]},
+  F = #{"a1" => [{str, "11"}],
+        "a2" => [{str, "12"}],
+        "b" => [{str, "2"}],
+        "c" => [{str, "3"}]},
   Pair = {L0, F},
   I = {correl, ["a1", "a2"]},
   L1 = [{param, "a1", false}, {param, "a2", false}|L0],
   ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
 
 can_augment_empty_argpairlist_with_param_test() ->
-  F1 = #{"a" => [{str, 1, "x1"}]},
-  F2 = #{"a" => [{str, 2, "y1"}]},
+  F1 = #{"a" => [{str, "x1"}]},
+  F2 = #{"a" => [{str, "y1"}]},
   PairList = [{[], F1}, {[], F2}],
   I = {param, "a", false},
   L1 = [{param, "a", false}],
@@ -324,8 +324,8 @@ can_augment_empty_argpairlist_with_param_test() ->
 
 can_augment_argpairlist_with_param_test() ->
   L0 = [{param, "b", false}, {param, "c", false}],
-  F1 = #{"a" => [{str, 1, "x1"}], "b" => [{str, 2, "x2"}], "c" => [{str, 3, "x3"}]},
-  F2 = #{"a" => [{str, 4, "y1"}], "b" => [{str, 5, "y2"}], "c" => [{str, 6, "y3"}]},
+  F1 = #{"a" => [{str, "x1"}], "b" => [{str, "x2"}], "c" => [{str, "x3"}]},
+  F2 = #{"a" => [{str, "y1"}], "b" => [{str, "y2"}], "c" => [{str, "y3"}]},
   PairList = [{L0, F1}, {L0, F2}],
   I = {param, "a", false},
   L1 = [{param, "a", false}|L0],
@@ -333,14 +333,14 @@ can_augment_argpairlist_with_param_test() ->
 
 can_augment_argpairlist_with_correl_test() ->
   L0 = [{param, "b", false}, {param, "c", false}],
-  F1 = #{"a1" => [{str, 1, "x11"}],
-         "a2" => [{str, 2, "x12"}],
-         "b" => [{str, 3, "x2"}],
-         "c" => [{str, 4, "x3"}]},
-  F2 = #{"a1" => [{str, 5, "y11"}],
-         "a2" => [{str, 6, "y12"}],
-         "b" => [{str, 7, "y2"}],
-         "c" => [{str, 8, "y3"}]},
+  F1 = #{"a1" => [{str, "x11"}],
+         "a2" => [{str, "x12"}],
+         "b" => [{str, "x2"}],
+         "c" => [{str, "x3"}]},
+  F2 = #{"a1" => [{str, "y11"}],
+         "a2" => [{str, "y12"}],
+         "b" => [{str, "y2"}],
+         "c" => [{str, "y3"}]},
   PairList = [{L0, F1}, {L0, F2}],
   I = {correl, ["a1", "a2"]},
   L1 = [{param, "a1", false}, {param, "a2", false}|L0],

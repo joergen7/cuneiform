@@ -47,7 +47,18 @@ start() ->
 
 string( S ) ->
   {Query, Rho, Gamma} = cf_parser:parse_string( S ),
-  cf_sem:eval( Query, {Rho, fun get_future/1, Gamma, #{}} ).
+  reduce( Query, Rho, Gamma ).
+
+reduce( X0, Rho, Gamma ) ->
+  X1 = cf_sem:eval( X0, {Rho, fun get_future/1, Gamma, #{}} ),
+  case cf_sem:pfinal( X1 ) of
+  	true  -> X1;
+  	false ->
+      receive
+        % TODO
+        X -> X
+      end
+  end.
 
 %% =============================================================================
 %% Internal Functions
