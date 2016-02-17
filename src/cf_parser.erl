@@ -1,13 +1,19 @@
 -module(cf_parser).
 -export([parse/1, parse_and_scan/1, format_error/1]).
--file("src/cf_parser.yrl", 99).
+-file("src/cf_parser.yrl", 111).
 
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+
+-export( [parse_string/1] ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
 -endif.
 
+parse_string( S ) ->
+  {ok, TokenList, _} = cf_lexer:string( S ),
+  {ok, ParseTree} = cf_parser:parse( TokenList ),
+  ParseTree.
 
 
 
@@ -49,258 +55,137 @@ mk_natlam( {deftask, Line, _}, {id, _, Name}, Sign, Block ) ->
 mk_forlam( {deftask, Line, _}, {id, _, Name}, Sign, Lang, {body, _, Code} ) ->
   #{Name => [{lam, Line, Name, Sign, {forbody, Lang, Code}}]}.
   
-  
+
+%% =============================================================================
+%% Unit Tests
+%% =============================================================================
+
 -ifdef( TEST ).
 
-% TEST INDEX
-
-parse_test_() -> [nil_should_be_recognized(),
-                  var_should_be_recognized(),
-                  multi_element_compoundexpr_should_be_recognized(),
-                  multiple_targets_should_be_joined(),
-                  strlit_should_be_recognized(),
-                  intlit_should_be_recognized(),
-                  cnd_should_be_recognized(),
-                  apply_should_be_recognized(),
-                  call_should_be_recognized(),
-                  assign_should_be_recognized(),
-                  native_deftask_should_be_recognized(),
-                  foreign_deftask_should_be_recognized(),
-                  sign_with_inparam_should_be_recognized(),
-                  param_should_be_recognized(),
-                  task_correl_should_be_recognized(),
-                  correl_inparam_should_be_recognized(),
-                  comb_noreplace_should_be_recognized()
-                 ].
-
-
-% ACTUAL TEST IMPLEMENTATION
-
-nil_should_be_recognized() ->
-  ?_assertEqual( {[], #{}, #{}}, parse_string( "nil;" ) ).
+nil_should_be_recognized_test() ->
+  ?assertEqual( {[], #{}, #{}}, parse_string( "nil;" ) ).
   
-var_should_be_recognized() ->
-  ?_assertEqual( {[{var, 1, "blub"}], #{}, #{}}, parse_string( "blub;" ) ).
+var_should_be_recognized_test() ->
+  ?assertEqual( {[{var, 1, "blub"}], #{}, #{}}, parse_string( "blub;" ) ).
   
-multi_element_compoundexpr_should_be_recognized() ->
-  ?_assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
+multi_element_compoundexpr_should_be_recognized_test() ->
+  ?assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
                  parse_string( "bla blub;" ) ).
   
-multiple_targets_should_be_joined() ->
-  ?_assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
+multiple_targets_should_be_joined_test() ->
+  ?assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
                  parse_string( "bla; blub;" ) ).
   
-strlit_should_be_recognized() ->
-  ?_assertEqual( {[{str, 1, "bla"}], #{}, #{}}, parse_string( "'bla';" ) ).
+strlit_should_be_recognized_test() ->
+  ?assertEqual( {[{str, 1, "bla"}], #{}, #{}}, parse_string( "\"bla\";" ) ).
   
-intlit_should_be_recognized() ->
-  ?_assertEqual( {[{str, 1, "-5"}], #{}, #{}}, parse_string( "-5;" ) ).
+intlit_should_be_recognized_test() ->
+  ?assertEqual( {[{str, 1, "-5"}], #{}, #{}}, parse_string( "-5;" ) ).
   
-cnd_should_be_recognized() ->
-  ?_assertEqual( {[{cnd, 1, [], [{str, 1, "bla"}], [{str, 1, "blub"}]}],
+cnd_should_be_recognized_test() ->
+  ?assertEqual( {[{cnd, 1, [], [{str, 1, "bla"}], [{str, 1, "blub"}]}],
                   #{}, #{}},
-                 parse_string( "if nil then 'bla' else 'blub' end;" ) ).
-  
-apply_should_be_recognized() ->
-  [?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}], #{}}], #{}, #{}},
-                  parse_string( "apply( task: f );" ) ),
-   ?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}], #{"x" => [{var, 1, "x"}]}}],
-                   #{}, #{}},
-                  parse_string( "apply( task: f, x: x );" ) ),
-   ?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}], #{"x" => [{var, 1, "x"}],
-                                                   "y" => [{str, 1, "y"}]}}],
-                   #{}, #{}},
-                  parse_string( "apply( task: f, x: x, y: 'y' );" ) ),
-   ?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}, {var, 1, "g"}],
-                          #{"x" => [{var, 1, "x"}]}}], #{}, #{}},
-                  parse_string( "apply( task: f g, x: x );" ) )].
-  
-call_should_be_recognized() ->
-  [?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}], #{}}], #{}, #{}},
+                 parse_string( "if nil then \"bla\" else \"blub\" end;" ) ).
+
+app_should_be_recognized_test() ->
+  [?assertEqual( {[{app, 1, 1, {var, 1, "f"}, #{}}], #{}, #{}},
                   parse_string( "f();" ) ),
-   ?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}], #{"x" => [{var, 1, "x"}]}}],
+   ?assertEqual( {[{app, 1, 1, {var, 1, "f"}, #{"x" => [{var, 1, "x"}]}}],
                    #{}, #{}}, parse_string( "f( x: x );" ) ),
-   ?_assertEqual( {[{app, 1, 1, [{var, 1, "f"}],
+   ?assertEqual( {[{app, 1, 1, {var, 1, "f"},
                      #{"x" => [{var, 1, "x"}],
                        "y" => [{str, 1, "y"}]}}], #{}, #{}},
-                  parse_string( "f( x: x, y: 'y' );" ) )].
+                  parse_string( "f( x: x, y: \"y\" );" ) )].
 
 
-assign_should_be_recognized() ->
-  [?_assertEqual( {[], #{"x" => [{str, 1, "x"}]}, #{}}, parse_string( "x = 'x';" ) ),              
-   ?_assertEqual( {[], #{"x" => [{app, 1, 1, [{var, 1, "f"}], #{}}], "y" => [{app, 1, 2, [{var, 1, "f"}], #{}}]}, #{}}, parse_string( "x y = f();" ) ),
-   ?_assertError( {parser, cannot_set_channel_on_nonapp_expr, str, 1}, parse_string( "x y = 'A';" ) ),
-   ?_assertError( {parser, nonvar_expr_left_of_eq, str, 1}, parse_string( "'a' = 'A';" ) )].
+assign_should_be_recognized_test() ->
+  [?assertEqual( {[], #{"x" => [{str, 1, "x"}]}, #{}}, parse_string( "x = \"x\";" ) ),              
+   ?assertEqual( {[], #{"x" => [{app, 1, 1, {var, 1, "f"}, #{}}], "y" => [{app, 1, 2, {var, 1, "f"}, #{}}]}, #{}}, parse_string( "x y = f();" ) ),
+   ?assertError( {parser, cannot_set_channel_on_nonapp_expr, str, 1}, parse_string( "x y = \"A\";" ) ),
+   ?assertError( {parser, nonvar_expr_left_of_eq, str, 1}, parse_string( "\"a\" = \"A\";" ) )].
    
-native_deftask_should_be_recognized() ->
-  ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+native_deftask_should_be_recognized_test() ->
+  ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                            {sign, [{param, {name, "out", false}, false}],
-                                                  [], []},
+                                                  []},
                                            {natbody, #{"out" => [{str, 1, "A"}]}}}]}},
-                 parse_string( "deftask f( out : ) { out = 'A'; }" ) ).
+                 parse_string( "deftask f( out : ) { out = \"A\"; }" ) ).
                  
-foreign_deftask_should_be_recognized() ->
-  [?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+foreign_deftask_should_be_recognized_test() ->
+  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
+                                                   []},
                                             {forbody, bash, "out=A"}}]}},
                   parse_string( "deftask f( out : )in bash *{out=A}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
+                                                   []},
                                             {forbody, r, "out=\"A\""}}]}},
                   parse_string( "deftask f( out : )in R *{out=\"A\"}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
-                                            {forbody, matlab, "out=\"A\""}}]}},
-                  parse_string( "deftask f( out : )in matlab *{out=\"A\"}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
-                                            {forbody, octave, "out=\"A\""}}]}},
-                  parse_string( "deftask f( out : )in octave *{out=\"A\"}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
-                                            {forbody, perl, ""}}]}},
-                  parse_string( "deftask f( out : )in perl *{}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
+                                                   []},
                                             {forbody, python, ""}}]}},
-                  parse_string( "deftask f( out : )in python *{}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+                  parse_string( "deftask f( out : )in python *{}*" ) )].
+
+sign_with_inparam_should_be_recognized_test() ->
+  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [], []},
-                                            {forbody, lisp, "(defparameter out \"A\")"}}]}},
-                  parse_string( "deftask f( out : )in lisp *{(defparameter out \"A\")}*" ) )].
-                  
-sign_with_inparam_should_be_recognized() ->
-  [?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [],
                                                    [{param, {name, "inp", false}, false}]},
-                                            {forbody, lisp, "(defparameter out \"A\")"}}]}},
-                  parse_string( "deftask f( out : inp )in lisp *{(defparameter out \"A\")}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+                                            {forbody, python, "(defparameter out \"A\")"}}]}},
+                  parse_string( "deftask f( out : inp )in python *{(defparameter out \"A\")}*" ) ),
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [],
                                                    [{param, {name, "a", false}, false},
                                                     {param, {name, "b", false}, false}]},
-                                            {forbody, lisp, "(defparameter out \"A\")"}}]}},
-                  parse_string( "deftask f( out : a b )in lisp *{(defparameter out \"A\")}*" ) )].
+                                            {forbody, python, "(defparameter out \"A\")"}}]}},
+                  parse_string( "deftask f( out : a b )in python *{(defparameter out \"A\")}*" ) )].
                   
-param_should_be_recognized() ->
-  [?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+%% =============================================================================
+%% Failing Tests
+%% =============================================================================
+
+param_should_be_recognized_test() ->
+  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [],
                                                    [{param, {name, "inp", false}, false}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( out( String ) : inp( String ) )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, false}],
-                                                   [],
                                                    [{param, {name, "inp", true}, false}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( out( File ) : inp( File ) )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
-                                                   [],
                                                    [{param, {name, "inp", false}, true}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( <out> : <inp> )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
-                                                   [],
                                                    [{param, {name, "inp", false}, true}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( <out( String )> : <inp( String )> )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, true}],
-                                                   [],
                                                    [{param, {name, "inp", true}, true}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( <out( File )> : <inp( File )> )in bash *{blub}*" ) )].
-  
-task_correl_should_be_recognized() ->
-  [?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+                    
+correl_inparam_should_be_recognized_test() ->
+  [?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", false}],
-                                                   [{param, {name, "b", false}, false}]},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a] b )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", false},
-                                                    {name, "b", false}],
-                                                   []},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a b] )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", false}],
-                                                   [{param, {name, "b", false}, false}]},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a( String )] b )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", false},
-                                                    {name, "b", false}],
-                                                   []},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a( String ) b( String )] )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", true}],
-                                                   [{param, {name, "b", false}, false}]},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a( File )] b )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [{name, "a", true},
-                                                    {name, "b", true}],
-                                                   []},
-                                            {forbody, bash, "blub"}}]}},
-                  parse_string( "deftask f( out : [task a( File ) b( File )] )in bash *{blub}*" ) )].    
-                  
-correl_inparam_should_be_recognized() ->
-  [?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                            {sign, [{param, {name, "out", false}, false}],
-                                                   [],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( out : [a( File ) b( File )] )in bash *{blub}*" ) ),
-   ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
+   ?assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
-                                                   [],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]},
                                                     {param, {name, "c", false}, false}]},
                                             {forbody, bash, "blub"}}]}},
                   parse_string( "deftask f( out : [a( File ) b( File )] c )in bash *{blub}*" ) )].
-
-comb_noreplace_should_be_recognized() ->
-  ?_assertEqual( {[], #{}, #{"f" => [{lam, 1, "f",
-                                           {sign, [{param, {name, "out", false}, false}],
-                                                  [],
-                                                  [{comb, cnr, {name, "x", true}, ["a", "b", "c"]}]},
-                                           {forbody, bash, "blub"}}]}},
-                 parse_string( "deftask f( out : {comb noreplace x( File ): a b c} )in bash *{blub}*" ) ).
-
-
-
-
-
-
-
-parse_string( S ) ->
-  {ok, TokenList, _} = cuneiform_lexer:string( S ),
-  {ok, ParseTree} = cuneiform_parser:parse( TokenList ),
-  ParseTree.
-
-
 
 -endif.
 
@@ -480,7 +365,7 @@ yecctoken2string(Other) ->
 
 
 
--file("src/cf_parser.erl", 483).
+-file("src/cf_parser.erl", 368).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 yeccpars2(0=S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -1295,7 +1180,7 @@ yeccgoto_stat(1, Cat, Ss, Stack, T, Ts, Tzr) ->
  yeccpars2_1(1, Cat, Ss, Stack, T, Ts, Tzr).
 
 -compile({inline,yeccpars2_3_/1}).
--file("src/cf_parser.yrl", 31).
+-file("src/cf_parser.yrl", 40).
 yeccpars2_3_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1303,7 +1188,7 @@ yeccpars2_3_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_5_/1}).
--file("src/cf_parser.yrl", 58).
+-file("src/cf_parser.yrl", 67).
 yeccpars2_5_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1311,7 +1196,7 @@ yeccpars2_5_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_6_/1}).
--file("src/cf_parser.yrl", 33).
+-file("src/cf_parser.yrl", 42).
 yeccpars2_6_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1319,7 +1204,7 @@ yeccpars2_6_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_9_/1}).
--file("src/cf_parser.yrl", 32).
+-file("src/cf_parser.yrl", 41).
 yeccpars2_9_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1327,7 +1212,7 @@ yeccpars2_9_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_13_/1}).
--file("src/cf_parser.yrl", 54).
+-file("src/cf_parser.yrl", 63).
 yeccpars2_13_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1335,7 +1220,7 @@ yeccpars2_13_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_14_/1}).
--file("src/cf_parser.yrl", 52).
+-file("src/cf_parser.yrl", 61).
 yeccpars2_14_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1343,7 +1228,7 @@ yeccpars2_14_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_15_/1}).
--file("src/cf_parser.yrl", 49).
+-file("src/cf_parser.yrl", 58).
 yeccpars2_15_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1351,7 +1236,7 @@ yeccpars2_15_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_16_/1}).
--file("src/cf_parser.yrl", 53).
+-file("src/cf_parser.yrl", 62).
 yeccpars2_16_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1359,15 +1244,15 @@ yeccpars2_16_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_21_/1}).
--file("src/cf_parser.yrl", 64).
+-file("src/cf_parser.yrl", 73).
 yeccpars2_21_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
-   { app , get_line ( __1 ) , 1 , [ mk_var ( __1 ) ] , # { } }
+   { app , get_line ( __1 ) , 1 , mk_var ( __1 ) , # { } }
   end | __Stack].
 
 -compile({inline,yeccpars2_24_/1}).
--file("src/cf_parser.yrl", 67).
+-file("src/cf_parser.yrl", 76).
 yeccpars2_24_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1375,7 +1260,7 @@ yeccpars2_24_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_26_/1}).
--file("src/cf_parser.yrl", 70).
+-file("src/cf_parser.yrl", 79).
 yeccpars2_26_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1383,15 +1268,15 @@ yeccpars2_26_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_27_/1}).
--file("src/cf_parser.yrl", 65).
+-file("src/cf_parser.yrl", 74).
 yeccpars2_27_(__Stack0) ->
  [__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
-   { app , get_line ( __1 ) , 1 , [ mk_var ( __1 ) ] , __3 }
+   { app , get_line ( __1 ) , 1 , mk_var ( __1 ) , __3 }
   end | __Stack].
 
 -compile({inline,yeccpars2_32_/1}).
--file("src/cf_parser.yrl", 84).
+-file("src/cf_parser.yrl", 93).
 yeccpars2_32_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1399,7 +1284,7 @@ yeccpars2_32_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_33_/1}).
--file("src/cf_parser.yrl", 81).
+-file("src/cf_parser.yrl", 90).
 yeccpars2_33_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1407,7 +1292,7 @@ yeccpars2_33_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_34_/1}).
--file("src/cf_parser.yrl", 87).
+-file("src/cf_parser.yrl", 96).
 yeccpars2_34_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1415,7 +1300,7 @@ yeccpars2_34_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_37_/1}).
--file("src/cf_parser.yrl", 82).
+-file("src/cf_parser.yrl", 91).
 yeccpars2_37_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1423,7 +1308,7 @@ yeccpars2_37_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_41_/1}).
--file("src/cf_parser.yrl", 88).
+-file("src/cf_parser.yrl", 97).
 yeccpars2_41_(__Stack0) ->
  [__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1431,7 +1316,7 @@ yeccpars2_41_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_42_/1}).
--file("src/cf_parser.yrl", 89).
+-file("src/cf_parser.yrl", 98).
 yeccpars2_42_(__Stack0) ->
  [__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1439,7 +1324,7 @@ yeccpars2_42_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_43_/1}).
--file("src/cf_parser.yrl", 85).
+-file("src/cf_parser.yrl", 94).
 yeccpars2_43_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1447,7 +1332,7 @@ yeccpars2_43_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_47_/1}).
--file("src/cf_parser.yrl", 78).
+-file("src/cf_parser.yrl", 87).
 yeccpars2_47_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1455,15 +1340,15 @@ yeccpars2_47_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_49_/1}).
--file("src/cf_parser.yrl", 72).
+-file("src/cf_parser.yrl", 81).
 yeccpars2_49_(__Stack0) ->
  [__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
-   { sign , __2 , [ ] , [ ] }
+   { sign , __2 , [ ] }
   end | __Stack].
 
 -compile({inline,yeccpars2_51_/1}).
--file("src/cf_parser.yrl", 91).
+-file("src/cf_parser.yrl", 100).
 yeccpars2_51_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1471,7 +1356,7 @@ yeccpars2_51_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_52_/1}).
--file("src/cf_parser.yrl", 92).
+-file("src/cf_parser.yrl", 101).
 yeccpars2_52_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1479,7 +1364,7 @@ yeccpars2_52_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_53_/1}).
--file("src/cf_parser.yrl", 76).
+-file("src/cf_parser.yrl", 85).
 yeccpars2_53_(__Stack0) ->
  [__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1487,7 +1372,7 @@ yeccpars2_53_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_54_/1}).
--file("src/cf_parser.yrl", 79).
+-file("src/cf_parser.yrl", 88).
 yeccpars2_54_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1495,15 +1380,15 @@ yeccpars2_54_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_55_/1}).
--file("src/cf_parser.yrl", 73).
+-file("src/cf_parser.yrl", 82).
 yeccpars2_55_(__Stack0) ->
  [__5,__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
-   { sign , __2 , [ ] , __4 }
+   { sign , __2 , __4 }
   end | __Stack].
 
 -compile({inline,yeccpars2_61_/1}).
--file("src/cf_parser.yrl", 40).
+-file("src/cf_parser.yrl", 49).
 yeccpars2_61_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1511,7 +1396,7 @@ yeccpars2_61_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_62_/1}).
--file("src/cf_parser.yrl", 42).
+-file("src/cf_parser.yrl", 51).
 yeccpars2_62_(__Stack0) ->
  [__6,__5,__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1519,7 +1404,7 @@ yeccpars2_62_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_65_/1}).
--file("src/cf_parser.yrl", 37).
+-file("src/cf_parser.yrl", 46).
 yeccpars2_65_(__Stack0) ->
  [__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1527,7 +1412,7 @@ yeccpars2_65_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_67_/1}).
--file("src/cf_parser.yrl", 45).
+-file("src/cf_parser.yrl", 54).
 yeccpars2_67_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1535,7 +1420,7 @@ yeccpars2_67_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_68_/1}).
--file("src/cf_parser.yrl", 46).
+-file("src/cf_parser.yrl", 55).
 yeccpars2_68_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1543,7 +1428,7 @@ yeccpars2_68_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_69_/1}).
--file("src/cf_parser.yrl", 47).
+-file("src/cf_parser.yrl", 56).
 yeccpars2_69_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
@@ -1551,7 +1436,7 @@ yeccpars2_69_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_70_/1}).
--file("src/cf_parser.yrl", 43).
+-file("src/cf_parser.yrl", 52).
 yeccpars2_70_(__Stack0) ->
  [__6,__5,__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1559,7 +1444,7 @@ yeccpars2_70_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_76_/1}).
--file("src/cf_parser.yrl", 62).
+-file("src/cf_parser.yrl", 71).
 yeccpars2_76_(__Stack0) ->
  [__7,__6,__5,__4,__3,__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1567,7 +1452,7 @@ yeccpars2_76_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_77_/1}).
--file("src/cf_parser.yrl", 35).
+-file("src/cf_parser.yrl", 44).
 yeccpars2_77_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1575,7 +1460,7 @@ yeccpars2_77_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_78_/1}).
--file("src/cf_parser.yrl", 59).
+-file("src/cf_parser.yrl", 68).
 yeccpars2_78_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1583,7 +1468,7 @@ yeccpars2_78_(__Stack0) ->
   end | __Stack].
 
 -compile({inline,yeccpars2_79_/1}).
--file("src/cf_parser.yrl", 29).
+-file("src/cf_parser.yrl", 38).
 yeccpars2_79_(__Stack0) ->
  [__2,__1 | __Stack] = __Stack0,
  [begin
@@ -1591,4 +1476,4 @@ yeccpars2_79_(__Stack0) ->
   end | __Stack].
 
 
--file("src/cf_parser.yrl", 404).
+-file("src/cf_parser.yrl", 301).

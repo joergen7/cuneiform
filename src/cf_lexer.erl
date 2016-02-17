@@ -12,7 +12,7 @@
 -export([format_error/1]).
 
 %% User code. This is placed here to allow extra attributes.
--file("src/cf_lexer.xrl", 103).
+-file("src/cf_lexer.xrl", 114).
 
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
@@ -28,200 +28,127 @@ trim_body( S ) ->
 trim_strlit( S ) ->
   string:substr( S, 2, length( S )-2 ).
   
+
+
+%% =============================================================================
+%% Unit Tests
+%% =============================================================================
+
   
 -ifdef( TEST ).
 
 
-% TEST INDEX
 
-token_test_() -> [
-                  bash_style_comment_should_be_recognized(),
-                  c_style_comment_should_be_recognized(),
-                  erlang_style_comment_should_be_recognized(),
-                  multiline_comment_should_be_recognized(),
-                  apply_should_be_recognized(),
-                  bash_should_be_recognized(),
-                  beginif_should_be_recognized(),
-                  colon_should_be_recognized(),
-                  comb_should_be_recognized(),
-                  deftask_should_be_recognized(),
-                  else_should_be_recognized(),
-                  endif_should_be_recognized(),
-                  eq_should_be_recognized(),
-                  file_should_be_recognized(),
-                  in_should_be_recognized(),
-                  id_should_be_recognized(),
-                  lisp_should_be_recognized(),
-                  matlab_should_be_recognized(),
-                  octave_should_be_recognized(),
-                  perl_should_be_recognized(),
-                  python_should_be_recognized(),
-                  r_should_be_recognized(),
-                  lbrace_should_be_recognized(),
-                  lparen_should_be_recognized(),
-                  lsquarebr_should_be_recognized(),
-                  ltag_should_be_recognized(),
-                  nil_should_be_recognized(),
-                  noreplace_should_be_recognized(),
-                  rbrace_should_be_recognized(),
-                  rparen_should_be_recognized(),
-                  rsquarebr_should_be_recognized(),
-                  rtag_should_be_recognized(),
-                  semicolon_should_be_recognized(),
-                  string_should_be_recognized(),
-                  task_should_be_recognized(),
-                  then_should_be_recognized(),
-                  intlit_should_be_recognized(),
-                  body_should_be_recognized(),
-                  strlit_should_be_recognized()
-                 ].
+bash_style_comment_should_be_recognized_test() ->
+  ?assertEqual( {ok, [], 1}, string( "#this is a comment" ) ).
+  
+c_style_comment_should_be_recognized_test() ->
+  ?assertEqual( {ok, [], 1}, string( "//this is a comment" ) ).
+  
+erlang_style_comment_should_be_recognized_test() ->
+  ?assertEqual( {ok, [], 1}, string( "%this is a comment" ) ).
+  
+  
+multiline_comment_should_be_recognized_test() ->
+  [?assertEqual( {ok, [], 1}, string( "/**/" ) ),
+   ?assertEqual( {ok, [], 1}, string( "/*x*/" ) ),
+   ?assertEqual( {ok, [], 1}, string( "/*xy*/" ) ),
+   ?assertEqual( {ok, [], 2}, string( "/*x\ny*/" ) )].
+    
+bash_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{bash, 1, "bash"}], 1}, string( "bash" ) ).
+  
+beginif_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{beginif, 1, "if"}], 1}, string( "if" ) ).
+  
+colon_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{colon, 1, ":"}], 1}, string( ":" ) ).
+  
+deftask_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{deftask, 1, "deftask"}], 1}, string( "deftask" ) ).
 
+else_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{else, 1, "else"}], 1}, string( "else" ) ).
 
+endif_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{endif, 1, "end"}], 1}, string( "end" ) ).
 
+eq_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{eq, 1, "="}], 1}, string( "=" ) ).
 
-% ACTUAL TEST IMPLEMENTATION
+file_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{file, 1, "File"}], 1}, string( "File" ) ).
 
-bash_style_comment_should_be_recognized() ->
-  ?_assertEqual( {ok, [], 1}, string( "#this is a comment" ) ).
+in_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{in, 1, "in"}], 1}, string( "in" ) ).
   
-c_style_comment_should_be_recognized() ->
-  ?_assertEqual( {ok, [], 1}, string( "//this is a comment" ) ).
+id_should_be_recognized_test() ->
+  [?assertEqual( {ok, [{id, 1, "inp"}], 1}, string( "inp" ) ),
+   ?assertEqual( {ok, [{id, 1, "a0"}], 1}, string( "a0" ) ),
+   ?assertEqual( {ok, [{id, 1, "a9"}], 1}, string( "a9" ) ),
+   ?assertEqual( {ok, [{id, 1, "a."}], 1}, string( "a." ) ),
+   ?assertEqual( {ok, [{id, 1, "a-"}], 1}, string( "a-" ) ),
+   ?assertEqual( {ok, [{id, 1, "a_"}], 1}, string( "a_" ) )].
+    
+python_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{python, 1, "python"}], 1}, string( "python" ) ).
   
-erlang_style_comment_should_be_recognized() ->
-  ?_assertEqual( {ok, [], 1}, string( "%this is a comment" ) ).
-  
-  
-multiline_comment_should_be_recognized() ->
-  [?_assertEqual( {ok, [], 1}, string( "/**/" ) ),
-   ?_assertEqual( {ok, [], 1}, string( "/*x*/" ) ),
-   ?_assertEqual( {ok, [], 1}, string( "/*xy*/" ) ),
-   ?_assertEqual( {ok, [], 2}, string( "/*x\ny*/" ) )].
-  
-apply_should_be_recognized() ->
-  ?_assertEqual( {ok, [{apply, 1, "apply"}], 1}, string( "apply" ) ).
-  
-bash_should_be_recognized() ->
-  ?_assertEqual( {ok, [{bash, 1, "bash"}], 1}, string( "bash" ) ).
-  
-beginif_should_be_recognized() ->
-  ?_assertEqual( {ok, [{beginif, 1, "if"}], 1}, string( "if" ) ).
-  
-colon_should_be_recognized() ->
-  ?_assertEqual( {ok, [{colon, 1, ":"}], 1}, string( ":" ) ).
-  
-comb_should_be_recognized() ->
-  ?_assertEqual( {ok, [{comb, 1, "comb"}], 1}, string( "comb" ) ).
+r_should_be_recognized_test() ->
+  [?assertEqual( {ok, [{r, 1, "r"}], 1}, string( "r" ) ),
+   ?assertEqual( {ok, [{r, 1, "R"}], 1}, string( "R" ) )].
 
-deftask_should_be_recognized() ->
-  ?_assertEqual( {ok, [{deftask, 1, "deftask"}], 1}, string( "deftask" ) ).
-
-else_should_be_recognized() ->
-  ?_assertEqual( {ok, [{else, 1, "else"}], 1}, string( "else" ) ).
-
-endif_should_be_recognized() ->
-  ?_assertEqual( {ok, [{endif, 1, "end"}], 1}, string( "end" ) ).
-
-eq_should_be_recognized() ->
-  ?_assertEqual( {ok, [{eq, 1, "="}], 1}, string( "=" ) ).
-
-file_should_be_recognized() ->
-  ?_assertEqual( {ok, [{file, 1, "File"}], 1}, string( "File" ) ).
-
-in_should_be_recognized() ->
-  ?_assertEqual( {ok, [{in, 1, "in"}], 1}, string( "in" ) ).
+lbrace_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{lbrace, 1, "{"}], 1}, string( "{" ) ).
   
-id_should_be_recognized() ->
-  [?_assertEqual( {ok, [{id, 1, "inp"}], 1}, string( "inp" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a0"}], 1}, string( "a0" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a9"}], 1}, string( "a9" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a."}], 1}, string( "a." ) ),
-   ?_assertEqual( {ok, [{id, 1, "a-"}], 1}, string( "a-" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a_"}], 1}, string( "a_" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a+"}], 1}, string( "a+" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a*"}], 1}, string( "a*" ) ),
-   ?_assertEqual( {ok, [{id, 1, "a/"}], 1}, string( "a/" ) )].
+lparen_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{lparen, 1, "("}], 1}, string( "(" ) ).
   
-lisp_should_be_recognized() ->
-  ?_assertEqual( {ok, [{lisp, 1, "lisp"}], 1}, string( "lisp" ) ).
+lsquarebr_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{lsquarebr, 1, "["}], 1}, string( "[" ) ).
   
-matlab_should_be_recognized() ->
-  ?_assertEqual( {ok, [{matlab, 1, "matlab"}], 1}, string( "matlab" ) ).
+ltag_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{ltag, 1, "<"}], 1}, string( "<" ) ).
   
-octave_should_be_recognized() ->
-  ?_assertEqual( {ok, [{octave, 1, "octave"}], 1}, string( "octave" ) ).
+nil_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{nil, 1, "nil"}], 1}, string( "nil" ) ).
+    
+rbrace_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{rbrace, 1, "}"}], 1}, string( "}" ) ).
   
-perl_should_be_recognized() ->
-  ?_assertEqual( {ok, [{perl, 1, "perl"}], 1}, string( "perl" ) ).
+rparen_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{rparen, 1, ")"}], 1}, string( ")" ) ).
   
-python_should_be_recognized() ->
-  ?_assertEqual( {ok, [{python, 1, "python"}], 1}, string( "python" ) ).
+rsquarebr_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{rsquarebr, 1, "]"}], 1}, string( "]" ) ).
   
-r_should_be_recognized() ->
-  [?_assertEqual( {ok, [{r, 1, "r"}], 1}, string( "r" ) ),
-   ?_assertEqual( {ok, [{r, 1, "R"}], 1}, string( "R" ) )].
-
-lbrace_should_be_recognized() ->
-  ?_assertEqual( {ok, [{lbrace, 1, "{"}], 1}, string( "{" ) ).
+rtag_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{rtag, 1, ">"}], 1}, string( ">" ) ).
   
-lparen_should_be_recognized() ->
-  ?_assertEqual( {ok, [{lparen, 1, "("}], 1}, string( "(" ) ).
+semicolon_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{semicolon, 1, ";"}], 1}, string( ";" ) ).
   
-lsquarebr_should_be_recognized() ->
-  ?_assertEqual( {ok, [{lsquarebr, 1, "["}], 1}, string( "[" ) ).
+string_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{string, 1, "String"}], 1}, string( "String" ) ).
   
-ltag_should_be_recognized() ->
-  ?_assertEqual( {ok, [{ltag, 1, "<"}], 1}, string( "<" ) ).
+then_should_be_recognized_test() ->
+  ?assertEqual( {ok, [{then, 1, "then"}], 1}, string( "then" ) ).
   
-nil_should_be_recognized() ->
-  ?_assertEqual( {ok, [{nil, 1, "nil"}], 1}, string( "nil" ) ).
-  
-noreplace_should_be_recognized() ->
-  ?_assertEqual( {ok, [{noreplace, 1, "noreplace"}], 1},
-                 string( "noreplace" ) ).
-  
-rbrace_should_be_recognized() ->
-  ?_assertEqual( {ok, [{rbrace, 1, "}"}], 1}, string( "}" ) ).
-  
-rparen_should_be_recognized() ->
-  ?_assertEqual( {ok, [{rparen, 1, ")"}], 1}, string( ")" ) ).
-  
-rsquarebr_should_be_recognized() ->
-  ?_assertEqual( {ok, [{rsquarebr, 1, "]"}], 1}, string( "]" ) ).
-  
-rtag_should_be_recognized() ->
-  ?_assertEqual( {ok, [{rtag, 1, ">"}], 1}, string( ">" ) ).
-  
-semicolon_should_be_recognized() ->
-  ?_assertEqual( {ok, [{semicolon, 1, ";"}], 1}, string( ";" ) ).
-  
-string_should_be_recognized() ->
-  ?_assertEqual( {ok, [{string, 1, "String"}], 1}, string( "String" ) ).
-  
-task_should_be_recognized() ->
-  ?_assertEqual( {ok, [{task, 1, "task"}], 1}, string( "task" ) ).
-  
-then_should_be_recognized() ->
-  ?_assertEqual( {ok, [{then, 1, "then"}], 1}, string( "then" ) ).
-  
-intlit_should_be_recognized() ->
-  [?_assertEqual( {ok, [{intlit, 1, "10"}], 1}, string( "10" ) ),
-   ?_assertEqual( {ok, [{intlit, 1, "-10"}], 1}, string( "-10" ) ),
-   ?_assertEqual( {ok, [{intlit, 1, "9"}], 1}, string( "9" ) ),
-   ?_assertEqual( {ok, [{intlit, 1, "0"}], 1}, string( "0" ) )].
+intlit_should_be_recognized_test() ->
+  [?assertEqual( {ok, [{intlit, 1, "10"}], 1}, string( "10" ) ),
+   ?assertEqual( {ok, [{intlit, 1, "-10"}], 1}, string( "-10" ) ),
+   ?assertEqual( {ok, [{intlit, 1, "9"}], 1}, string( "9" ) ),
+   ?assertEqual( {ok, [{intlit, 1, "0"}], 1}, string( "0" ) )].
    
-body_should_be_recognized() ->
-  [?_assertEqual( {ok, [{body, 1, ""}], 1}, string( "*{}*" ) ),
-   ?_assertEqual( {ok, [{body, 1, "x"}], 1}, string( "*{x}*" ) ),
-   ?_assertEqual( {ok, [{body, 1, "xy"}], 1}, string( "*{xy}*" ) ),
-   ?_assertEqual( {ok, [{body, 1, "x\ny"}], 2}, string( "*{x\ny}*" ) )].
+body_should_be_recognized_test() ->
+  [?assertEqual( {ok, [{body, 1, ""}], 1}, string( "*{}*" ) ),
+   ?assertEqual( {ok, [{body, 1, "x"}], 1}, string( "*{x}*" ) ),
+   ?assertEqual( {ok, [{body, 1, "xy"}], 1}, string( "*{xy}*" ) ),
+   ?assertEqual( {ok, [{body, 1, "x\ny"}], 2}, string( "*{x\ny}*" ) )].
    
-strlit_should_be_recognized() ->
-  [?_assertEqual( {ok, [{strlit, 1, ""}], 1}, string( "''" ) ),
-   ?_assertEqual( {ok, [{strlit, 1, ""}], 1}, string( "\"\"" ) ),
-   ?_assertEqual( {ok, [{strlit, 1, "x"}], 1}, string( "'x'" ) ),
-   ?_assertEqual( {ok, [{strlit, 1, "x"}], 1}, string( "\"x\"" ) ),
-   ?_assertEqual( {ok, [{strlit, 1, "xy"}], 1}, string( "'xy'" ) ),
-   ?_assertEqual( {ok, [{strlit, 1, "xy"}], 1}, string( "\"xy\"" ) )].
+strlit_should_be_recognized_test() ->
+  [?assertEqual( {ok, [{strlit, 1, ""}], 1}, string( "\"\"" ) ),
+   ?assertEqual( {ok, [{strlit, 1, "x"}], 1}, string( "\"x\"" ) ),
+   ?assertEqual( {ok, [{strlit, 1, "xy"}], 1}, string( "\"xy\"" ) )].
 
    
    
@@ -499,7 +426,7 @@ yysuf(List, N) -> lists:nthtail(N, List).
 %% return signal either an unrecognised character or end of current
 %% input.
 
--file("src/cf_lexer.erl", 501).
+-file("src/cf_lexer.erl", 428).
 yystate() -> 69.
 
 yystate(72, [122|Ics], Line, Tlen, _, _) ->
@@ -1592,157 +1519,157 @@ yyaction(30, _, _, _) ->
 yyaction(_, _, _, _) -> error.
 
 -compile({inline,yyaction_0/2}).
--file("src/cf_lexer.xrl", 61).
+-file("src/cf_lexer.xrl", 69).
 yyaction_0(TokenChars, TokenLine) ->
      { token, { bash, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_1/2}).
--file("src/cf_lexer.xrl", 62).
+-file("src/cf_lexer.xrl", 70).
 yyaction_1(TokenChars, TokenLine) ->
      { token, { python, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_2/2}).
--file("src/cf_lexer.xrl", 63).
+-file("src/cf_lexer.xrl", 71).
 yyaction_2(TokenChars, TokenLine) ->
      { token, { r, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_3/2}).
--file("src/cf_lexer.xrl", 65).
+-file("src/cf_lexer.xrl", 73).
 yyaction_3(TokenChars, TokenLine) ->
      { token, { intlit, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_4/2}).
--file("src/cf_lexer.xrl", 66).
+-file("src/cf_lexer.xrl", 74).
 yyaction_4(TokenChars, TokenLine) ->
      { token, { strlit, TokenLine, trim_strlit (TokenChars) } } .
 
 -compile({inline,yyaction_5/2}).
--file("src/cf_lexer.xrl", 67).
+-file("src/cf_lexer.xrl", 75).
 yyaction_5(TokenChars, TokenLine) ->
      { token, { body, TokenLine, trim_body (TokenChars) } } .
 
 -compile({inline,yyaction_6/2}).
--file("src/cf_lexer.xrl", 68).
+-file("src/cf_lexer.xrl", 76).
 yyaction_6(TokenChars, TokenLine) ->
      { token, { beginif, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_7/2}).
--file("src/cf_lexer.xrl", 69).
+-file("src/cf_lexer.xrl", 77).
 yyaction_7(TokenChars, TokenLine) ->
      { token, { colon, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_8/2}).
--file("src/cf_lexer.xrl", 70).
+-file("src/cf_lexer.xrl", 78).
 yyaction_8(TokenChars, TokenLine) ->
      { token, { comma, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_9/2}).
--file("src/cf_lexer.xrl", 71).
+-file("src/cf_lexer.xrl", 79).
 yyaction_9(TokenChars, TokenLine) ->
      { token, { deftask, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_10/2}).
--file("src/cf_lexer.xrl", 72).
+-file("src/cf_lexer.xrl", 80).
 yyaction_10(TokenChars, TokenLine) ->
      { token, { else, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_11/2}).
--file("src/cf_lexer.xrl", 73).
+-file("src/cf_lexer.xrl", 81).
 yyaction_11(TokenChars, TokenLine) ->
      { token, { endif, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_12/2}).
--file("src/cf_lexer.xrl", 74).
+-file("src/cf_lexer.xrl", 82).
 yyaction_12(TokenChars, TokenLine) ->
      { token, { eq, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_13/2}).
--file("src/cf_lexer.xrl", 75).
+-file("src/cf_lexer.xrl", 83).
 yyaction_13(TokenChars, TokenLine) ->
      { token, { file, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_14/2}).
--file("src/cf_lexer.xrl", 76).
+-file("src/cf_lexer.xrl", 84).
 yyaction_14(TokenChars, TokenLine) ->
      { token, { in, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_15/2}).
--file("src/cf_lexer.xrl", 77).
+-file("src/cf_lexer.xrl", 85).
 yyaction_15(TokenChars, TokenLine) ->
      { token, { lbrace, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_16/2}).
--file("src/cf_lexer.xrl", 78).
+-file("src/cf_lexer.xrl", 86).
 yyaction_16(TokenChars, TokenLine) ->
      { token, { lparen, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_17/2}).
--file("src/cf_lexer.xrl", 79).
+-file("src/cf_lexer.xrl", 87).
 yyaction_17(TokenChars, TokenLine) ->
      { token, { lsquarebr, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_18/2}).
--file("src/cf_lexer.xrl", 80).
+-file("src/cf_lexer.xrl", 88).
 yyaction_18(TokenChars, TokenLine) ->
      { token, { ltag, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_19/2}).
--file("src/cf_lexer.xrl", 81).
+-file("src/cf_lexer.xrl", 89).
 yyaction_19(TokenChars, TokenLine) ->
      { token, { nil, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_20/2}).
--file("src/cf_lexer.xrl", 82).
+-file("src/cf_lexer.xrl", 90).
 yyaction_20(TokenChars, TokenLine) ->
      { token, { rbrace, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_21/2}).
--file("src/cf_lexer.xrl", 83).
+-file("src/cf_lexer.xrl", 91).
 yyaction_21(TokenChars, TokenLine) ->
      { token, { rparen, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_22/2}).
--file("src/cf_lexer.xrl", 84).
+-file("src/cf_lexer.xrl", 92).
 yyaction_22(TokenChars, TokenLine) ->
      { token, { rsquarebr, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_23/2}).
--file("src/cf_lexer.xrl", 85).
+-file("src/cf_lexer.xrl", 93).
 yyaction_23(TokenChars, TokenLine) ->
      { token, { rtag, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_24/2}).
--file("src/cf_lexer.xrl", 86).
+-file("src/cf_lexer.xrl", 94).
 yyaction_24(TokenChars, TokenLine) ->
      { token, { semicolon, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_25/2}).
--file("src/cf_lexer.xrl", 87).
+-file("src/cf_lexer.xrl", 95).
 yyaction_25(TokenChars, TokenLine) ->
      { token, { string, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_26/2}).
--file("src/cf_lexer.xrl", 88).
+-file("src/cf_lexer.xrl", 96).
 yyaction_26(TokenChars, TokenLine) ->
      { token, { then, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_27/2}).
--file("src/cf_lexer.xrl", 90).
+-file("src/cf_lexer.xrl", 98).
 yyaction_27(TokenChars, TokenLine) ->
      { token, { id, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_28/0}).
--file("src/cf_lexer.xrl", 92).
+-file("src/cf_lexer.xrl", 100).
 yyaction_28() ->
      skip_token .
 
 -compile({inline,yyaction_29/0}).
--file("src/cf_lexer.xrl", 93).
+-file("src/cf_lexer.xrl", 101).
 yyaction_29() ->
      skip_token .
 
 -compile({inline,yyaction_30/0}).
--file("src/cf_lexer.xrl", 94).
+-file("src/cf_lexer.xrl", 102).
 yyaction_30() ->
      skip_token .
 
