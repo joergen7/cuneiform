@@ -79,21 +79,21 @@ reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
         {failed, ActScript, Out} -> error( {failed, ActScript, Out} );
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
-          Prefix = maps:get( prefix, Summary ),
+          {R, _} = string:to_integer( maps:get( prefix, Summary ) ),
           Delta = lists:foldl(
                     fun( N, Delta0 ) ->
-                      acc_delta( N, Delta0, Ret, Prefix )
+                      acc_delta( N, Delta0, Ret, R )
                     end,
                     #{}, maps:keys( Ret ) ),
           reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} )
       end
   end.
 
--spec acc_delta( N, Delta0, Ret, Prefix ) -> #{string() => [cf_sem:str()]}
+-spec acc_delta( N, Delta0, Ret, R ) -> #{string() => [cf_sem:str()]}
 when N      :: string(),
      Delta0 :: #{string() => [cf_sem:str()]},
      Ret    :: #{string() => [string()]},
-     Prefix :: string().
+     R      :: pos_integer().
 
-acc_delta( N, Delta0, Ret, Prefix ) ->
-  Delta0#{{N, Prefix} => [{str, S} || S <- maps:get( N, Ret )]}.
+acc_delta( N, Delta0, Ret, R ) ->
+  Delta0#{{N, R} => [{str, S} || S <- maps:get( N, Ret )]}.

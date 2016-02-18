@@ -24,7 +24,7 @@
 -define( THETA0, {#{}, fun mu/1, #{}, #{}} ).
 
 mu( {app, _AppLine, _C, {lam, _LamLine, Name, {sign, Lo, _Li}, _B}, _Fa} ) ->
-  {fut, Name, lists:flatten( io_lib:format( "~B", [random:uniform( 1000000000 )] )), Lo}.
+  {fut, Name, random:uniform( 1000000000 ), Lo}.
 
 nil_should_eval_itself_test() ->
   ?assertEqual( [], cf_sem:eval( [], ?THETA0 ) ).
@@ -54,17 +54,17 @@ def_var_should_cascade_binding_twice_test() ->
   ?assertEqual( A, cf_sem:eval( [{var, 4, "x"}], {Rho, fun mu/1, #{}, #{}} ) ).
 
 unfinished_fut_should_eval_to_itself_test() ->
-  Fut = {fut, "f", 1234, [false]},
+  Fut = {fut, "f", 1234, [{param, "out", false}]},
   E = [{select, 2, 1, Fut}],
   X = cf_sem:eval( E, ?THETA0 ),
   ?assertEqual( E, X ).
 
 
 finished_fut_should_eval_to_result_test() ->
-  Fut = {fut, "f", 1234, [false]},
+  Fut = {fut, "f", 1234, [{param, "out", false}]},
   S = {select, 2, 1, Fut},
   F = [{str, "blub"}],
-  Theta = {#{}, fun mu/1, #{}, #{{1, 1234} => F}},
+  Theta = {#{}, fun mu/1, #{}, #{{"out", 1234} => F}},
   X = cf_sem:eval( [S], Theta ),
   ?assertEqual( F, X ).
 
@@ -251,7 +251,7 @@ foreign_app_with_select_param_is_left_untouched_test() ->
 
 app_non_final_result_preserves_app_test() ->
   Sign = {sign, [{param, "out", false}], []},
-  Body = {natbody, #{"out" => [{select, 1, 1, {fut, "f", 1234, [false]}}]}},
+  Body = {natbody, #{"out" => [{select, 1, 1, {fut, "f", 1234, [{param, "out", false}]}}]}},
   Lam = {lam, 3, "g", Sign, Body},
   App = [{app, 4, 1, Lam, #{}}],
   X = cf_sem:eval( App, ?THETA0 ),
@@ -281,7 +281,7 @@ nested_app_undergoes_reduction_test() ->
   X = cf_sem:eval( App2, ?THETA0 ),
   [{app, 4, 1, {lam, 3, "g", _, {natbody, Fb}}, _}] = X,
   [{select, 2, 1, {fut, "f", R, _}}] = maps:get( "out", Fb ),
-  Omega = #{{1, R} => [{str, "A"}]},
+  Omega = #{{"out", R} => [{str, "A"}]},
   Y = cf_sem:eval( X, {#{}, fun mu/1, #{}, Omega} ),
   ?assertEqual( [{str, "A"}], Y ).
 

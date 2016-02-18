@@ -34,8 +34,8 @@
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
--type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.        % (4)
--type fut()     :: {fut, Name::string(), R::string(),                           % (5)
+-type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
+-type fut()     :: {fut, Name::string(), R::pos_integer(),                      % (5)
                          Fp::#{string() => boolean()}}.
 -type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
@@ -68,7 +68,7 @@
 -type ctx()     :: {Rho   :: #{string() => [expr()]},                           % (18)
                     Mu    :: fun( ( app() ) -> fut() ),
                     Gamma :: #{string() => lam()},
-                    Omega :: #{{string(), string()} => [expr()]}}.
+                    Omega :: #{{string(), pos_integer()} => [expr()]}}.
                     
 %% =============================================================================
 %% Predicates
@@ -164,8 +164,9 @@ step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              
   maps:get( N, Rho );
   
 % Future Channel Selection
-step( S={select, _, C, {fut, _, R, _}}, {_Rho, _Mu, _Gamma, Omega} ) ->         % (47,48)
-  maps:get( {C, R}, Omega, [S] );
+step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
+  {param, N, _} = lists:nth( C, Lo ),
+  maps:get( {N, R}, Omega, [S] );
 
 % Conditional
 step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (49)
