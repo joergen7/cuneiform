@@ -50,7 +50,7 @@ string( S ) ->
   reduce( Query, Rho, Gamma ).
 
 reduce( X0, Rho, Gamma ) ->
-  X1 = cf_sem:eval( X0, {Rho, fun get_future/1, Gamma, #{}} ),
+  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, #{}} ),
   case cf_sem:pfinal( X1 ) of
   	true  -> X1;
   	false ->
@@ -64,7 +64,5 @@ reduce( X0, Rho, Gamma ) ->
 %% Internal Functions
 %% =============================================================================
 
-get_future( App ) ->
-  gen_server:call( cre, {submit, App} ).
 
 

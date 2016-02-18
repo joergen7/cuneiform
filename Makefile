@@ -4,5 +4,8 @@ all: .rebar/cf_18.2.1_plt
 clean:
 	rebar clean
 
-.rebar/cf_18.2.1_plt:
+.rebar/cf_18.2.1_plt: deps/cre/src/cre.erl
 	rebar build-plt
+
+deps/cre/src/cre.erl:
+	rebar get-deps
