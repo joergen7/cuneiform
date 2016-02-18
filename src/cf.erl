@@ -56,6 +56,7 @@ string( S ) ->
 %% Internal Functions
 %% =============================================================================
 
+%% Reduction %%
 
 -spec reduce( X0, Rho, Gamma ) -> [cf_sem:str()]
 when X0    :: [cf_sem:expr()],
@@ -63,12 +64,19 @@ when X0    :: [cf_sem:expr()],
      Gamma :: #{string() => cf_sem:lam()}.
 
 reduce( X0, Rho, Gamma ) ->
+  reduce( X0, {Rho, fun cre:submit/1, Gamma, #{}} ).
+
+-spec reduce( X0, Theta ) -> [cf_sem:str()]
+when X0    :: [cf_sem:expr()],
+     Theta :: cf_sem:ctx().
+
+reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
   X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, #{}} ),
   case cf_sem:pfinal( X1 ) of
     true  -> X1;
     false ->
       receive
-        {failed, ActScript, Out} -> {failed, ActScript, Out};
+        {failed, ActScript, Out} -> error( {failed, ActScript, Out} );
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
           Prefix = maps:get( prefix, Summary ),
@@ -76,9 +84,8 @@ reduce( X0, Rho, Gamma ) ->
                     fun( N, Delta0 ) ->
                       acc_delta( N, Delta0, Ret, Prefix )
                     end,
-                    #{}, maps:keys( Ret ) )
-
-
+                    #{}, maps:keys( Ret ) ),
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} )
       end
   end.
 
