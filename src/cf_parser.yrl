@@ -2,7 +2,7 @@
 %
 % Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
 %
-% Copyright 2013 Jörgen Brandt, Marc Bux, and Ulf Leser
+% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
 %
 % Licensed under the Apache License, Version 2.0 (the "License");
 % you may not use this file except in compliance with the License.

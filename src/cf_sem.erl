@@ -2,7 +2,7 @@
 %
 % Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
 %
-% Copyright 2013 Jörgen Brandt, Marc Bux, and Ulf Leser
+% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
 %
 % Licensed under the Apache License, Version 2.0 (the "License");
 % you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ psing_argpair( _Z ) -> false.
 -spec pen( X::expr()|[expr()] ) -> boolean().                                   % (30)
 
 pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (31,32)
-pen( {str, _S} ) -> true;                                                    % (33)
+pen( {str, _S} ) -> true;                                                       % (33)
 pen( {cnd, _, _Xc, Xt, Xe} )when length( Xt ) =:= 1, length( Xe ) =:= 1 ->      % (34)
   pen( Xt ) andalso pen( Xe );
 pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (35)
@@ -119,7 +119,7 @@ pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  
       {param, _N, Pl} = lists:nth( C, Lo ),
       not Pl
   end;
-pen( {select, _, C, {fut, _, _R, Lp}} ) -> not lists:nth( C, Lp );                 % (36)
+pen( {select, _, C, {fut, _, _R, Lp}} ) -> not lists:nth( C, Lp );              % (36)
 pen( _T ) -> false.
 
 %% =============================================================================
@@ -157,7 +157,7 @@ step( X, Theta ) when is_list( X ) ->                                           
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
   
 % String Literal
-step( X={str, _S}, _Theta ) -> [X];                                          % (45)
+step( X={str, _S}, _Theta ) -> [X];                                             % (45)
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
@@ -179,7 +179,8 @@ step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
 step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->
   [{app, Line, C, maps:get( N, Gamma ), Fa}];
   
-step( X={app, AppLine, C, Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B}, Fa},
+step( X={app, AppLine, C,
+      Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B}, Fa},
       Theta={_Rho, Mu, Gamma, Omega} ) ->
   case psing( X ) of
     false -> enum_app( {app, AppLine, C, Lambda, step_assoc( Fa, Theta )} );    % (53)
@@ -257,7 +258,7 @@ estep( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
     false -> [{L, F}];                                                          % (72)
     true  ->
       Z = corrstep( Lc, F, F ),
-      aug( [{T, G} || G <- Z], H )                                               % (73)
+      aug( [{T, G} || G <- Z], H )                                              % (73)
   end.
       
   
