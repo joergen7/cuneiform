@@ -24,8 +24,7 @@
 -define( THETA0, {#{}, fun mu/1, #{}, #{}} ).
 
 mu( {app, _AppLine, _C, {lam, _LamLine, Name, {sign, Lo, _Li}, _B}, _Fa} ) ->
-  V = [{N, Pl} || {param, N, Pl} <- Lo],
-  {fut, Name, lists:flatten( io_lib:format( "~B", [random:uniform( 1000000000 )] )), maps:from_list( V )}.
+  {fut, Name, lists:flatten( io_lib:format( "~B", [random:uniform( 1000000000 )] )), Lo}.
 
 nil_should_eval_itself_test() ->
   ?assertEqual( [], cf_sem:eval( [], ?THETA0 ) ).
@@ -218,7 +217,7 @@ cnd_evaluates_only_on_final_condition_test() ->
   E = [{cnd, 5, App, A, B}],
   Rho = #{"a" => [{str, "A"}], "b" => [{str, "B"}]},
   X = cf_sem:eval( E, {Rho, fun mu/1, #{}, #{}} ),
-  ?assertMatch( [{cnd, 5, [{select, 2, "out", _}], A, B}], X ).
+  ?assertMatch( [{cnd, 5, [{select, 2, 1, _}], A, B}], X ).
 
 cnd_evaluates_then_expr_test() ->
   E = [{cnd, 1, [{str, "Z"}], [{var, 3, "x"}], [{str, "B"}]}],
@@ -270,7 +269,7 @@ app_non_final_result_preserves_app_with_new_lam_test() ->
   X = cf_sem:eval( App, ?THETA0 ),
   [{app, 8, 1, {lam, 7, "f", Sign, {natbody, BodyMap1}}, #{}}] = X,
   Val = maps:get( "out", BodyMap1 ),
-  ?assertMatch( [{cnd, 3, [{select, 2, "out", _}], [{var, 4, "x"}], [{var, 5, "x"}]}], Val ).
+  ?assertMatch( [{cnd, 3, [{select, 2, 1, _}], [{var, 4, "x"}], [{var, 5, "x"}]}], Val ).
 
 nested_app_undergoes_reduction_test() ->
   Sign = {sign, [{param, "out", false}], []},
@@ -281,8 +280,8 @@ nested_app_undergoes_reduction_test() ->
   App2 = [{app, 4, 1, Lam2, #{}}],
   X = cf_sem:eval( App2, ?THETA0 ),
   [{app, 4, 1, {lam, 3, "g", _, {natbody, Fb}}, _}] = X,
-  [{select, 2, "out", {fut, "f", R, _}}] = maps:get( "out", Fb ),
-  Omega = #{{"out", R} => [{str, "A"}]},
+  [{select, 2, 1, {fut, "f", R, _}}] = maps:get( "out", Fb ),
+  Omega = #{{1, R} => [{str, "A"}]},
   Y = cf_sem:eval( X, {#{}, fun mu/1, #{}, Omega} ),
   ?assertEqual( [{str, "A"}], Y ).
 
