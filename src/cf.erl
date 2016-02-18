@@ -44,25 +44,49 @@ stop( _State ) ->
 start() ->
   start( normal, [] ).
 
+-spec string( S::string() ) -> [cf_sem:str()].
 
 string( S ) ->
   {Query, Rho, Gamma} = cf_parser:parse_string( S ),
   reduce( Query, Rho, Gamma ).
 
-reduce( X0, Rho, Gamma ) ->
-  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, #{}} ),
-  case cf_sem:pfinal( X1 ) of
-  	true  -> X1;
-  	false ->
-      receive
-        % TODO
-        X -> X
-      end
-  end.
+
 
 %% =============================================================================
 %% Internal Functions
 %% =============================================================================
 
 
+-spec reduce( X0, Rho, Gamma ) -> [cf_sem:str()]
+when X0    :: [cf_sem:expr()],
+     Rho   :: #{string() => [cf_sem:expr()]},
+     Gamma :: #{string() => cf_sem:lam()}.
 
+reduce( X0, Rho, Gamma ) ->
+  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, #{}} ),
+  case cf_sem:pfinal( X1 ) of
+    true  -> X1;
+    false ->
+      receive
+        {failed, ActScript, Out} -> {failed, ActScript, Out};
+        {finished, Summary} ->
+          Ret = maps:get( ret, Summary ),
+          Prefix = maps:get( prefix, Summary ),
+          Delta = lists:foldl(
+                    fun( N, Delta0 ) ->
+                      acc_delta( N, Delta0, Ret, Prefix )
+                    end,
+                    #{}, maps:keys( Ret ) )
+
+
+      end
+  end.
+
+-spec acc_delta( N, Delta0, Ret, Prefix ) -> #{string() => [cf_sem:str()]}
+when N      :: string(),
+     Delta0 :: #{string() => [cf_sem:str()]},
+     Ret    :: #{string() => [string()]},
+     Prefix :: string().
+
+acc_delta( N, Delta0, Ret, Prefix ) ->
+  Delta0#{{N, Prefix} => [{str, S} || S <- maps:get( N, Ret )]}.

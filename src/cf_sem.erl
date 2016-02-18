@@ -34,8 +34,9 @@
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
--type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
--type fut()     :: {fut, Name::string(), R::pos_integer(), Lp::[boolean()]}.    % (5)
+-type select()  :: {select, Line::pos_integer(), N::string(), U::fut()}.        % (4)
+-type fut()     :: {fut, Name::string(), R::string(),                           % (5)
+                         Fp::#{string() => boolean()}}.
 -type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
 -type app()     :: {app, Line::pos_integer(), C::pos_integer(),                 % (7)
@@ -67,7 +68,7 @@
 -type ctx()     :: {Rho   :: #{string() => [expr()]},                           % (18)
                     Mu    :: fun( ( app() ) -> fut() ),
                     Gamma :: #{string() => lam()},
-                    Omega :: #{{pos_integer(), pos_integer()} => [expr()]}}.
+                    Omega :: #{{string(), string()} => [expr()]}}.
                     
 %% =============================================================================
 %% Predicates
@@ -116,7 +117,7 @@ pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  
       {param, _N, Pl} = lists:nth( C, Lo ),
       not Pl
   end;
-pen( {select, _, C, {fut, _, _R, Lp}} ) -> not lists:nth( C, Lp );              % (36)
+pen( {select, _, N, {fut, _, _R, Fp}} ) -> not maps:get( N, Fp );               % (36)
 pen( _T ) -> false.
 
 %% =============================================================================
@@ -161,8 +162,8 @@ step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              
   maps:get( N, Rho );
   
 % Future Channel Selection
-step( S={select, _, C, {fut, _, R, _}}, {_Rho, _Mu, _Gamma, Omega} ) ->                  % (47,48)
-  maps:get( {C, R}, Omega, [S] );
+step( S={select, _, N, {fut, _, R, _}}, {_Rho, _Mu, _Gamma, Omega} ) ->         % (47,48)
+  maps:get( {N, R}, Omega, [S] );
 
 % Conditional
 step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (49)
@@ -182,19 +183,19 @@ step( X={app, AppLine, C,
   case psing( X ) of
     false -> enum_app( {app, AppLine, C, Lambda, step_assoc( Fa, Theta )} );    % (53)
     true  ->
+      {param, N, Pl} = lists:nth( C, Lo ),
       case B of
         {forbody, _L, _Z} ->
           case pfinal( Fa ) of
             false -> [{app, AppLine, C, Lambda, step_assoc( Fa, Theta )}];      % (54)
-            true  -> [{select, AppLine, C, apply( Mu, [X] )}]                   % (55)
+            true  -> [{select, AppLine, N, apply( Mu, [X] )}]                   % (55)
           end;
         {natbody, Fb} ->
-          {param, K, Pl} = lists:nth( C, Lo ),
-          V0 = maps:get( K, Fb ),
+          V0 = maps:get( N, Fb ),
           V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
           case pfinal( V1 ) of
             false -> [{app, AppLine, C, {lam, LamLine, LamName, S,              % (56)
-                                              {natbody, Fb#{ K => V1}}}, Fa}];
+                                              {natbody, Fb#{ N => V1}}}, Fa}];
             true  ->
               case Pl orelse length( V1 ) =:= 1 of
                 true  -> V1;                                                    % (57)
