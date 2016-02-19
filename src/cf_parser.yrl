@@ -110,7 +110,7 @@ namelist     -> name namelist : ['$1'|'$2'].
 
 Erlang code.
 
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [parse_string/1] ).
 

@@ -113,7 +113,7 @@ Rules.
 
 Erlang code.
 
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [yyrev/2] ).
 

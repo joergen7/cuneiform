@@ -17,7 +17,7 @@
 % limitations under the License.
 
 -module( cf ).
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( application ).
 

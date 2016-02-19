@@ -17,7 +17,7 @@
 % limitations under the License.
 
 -module( cf_sem_test ).
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -include_lib( "eunit/include/eunit.hrl" ).
 

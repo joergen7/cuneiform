@@ -17,7 +17,7 @@
 % limitations under the License.
 
 -module( cf_sem ).
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [eval/2, pfinal/1] ).
 
@@ -49,9 +49,10 @@
 
 % Task Signature
 -type sign()    :: {sign, Lo::[param()], Li::[inparam()]}.                      % (9)
--type param()   :: {param, N::string(), Pl::boolean()}.                         % (10)
+-type param()   :: {param, M::name(), Pl::boolean()}.                           % (10)
+-type name()    :: {name, N::string(), Pf::boolean()}
 -type inparam() :: param() | correl().                                          % (11)
--type correl()  :: {correl, Lc::[string()]}.                                    % (12)
+-type correl()  :: {correl, Lc::[name()]}.                                      % (12)
 
 % Body
 -type body()    :: natbody() | forbody().                                       % (13)
