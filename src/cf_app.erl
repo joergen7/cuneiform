@@ -16,40 +16,23 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
--module(cf_sup).
+-module( cf_app ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( supervisor ).
+-behaviour( application ).
 
-%% API
--export( [start_link/0] ).
-
-%% Supervisor callbacks
--export([init/1]).
-
+% Application
+-export( [start/2, stop/1] ).
 
 %% =============================================================================
-%% API functions
+%% Application callbacks
 %% =============================================================================
 
-start_link() ->
-  supervisor:start_link( {local, ?MODULE}, ?MODULE, [] ).
+start( normal, [] ) ->
 
-%% =============================================================================
-%% Supervisor callbacks
-%% =============================================================================
+  % TODO: load and hand down configuration
+  
+  cf_sup:start_link().
 
-init( [] ) ->
-
-  RestartStrategy = one_for_one,
-  MaxRestarts = 5,
-  MaxSecondsBetweenRestarts = 10,
-  SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
-
-  Restart = permanent,
-  Shutdown = 2000,
-  Type = worker,
-  Cre = {cre, {cre, start_link, []}, Restart, Shutdown, Type, [cre]},
-
-  {ok, {SupFlags, [Cre]}}.
-
+stop( _State ) ->
+  ok.

@@ -19,36 +19,28 @@
 -module( cf ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( application ).
-
-% Application
--export( [start/2, stop/1] ).
-
 % API
--export( [start/0, string/1] ).
-
-%% =============================================================================
-%% Application callbacks
-%% =============================================================================
-
-start( normal, [] ) ->
-  cf_sup:start_link().
-
-stop( _State ) ->
-  ok.
+-export( [start/0, string/1, file/1] ).
   
 %% =============================================================================
 %% API functions
 %% =============================================================================
 
 start() ->
-  start( normal, [] ).
+  application:start( cf ).
 
 -spec string( S::string() ) -> [cf_sem:str()].
 
 string( S ) ->
   {Query, Rho, Gamma} = cf_parser:parse_string( S ),
   reduce( Query, Rho, Gamma ).
+
+-spec file( F::string() ) -> [cf_sem:str()].
+
+file( Filename ) ->
+  {ok, B} = file:read_file( Filename ),
+  S = binary_to_list( B ),
+  string( S ).
 
 
 

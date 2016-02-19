@@ -2,7 +2,7 @@
 -export([parse/1, parse_and_scan/1, format_error/1]).
 -file("src/cf_parser.yrl", 111).
 
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [parse_string/1] ).
 

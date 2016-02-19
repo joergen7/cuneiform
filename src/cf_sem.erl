@@ -32,7 +32,7 @@
 %% Expression %% ===============================================================
 
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
--type str()     :: {str, S::string()}.                                          % (2)
+-type str()     :: {str, Line::pos_integer(), S::string()}.                     % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
 -type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
 -type fut()     :: {fut, Name::string(), R::pos_integer(),                      % (5)
@@ -50,7 +50,7 @@
 % Task Signature
 -type sign()    :: {sign, Lo::[param()], Li::[inparam()]}.                      % (9)
 -type param()   :: {param, M::name(), Pl::boolean()}.                           % (10)
--type name()    :: {name, N::string(), Pf::boolean()}
+-type name()    :: {name, N::string(), Pf::boolean()}.
 -type inparam() :: param() | correl().                                          % (11)
 -type correl()  :: {correl, Lc::[name()]}.                                      % (12)
 
@@ -82,7 +82,7 @@ when X :: #{string() => [expr()]} | [expr()] | expr().
 
 pfinal( F ) when is_map( F )  -> pfinal( maps:values( F ) );                    % (20)
 pfinal( L ) when is_list( L ) -> lists:all( fun pfinal/1, L );                  % (21,22)
-pfinal( {str, _S} )           -> true;                                          % (23)
+pfinal( {str, _, _S} )        -> true;                                          % (23)
 pfinal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
@@ -94,9 +94,11 @@ psing( {app, _, _C, {lam, _, _, {sign, _Lo, Li}, _B}, Fa} ) ->                  
 
 -spec psing_argpair( Z::argpair() ) -> boolean().                               % (26)
 
-psing_argpair( {[], _F} )                         -> true;                      % (27)
-psing_argpair( {[{param, _N, Pl}|T], F} ) when Pl -> psing_argpair( {T, F} );   % (28)
-psing_argpair( {[{param, N, _Pl}|T], F} ) ->                                    % (29)
+psing_argpair( {[], _F} ) -> true;                                              % (27)
+psing_argpair( {[{param, _, Pl}|T], F} )                            % (28)
+when Pl ->
+  psing_argpair( {T, F} );
+psing_argpair( {[{param, {name, N, _}, _Pl}|T], F} ) ->                         % (29)
   case length( maps:get( N, F ) ) of
     1 -> psing_argpair( {T, F} );
     _ -> false
@@ -108,18 +110,18 @@ psing_argpair( _Z ) -> false.
 -spec pen( X::expr()|[expr()] ) -> boolean().                                   % (30)
 
 pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (31,32)
-pen( {str, _S} ) -> true;                                                       % (33)
+pen( {str, _, _S} ) -> true;                                                    % (33)
 pen( {cnd, _, _Xc, Xt, Xe} )when length( Xt ) =:= 1, length( Xe ) =:= 1 ->      % (34)
   pen( Xt ) andalso pen( Xe );
 pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (35)
   case psing( X ) of
     false -> false;
     true ->
-      {param, _N, Pl} = lists:nth( C, Lo ),
+      {param, _, Pl} = lists:nth( C, Lo ),
       not Pl
   end;
 pen( {select, _, C, {fut, _, _R, Lo}} ) ->                                      % (36)
-  {param, _N, Pl} = lists:nth( C, Lo ),
+  {param, _, Pl} = lists:nth( C, Lo ),
   not Pl;
 pen( _T ) -> false.
 
@@ -158,7 +160,7 @@ step( X, Theta ) when is_list( X ) ->                                           
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
   
 % String Literal
-step( X={str, _S}, _Theta ) -> [X];                                             % (45)
+step( X={str, _Line, _S}, _Theta ) -> [X];                                      % (45)
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
@@ -166,7 +168,7 @@ step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              
   
 % Future Channel Selection
 step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
-  {param, N, _} = lists:nth( C, Lo ),
+  {param, {name, N, _}, _} = lists:nth( C, Lo ),
   maps:get( {N, R}, Omega, [S] );
 
 % Conditional
@@ -194,7 +196,7 @@ step( X={app, AppLine, C,
             true  -> [{select, AppLine, C, apply( Mu, [X] )}]                   % (55)
           end;
         {natbody, Fb} ->
-          {param, N, Pl} = lists:nth( C, Lo ),
+          {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
           V0 = maps:get( N, Fb ),
           V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
           case pfinal( V1 ) of
@@ -243,8 +245,8 @@ estep( Z ) ->                                                                   
 -spec estep( Li::[inparam()], F::#{string() => [expr()]} ) -> [argpair()].      % (66)
 
 estep( [], F ) -> [{[], F}];                                                    % (67)
-estep( [H={param, _N, Pl}|T], F ) when Pl -> aug( estep( T, F ), H );           % (68)
-estep( L=[H={param, N, _Pl}|T], F ) ->
+estep( [H={param, _, Pl}|T], F ) when Pl -> aug( estep( T, F ), H );           % (68)
+estep( L=[H={param, {name, N, _}, _Pl}|T], F ) ->
   V = maps:get( N, F ),
   case pen( V ) of
     false -> [{L, F}];                                                          % (69)
@@ -255,7 +257,7 @@ estep( L=[H={param, N, _Pl}|T], F ) ->
       end
   end;
 estep( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
-  Pen = pen( [maps:get( N, F ) || N <- Lc] ),
+  Pen = pen( [maps:get( N, F ) || {name, N, _} <- Lc] ),
   case Pen of
     false -> [{L, F}];                                                          % (72)
     true  ->
@@ -273,9 +275,9 @@ aug( Z, A ) -> [aug_argpair( Y, A ) || Y <- Z].                                 
 
 -spec aug_argpair( Y::argpair(), A::inparam() ) -> argpair().                   % (76)
 
-aug_argpair( {L0, F}, A={param, _N, _Pl} ) -> {[A|L0], F};                      % (77)
+aug_argpair( {L0, F}, A={param, _, _Pl} ) -> {[A|L0], F};                       % (77)
 aug_argpair( {L0, F}, {correl, Lc} ) ->                                         % (78)
-  L1 = [{param, N, false} || N <- Lc],
+  L1 = [{param, M, false} || M <- Lc],
   {L1++L0, F}.
 
 %% Correlation %%
@@ -286,7 +288,7 @@ when Lc   :: [string()],
      F0   :: #{string() => [expr()]}.
 
 corrstep( [], Facc, F0 ) -> [Facc, F0];                                         % (80)
-corrstep( [H|T], Facc, F0 ) ->
+corrstep( [{name, H, _}|T], Facc, F0 ) ->
   case maps:get( H, F0 ) of
     []    -> [];                                                                % (81)
     [A|B] -> corrstep( T, Facc#{H => [A]}, F0#{H => B})                         % (82)
@@ -304,7 +306,7 @@ corrstep( [H|T], Facc, F0 ) ->
 %% The enum Function %%
 
 enum_app_without_app_does_nothing_test() ->
-  S = {sign, [{param, "out", false}], []},
+  S = {sign, [{param, {param, "out", false}, false}], []},
   B = {forbody, bash, "shalala"},
   Lam = {lam, 1, "f", S, B},
   App = {app, 2, 1, Lam, #{}},
@@ -315,43 +317,43 @@ enum_app_without_app_does_nothing_test() ->
 %% Augmentation %%
 
 can_aug_argpair_with_param_test() ->
-  L0 = [{param, "b", false}, {param, "c", false}],
+  L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a" => [{str, "1"}], "b" => [{str, "2"}], "c" => [{str, "3"}]},
   Pair = {L0, F},
-  I = {param, "a", false},
+  I = {param, {name, "a", false}, false},
   L1 = [I|L0],
   ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
 
 can_aug_argpair_with_correl_test() ->
-  L0 = [{param, "b", false}, {param, "c", false}],
+  L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a1" => [{str, "11"}],
         "a2" => [{str, "12"}],
         "b" => [{str, "2"}],
         "c" => [{str, "3"}]},
   Pair = {L0, F},
-  I = {correl, ["a1", "a2"]},
-  L1 = [{param, "a1", false}, {param, "a2", false}|L0],
+  I = {correl, [{name, "a1", false}, {name, "a2", false}]},
+  L1 = [{param, {name, "a1", false}, false}, {param, {name, "a2", false}, false}|L0],
   ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
 
 can_augment_empty_argpairlist_with_param_test() ->
   F1 = #{"a" => [{str, "x1"}]},
   F2 = #{"a" => [{str, "y1"}]},
   PairList = [{[], F1}, {[], F2}],
-  I = {param, "a", false},
-  L1 = [{param, "a", false}],
+  I = {param, {name, "a", false}, false},
+  L1 = [{param, {name, "a", false}, false}],
   ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
 
 can_augment_argpairlist_with_param_test() ->
-  L0 = [{param, "b", false}, {param, "c", false}],
+  L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a" => [{str, "x1"}], "b" => [{str, "x2"}], "c" => [{str, "x3"}]},
   F2 = #{"a" => [{str, "y1"}], "b" => [{str, "y2"}], "c" => [{str, "y3"}]},
   PairList = [{L0, F1}, {L0, F2}],
-  I = {param, "a", false},
-  L1 = [{param, "a", false}|L0],
+  I = {param, {name, "a", false}, false},
+  L1 = [{param, {name, "a", false}, false}|L0],
   ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
 
 can_augment_argpairlist_with_correl_test() ->
-  L0 = [{param, "b", false}, {param, "c", false}],
+  L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a1" => [{str, "x11"}],
          "a2" => [{str, "x12"}],
          "b" => [{str, "x2"}],
@@ -361,8 +363,8 @@ can_augment_argpairlist_with_correl_test() ->
          "b" => [{str, "y2"}],
          "c" => [{str, "y3"}]},
   PairList = [{L0, F1}, {L0, F2}],
-  I = {correl, ["a1", "a2"]},
-  L1 = [{param, "a1", false}, {param, "a2", false}|L0],
+  I = {correl, [{name, "a1", false}, {name, "a2", false}]},
+  L1 = [{param, {name, "a1", false}, false}, {param, {name, "a2", false}, false}|L0],
   ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
 
 %% Correlation %%

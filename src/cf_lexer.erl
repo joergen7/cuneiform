@@ -14,7 +14,7 @@
 %% User code. This is placed here to allow extra attributes.
 -file("src/cf_lexer.xrl", 114).
 
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [yyrev/2] ).
 
