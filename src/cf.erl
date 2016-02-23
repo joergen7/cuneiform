@@ -21,7 +21,7 @@
 
 % API
 -export( [start/0, string/1, file/1] ).
-  
+
 %% =============================================================================
 %% API functions
 %% =============================================================================
@@ -63,21 +63,49 @@ when X0    :: [cf_sem:expr()],
      Theta :: cf_sem:ctx().
 
 reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
-  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, #{}} ),
+  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, Omega} ),
   case cf_sem:pfinal( X1 ) of
-    true  -> X1;
+    true  ->
+      io:format( "Finished: ~p~nReturning ...~n", [X1] ),
+      X1;
     false ->
+      io:format( "Not finished: ~p~nOmega: ~p~nWaiting for futures to terminate ...~n", [X1, Omega] ),
       receive
-        {failed, ActScript, Out} -> error( {failed, ActScript, Out} );
+
+        {failed, script_error, {ActScript, Out}} ->
+
+          % print tool output
+          ok = lists:foreach( fun( Line ) ->
+                                io:format( "~s~n", [Line] )
+                              end,
+                              Out ),
+
+          % print actual script
+          ok = io:format( "[script]~n" ),
+          _ = lists:foldl( fun( Line, N ) ->
+                             ok = io:format( "~4.B  ~s~n", [N, Line] ),
+                             N+1
+                           end,
+                           1, string:tokens( ActScript, "\n" ) ),
+
+          error( script_error );
+
+        {failed, Reason, Data} ->
+          error( {Reason, Data} );
+
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
-          {R, _} = string:to_integer( maps:get( prefix, Summary ) ),
+          R   = maps:get( prefix, Summary ),
           Delta = lists:foldl(
                     fun( N, Delta0 ) ->
                       acc_delta( N, Delta0, Ret, R )
                     end,
                     #{}, maps:keys( Ret ) ),
-          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} )
+          io:format( "Reducing with Omega = ~p~n", [maps:merge( Omega, Delta )] ),
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} );
+
+        Msg -> error( {bad_msg, Msg} )
+
       end
   end.
 
@@ -88,4 +116,4 @@ when N      :: string(),
      R      :: pos_integer().
 
 acc_delta( N, Delta0, Ret, R ) ->
-  Delta0#{{N, R} => [{str, S} || S <- maps:get( N, Ret )]}.
+  Delta0#{{N, R} => maps:get( N, Ret )}.

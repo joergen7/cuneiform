@@ -70,7 +70,7 @@
                     Mu    :: fun( ( app() ) -> fut() ),
                     Gamma :: #{string() => lam()},
                     Omega :: #{{string(), pos_integer()} => [expr()]}}.
-                    
+
 %% =============================================================================
 %% Predicates
 %% =============================================================================
@@ -132,14 +132,14 @@ pen( _T ) -> false.
 %% The eval Function %% ========================================================
 
 -spec eval( X::[expr()], Theta::ctx() ) -> [expr()].                            % (37)
-     
+
 eval( X, Theta ) ->
   X1 = step( X, Theta ),
   case X1 of
     X -> X;                                                                     % (38)
     _ -> eval( X1, Theta )                                                      % (39)
   end.
-  
+
 %% Reduction Rules %% ==========================================================
 
 -spec step_assoc( F, Theta ) -> #{string() => [expr()]}                         % (40)
@@ -153,22 +153,23 @@ step_assoc( F, Theta ) when is_map( F ) ->                                      
 -spec step( X, Theta ) -> [expr()]                                              % (42)
 when X     :: #{string() => [expr()]} | [expr()] | expr(),
      Theta :: ctx().
-     
 
-% Expression List     
+
+% Expression List
 step( X, Theta ) when is_list( X ) ->                                           % (43,44)
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
-  
+
 % String Literal
 step( X={str, _Line, _S}, _Theta ) -> [X];                                      % (45)
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
   maps:get( N, Rho );
-  
+
 % Future Channel Selection
 step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
   {param, {name, N, _}, _} = lists:nth( C, Lo ),
+  io:format( "Looking up {~p, ~p} in ~p~n", [N, R, Omega] ),
   maps:get( {N, R}, Omega, [S] );
 
 % Conditional
@@ -178,11 +179,11 @@ step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
     false -> [{cnd, Line, step( Xc, Theta ), Xt, Xe}];                          % (50)
     true  -> Xt                                                                 % (51)
   end;
-  
+
 % Application
 step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->
   [{app, Line, C, maps:get( N, Gamma ), Fa}];
-  
+
 step( X={app, AppLine, C,
       Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B}, Fa},
       Theta={_Rho, Mu, Gamma, Omega} ) ->
@@ -210,7 +211,7 @@ step( X={app, AppLine, C,
           end
       end
   end.
-  
+
 
 
 %% =============================================================================
@@ -264,8 +265,8 @@ estep( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
       Z = corrstep( Lc, F, F ),
       aug( [{T, G} || G <- Z], H )                                              % (73)
   end.
-      
-  
+
+
 
 %% Augmentation %%
 
