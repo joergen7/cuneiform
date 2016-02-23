@@ -32,7 +32,7 @@
 %% Expression %% ===============================================================
 
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
--type str()     :: {str, Line::pos_integer(), S::string()}.                     % (2)
+-type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
 -type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
 -type fut()     :: {fut, Name::string(), R::pos_integer(),                      % (5)
@@ -82,7 +82,7 @@ when X :: #{string() => [expr()]} | [expr()] | expr().
 
 pfinal( F ) when is_map( F )  -> pfinal( maps:values( F ) );                    % (20)
 pfinal( L ) when is_list( L ) -> lists:all( fun pfinal/1, L );                  % (21,22)
-pfinal( {str, _, _S} )        -> true;                                          % (23)
+pfinal( {str, _S} )            -> true;                                          % (23)
 pfinal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
@@ -110,8 +110,8 @@ psing_argpair( _Z ) -> false.
 -spec pen( X::expr()|[expr()] ) -> boolean().                                   % (30)
 
 pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (31,32)
-pen( {str, _, _S} ) -> true;                                                    % (33)
-pen( {cnd, _, _Xc, Xt, Xe} )when length( Xt ) =:= 1, length( Xe ) =:= 1 ->      % (34)
+pen( {str, _S} )          -> true;                                              % (33)
+pen( {cnd, _, _Xc, Xt, Xe} ) when length( Xt ) =:= 1, length( Xe ) =:= 1 ->     % (34)
   pen( Xt ) andalso pen( Xe );
 pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (35)
   case psing( X ) of
@@ -160,7 +160,7 @@ step( X, Theta ) when is_list( X ) ->                                           
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
 
 % String Literal
-step( X={str, _Line, _S}, _Theta ) -> [X];                                      % (45)
+step( X={str, _S}, _Theta ) -> [X];                                             % (45)
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)

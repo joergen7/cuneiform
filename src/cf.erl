@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
--export( [start/0, string/1, file/1] ).
+-export( [start/0, string/2, file/2] ).
 
 %% =============================================================================
 %% API functions
@@ -29,18 +29,18 @@
 start() ->
   application:start( cf ).
 
--spec string( S::string() ) -> [cf_sem:str()].
+-spec string( S::string(), DataDir::string() ) -> [cf_sem:str()].
 
-string( S ) ->
+string( S, DataDir ) ->
   {Query, Rho, Gamma} = cf_parser:parse_string( S ),
-  reduce( Query, Rho, Gamma ).
+  reduce( Query, Rho, Gamma, DataDir ).
 
--spec file( F::string() ) -> [cf_sem:str()].
+-spec file( Filename::string(), DataDir::string() ) -> [cf_sem:str()].
 
-file( Filename ) ->
+file( Filename, DataDir ) ->
   {ok, B} = file:read_file( Filename ),
   S = binary_to_list( B ),
-  string( S ).
+  string( S, DataDir ).
 
 
 
@@ -50,20 +50,24 @@ file( Filename ) ->
 
 %% Reduction %%
 
--spec reduce( X0, Rho, Gamma ) -> [cf_sem:str()]
-when X0    :: [cf_sem:expr()],
-     Rho   :: #{string() => [cf_sem:expr()]},
-     Gamma :: #{string() => cf_sem:lam()}.
+-spec reduce( X0, Rho, Gamma, DataDir ) -> [cf_sem:str()]
+when X0      :: [cf_sem:expr()],
+     Rho     :: #{string() => [cf_sem:expr()]},
+     Gamma   :: #{string() => cf_sem:lam()},
+     DataDir :: string().
 
-reduce( X0, Rho, Gamma ) ->
-  reduce( X0, {Rho, fun cre:submit/1, Gamma, #{}} ).
+reduce( X0, Rho, Gamma, DataDir ) ->
+  Mu = fun( A ) -> cre:submit( A, DataDir ) end,
+  reduce( X0, {Rho, Mu, Gamma, #{}}, DataDir ).
 
--spec reduce( X0, Theta ) -> [cf_sem:str()]
-when X0    :: [cf_sem:expr()],
-     Theta :: cf_sem:ctx().
+-spec reduce( X0, Theta, DataDir ) -> [cf_sem:str()]
+when X0      :: [cf_sem:expr()],
+     Theta   :: cf_sem:ctx(),
+     DataDir :: string().
 
-reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
-  X1 = cf_sem:eval( X0, {Rho, fun cre:submit/1, Gamma, Omega} ),
+reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
+
+  X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
   case cf_sem:pfinal( X1 ) of
     true  ->
       io:format( "Finished: ~p~nReturning ...~n", [X1] ),
@@ -102,7 +106,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
                     end,
                     #{}, maps:keys( Ret ) ),
           io:format( "Reducing with Omega = ~p~n", [maps:merge( Omega, Delta )] ),
-          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} );
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, DataDir );
 
         Msg -> error( {bad_msg, Msg} )
 

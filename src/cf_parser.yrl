@@ -132,8 +132,8 @@ combine( {Target1, Rho1, Global1}, {Target2, Rho2, Global2} ) ->
 
 mk_var( {id, Line, Name} ) -> {var, Line, Name}.
 
-mk_str( {intlit, Line, N} ) -> {str, Line, N};
-mk_str( {strlit, Line, S} ) -> {str, Line, S}.
+mk_str( {intlit, _Line, N} ) -> {str, N};
+mk_str( {strlit, _Line, S} ) -> {str, S}.
 
 get_line( {_, Line, _} ) -> Line.
 
@@ -155,7 +155,7 @@ mk_assign( [E|_Rest], _ExprList, _Channel ) ->
 
 set_channel( {app, Line, _Channel, LamList, Binding}, N ) -> [{app, Line, N, LamList, Binding}];
 set_channel( E, 1 ) -> [E];
-set_channel( E, _ ) -> error( {parser, cannot_set_channel_on_nonapp_expr, element( 1, E ), element( 2, E )} ).
+set_channel( E, _ ) -> error( {parser, nonapp_expr, element( 1, E ), element( 2, E )} ).
 
 mk_natlam( {deftask, Line, _}, {id, _, Name}, Sign, Block ) ->
   #{Name => {lam, Line, Name, Sign, {natbody, Block}}}.
@@ -185,13 +185,13 @@ multiple_targets_should_be_joined_test() ->
                  parse_string( "bla; blub;" ) ).
 
 strlit_should_be_recognized_test() ->
-  ?assertEqual( {[{str, 1, "bla"}], #{}, #{}}, parse_string( "\"bla\";" ) ).
+  ?assertEqual( {[{str, "bla"}], #{}, #{}}, parse_string( "\"bla\";" ) ).
 
 intlit_should_be_recognized_test() ->
-  ?assertEqual( {[{str, 1, "-5"}], #{}, #{}}, parse_string( "-5;" ) ).
+  ?assertEqual( {[{str, "-5"}], #{}, #{}}, parse_string( "-5;" ) ).
 
 cnd_should_be_recognized_test() ->
-  ?assertEqual( {[{cnd, 1, [], [{str, 1, "bla"}], [{str, 1, "blub"}]}],
+  ?assertEqual( {[{cnd, 1, [], [{str, "bla"}], [{str, "blub"}]}],
                   #{}, #{}},
                  parse_string( "if nil then \"bla\" else \"blub\" end;" ) ).
 
@@ -202,21 +202,21 @@ app_should_be_recognized_test() ->
                    #{}, #{}}, parse_string( "f( x: x );" ) ),
    ?assertEqual( {[{app, 1, 1, {var, 1, "f"},
                      #{"x" => [{var, 1, "x"}],
-                       "y" => [{str, 1, "y"}]}}], #{}, #{}},
+                       "y" => [{str, "y"}]}}], #{}, #{}},
                   parse_string( "f( x: x, y: \"y\" );" ) )].
 
 
 assign_should_be_recognized_test() ->
-  [?assertEqual( {[], #{"x" => [{str, 1, "x"}]}, #{}}, parse_string( "x = \"x\";" ) ),
+  [?assertEqual( {[], #{"x" => [{str, "x"}]}, #{}}, parse_string( "x = \"x\";" ) ),
    ?assertEqual( {[], #{"x" => [{app, 1, 1, {var, 1, "f"}, #{}}], "y" => [{app, 1, 2, {var, 1, "f"}, #{}}]}, #{}}, parse_string( "x y = f();" ) ),
-   ?assertError( {parser, cannot_set_channel_on_nonapp_expr, str, 1}, parse_string( "x y = \"A\";" ) ),
-   ?assertError( {parser, nonvar_expr_left_of_eq, str, 1}, parse_string( "\"a\" = \"A\";" ) )].
+   ?assertError( {parser, nonapp_expr, str, "A"}, parse_string( "x y = \"A\";" ) ),
+   ?assertError( {parser, nonvar_expr_left_of_eq, str, "a"}, parse_string( "\"a\" = \"A\";" ) )].
 
 native_deftask_should_be_recognized_test() ->
   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
                                            {sign, [{param, {name, "out", false}, false}],
                                                   []},
-                                           {natbody, #{"out" => [{str, 1, "A"}]}}}}},
+                                           {natbody, #{"out" => [{str, "A"}]}}}}},
                  parse_string( "deftask f( out : ) { out = \"A\"; }" ) ).
 
 foreign_deftask_should_be_recognized_test() ->
