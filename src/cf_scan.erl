@@ -6,13 +6,13 @@
 %% property of the creator of the scanner and is not covered by that
 %% Copyright.
 
--module(cf_lexer).
+-module(cf_scan).
 
 -export([string/1,string/2,token/2,token/3,tokens/2,tokens/3]).
 -export([format_error/1]).
 
 %% User code. This is placed here to allow extra attributes.
--file("src/cf_lexer.xrl", 114).
+-file("src/cf_scan.xrl", 114).
 
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
@@ -426,7 +426,7 @@ yysuf(List, N) -> lists:nthtail(N, List).
 %% return signal either an unrecognised character or end of current
 %% input.
 
--file("src/cf_lexer.erl", 428).
+-file("src/cf_scan.erl", 428).
 yystate() -> 69.
 
 yystate(72, [122|Ics], Line, Tlen, _, _) ->
@@ -1519,157 +1519,157 @@ yyaction(30, _, _, _) ->
 yyaction(_, _, _, _) -> error.
 
 -compile({inline,yyaction_0/2}).
--file("src/cf_lexer.xrl", 69).
+-file("src/cf_scan.xrl", 69).
 yyaction_0(TokenChars, TokenLine) ->
      { token, { bash, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_1/2}).
--file("src/cf_lexer.xrl", 70).
+-file("src/cf_scan.xrl", 70).
 yyaction_1(TokenChars, TokenLine) ->
      { token, { python, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_2/2}).
--file("src/cf_lexer.xrl", 71).
+-file("src/cf_scan.xrl", 71).
 yyaction_2(TokenChars, TokenLine) ->
      { token, { r, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_3/2}).
--file("src/cf_lexer.xrl", 73).
+-file("src/cf_scan.xrl", 73).
 yyaction_3(TokenChars, TokenLine) ->
      { token, { intlit, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_4/2}).
--file("src/cf_lexer.xrl", 74).
+-file("src/cf_scan.xrl", 74).
 yyaction_4(TokenChars, TokenLine) ->
      { token, { strlit, TokenLine, trim_strlit (TokenChars) } } .
 
 -compile({inline,yyaction_5/2}).
--file("src/cf_lexer.xrl", 75).
+-file("src/cf_scan.xrl", 75).
 yyaction_5(TokenChars, TokenLine) ->
      { token, { body, TokenLine, trim_body (TokenChars) } } .
 
 -compile({inline,yyaction_6/2}).
--file("src/cf_lexer.xrl", 76).
+-file("src/cf_scan.xrl", 76).
 yyaction_6(TokenChars, TokenLine) ->
      { token, { beginif, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_7/2}).
--file("src/cf_lexer.xrl", 77).
+-file("src/cf_scan.xrl", 77).
 yyaction_7(TokenChars, TokenLine) ->
      { token, { colon, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_8/2}).
--file("src/cf_lexer.xrl", 78).
+-file("src/cf_scan.xrl", 78).
 yyaction_8(TokenChars, TokenLine) ->
      { token, { comma, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_9/2}).
--file("src/cf_lexer.xrl", 79).
+-file("src/cf_scan.xrl", 79).
 yyaction_9(TokenChars, TokenLine) ->
      { token, { deftask, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_10/2}).
--file("src/cf_lexer.xrl", 80).
+-file("src/cf_scan.xrl", 80).
 yyaction_10(TokenChars, TokenLine) ->
      { token, { else, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_11/2}).
--file("src/cf_lexer.xrl", 81).
+-file("src/cf_scan.xrl", 81).
 yyaction_11(TokenChars, TokenLine) ->
      { token, { endif, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_12/2}).
--file("src/cf_lexer.xrl", 82).
+-file("src/cf_scan.xrl", 82).
 yyaction_12(TokenChars, TokenLine) ->
      { token, { eq, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_13/2}).
--file("src/cf_lexer.xrl", 83).
+-file("src/cf_scan.xrl", 83).
 yyaction_13(TokenChars, TokenLine) ->
      { token, { file, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_14/2}).
--file("src/cf_lexer.xrl", 84).
+-file("src/cf_scan.xrl", 84).
 yyaction_14(TokenChars, TokenLine) ->
      { token, { in, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_15/2}).
--file("src/cf_lexer.xrl", 85).
+-file("src/cf_scan.xrl", 85).
 yyaction_15(TokenChars, TokenLine) ->
      { token, { lbrace, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_16/2}).
--file("src/cf_lexer.xrl", 86).
+-file("src/cf_scan.xrl", 86).
 yyaction_16(TokenChars, TokenLine) ->
      { token, { lparen, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_17/2}).
--file("src/cf_lexer.xrl", 87).
+-file("src/cf_scan.xrl", 87).
 yyaction_17(TokenChars, TokenLine) ->
      { token, { lsquarebr, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_18/2}).
--file("src/cf_lexer.xrl", 88).
+-file("src/cf_scan.xrl", 88).
 yyaction_18(TokenChars, TokenLine) ->
      { token, { ltag, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_19/2}).
--file("src/cf_lexer.xrl", 89).
+-file("src/cf_scan.xrl", 89).
 yyaction_19(TokenChars, TokenLine) ->
      { token, { nil, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_20/2}).
--file("src/cf_lexer.xrl", 90).
+-file("src/cf_scan.xrl", 90).
 yyaction_20(TokenChars, TokenLine) ->
      { token, { rbrace, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_21/2}).
--file("src/cf_lexer.xrl", 91).
+-file("src/cf_scan.xrl", 91).
 yyaction_21(TokenChars, TokenLine) ->
      { token, { rparen, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_22/2}).
--file("src/cf_lexer.xrl", 92).
+-file("src/cf_scan.xrl", 92).
 yyaction_22(TokenChars, TokenLine) ->
      { token, { rsquarebr, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_23/2}).
--file("src/cf_lexer.xrl", 93).
+-file("src/cf_scan.xrl", 93).
 yyaction_23(TokenChars, TokenLine) ->
      { token, { rtag, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_24/2}).
--file("src/cf_lexer.xrl", 94).
+-file("src/cf_scan.xrl", 94).
 yyaction_24(TokenChars, TokenLine) ->
      { token, { semicolon, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_25/2}).
--file("src/cf_lexer.xrl", 95).
+-file("src/cf_scan.xrl", 95).
 yyaction_25(TokenChars, TokenLine) ->
      { token, { string, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_26/2}).
--file("src/cf_lexer.xrl", 96).
+-file("src/cf_scan.xrl", 96).
 yyaction_26(TokenChars, TokenLine) ->
      { token, { then, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_27/2}).
--file("src/cf_lexer.xrl", 98).
+-file("src/cf_scan.xrl", 98).
 yyaction_27(TokenChars, TokenLine) ->
      { token, { id, TokenLine, TokenChars } } .
 
 -compile({inline,yyaction_28/0}).
--file("src/cf_lexer.xrl", 100).
+-file("src/cf_scan.xrl", 100).
 yyaction_28() ->
      skip_token .
 
 -compile({inline,yyaction_29/0}).
--file("src/cf_lexer.xrl", 101).
+-file("src/cf_scan.xrl", 101).
 yyaction_29() ->
      skip_token .
 
 -compile({inline,yyaction_30/0}).
--file("src/cf_lexer.xrl", 102).
+-file("src/cf_scan.xrl", 102).
 yyaction_30() ->
      skip_token .
 
