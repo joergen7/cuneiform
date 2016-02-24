@@ -46,7 +46,7 @@ init( [] ) ->
   MaxSecondsBetweenRestarts = 10,
   SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
-  Restart = permanent,
+  Restart = temporary,
   Shutdown = 2000,
   Type = worker,
   Cre = {cre, {cre, start_link, []}, Restart, Shutdown, Type, [cre]},

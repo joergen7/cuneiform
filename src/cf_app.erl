@@ -31,7 +31,7 @@
 start( normal, [] ) ->
 
   % TODO: load and hand down configuration
-  
+
   cf_sup:start_link().
 
 stop( _State ) ->

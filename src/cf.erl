@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
--export( [start/0, string/2, file/2] ).
+-export( [start/0, string/2, file/1, file/2] ).
 
 %% =============================================================================
 %% API functions
@@ -34,6 +34,10 @@ start() ->
 string( S, DataDir ) ->
   {Query, Rho, Gamma} = cf_parser:parse_string( S ),
   reduce( Query, Rho, Gamma, DataDir ).
+
+-spec file( Filename::string() ) -> [cf_sem:str()].
+
+file( Filename ) -> file( Filename, "." ).
 
 -spec file( Filename::string(), DataDir::string() ) -> [cf_sem:str()].
 
