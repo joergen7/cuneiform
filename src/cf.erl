@@ -120,4 +120,4 @@ when N      :: string(),
      R      :: pos_integer().
 
 acc_delta( N, Delta0, Ret, R ) ->
-  Delta0#{{N, R} => maps:get( N, Ret )}.
+  Delta0#{{N, R} => [{str, S} || S <- maps:get( N, Ret )]}.
