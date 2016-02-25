@@ -180,7 +180,7 @@ step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
   end;
 
 % Application
-step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->
+step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->          % (52)
   [{app, Line, C, maps:get( N, Gamma ), Fa}];
 
 step( X={app, AppLine, C,
@@ -189,23 +189,25 @@ step( X={app, AppLine, C,
   case psing( X ) of
     false -> enum_app( {app, AppLine, C, Lambda, step_assoc( Fa, Theta )} );    % (53)
     true  ->
-      case B of
-        {forbody, _L, _Z} ->
-          case pfinal( Fa ) of
-            false -> [{app, AppLine, C, Lambda, step_assoc( Fa, Theta )}];      % (54)
-            true  -> [{select, AppLine, C, apply( Mu, [X] )}]                   % (55)
-          end;
-        {natbody, Fb} ->
-          {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
-          V0 = maps:get( N, Fb ),
-          V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
-          case pfinal( V1 ) of
-            false -> [{app, AppLine, C, {lam, LamLine, LamName, S,              % (56)
-                                              {natbody, Fb#{ N => V1}}}, Fa}];
-            true  ->
-              case Pl orelse length( V1 ) =:= 1 of
-                true  -> V1;                                                    % (57)
-                false -> error( output_sign_mismatch )
+      case pfinal( Fa ) of
+        false -> [{app, AppLine, C, Lambda, step_assoc( Fa, Theta )}];          % (54)
+        true  ->
+          case B of
+            {forbody, _L, _Z} -> [{select, AppLine, C, apply( Mu, [X] )}];      % (55)
+            {natbody, Fb} ->
+              {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
+              V0 = maps:get( N, Fb ),
+              V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
+              case pfinal( V1 ) of
+                false -> [{app, AppLine, C,                                     % (56)
+                                {lam, LamLine, LamName, S,
+                                      {natbody, Fb#{ N => V1}}},
+                                Fa}];
+                true  ->
+                  case Pl orelse length( V1 ) =:= 1 of
+                    true  -> V1;                                                % (57)
+                    false -> error( output_sign_mismatch )
+                  end
               end
           end
       end

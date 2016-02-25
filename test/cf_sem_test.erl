@@ -297,3 +297,21 @@ app_select_param_is_enumerated_test() ->
   B = [{app, 5, 1, Lam2, #{"inp" => A}}],
   X = cf_sem:eval( B, ?THETA0 ), 
   ?assertMatch( [{app, 5, 1, _, _}, {app, 5, 1, _, _}], X ).
+
+% deftask find_clusters( cls( File ) : state( File ) ) {
+%   cls = state;
+% }
+% mu0 = 1;
+% cls = find_clusters( state: mu0 );
+% cls;
+identity_fn_should_resolve_var_test() ->
+  Lo = [{param, {name, "cls", false}, false}],
+  Li = [{param, {name, "state", false}, false}],
+  Sign = {sign, Lo, Li},
+  Body = {natbody, #{"cls" => [{var, 1, "state"}]}},
+  Lam = {lam, 2, "find_clusters", Sign, Body},
+  Fa = #{"state" => [{var, 3, "mu0"}]},
+  App = {app, 4, 1, Lam, Fa},
+  Rho = #{"cls" => [App], "mu0" => [{str, "1"}]},
+  X = [{var, 6, "cls"}],
+  ?assertEqual( [{str, "1"}], cf_sem:eval( X, {Rho, fun sem:mu/1, #{}, #{}} ) ).
