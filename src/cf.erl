@@ -73,11 +73,8 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
 
   X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
   case cf_sem:pfinal( X1 ) of
-    true  ->
-      io:format( "Finished: ~p~nReturning ...~n", [X1] ),
-      X1;
+    true  -> X1;
     false ->
-      io:format( "Not finished: ~p~nOmega: ~p~nWaiting for futures to terminate ...~n", [X1, Omega] ),
       receive
 
         {failed, script_error, {ActScript, Out}} ->
@@ -94,7 +91,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
                              ok = io:format( "~4.B  ~s~n", [N, Line] ),
                              N+1
                            end,
-                           1, string:tokens( ActScript, "\n" ) ),
+                           1, re:split( ActScript, "\n" ) ),
 
           error( script_error );
 
@@ -109,7 +106,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
                       acc_delta( N, Delta0, Ret, R )
                     end,
                     #{}, maps:keys( Ret ) ),
-          io:format( "Reducing with Omega = ~p~n", [maps:merge( Omega, Delta )] ),
+
           reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, DataDir );
 
         Msg -> error( {bad_msg, Msg} )

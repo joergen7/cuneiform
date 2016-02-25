@@ -12,8 +12,12 @@
 
 string( S ) ->
   {ok, TokenList, _} = cf_scan:string( S ),
-  {ok, ParseTree} = cf_parse:parse( TokenList ),
-  ParseTree.
+
+  % parse
+  case parse( TokenList ) of
+    {error, R2}     -> error( R2 );
+    {ok, ParseTree} -> ParseTree
+  end.
 
 
 
@@ -365,7 +369,7 @@ yecctoken2string(Other) ->
 
 
 
--file("src/cf_parse.erl", 368).
+-file("src/cf_parse.erl", 372).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 yeccpars2(0=S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -1476,4 +1480,4 @@ yeccpars2_79_(__Stack0) ->
   end | __Stack].
 
 
--file("src/cf_parse.yrl", 301).
+-file("src/cf_parse.yrl", 305).

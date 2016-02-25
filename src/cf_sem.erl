@@ -169,7 +169,6 @@ step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              
 % Future Channel Selection
 step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
   {param, {name, N, _}, _} = lists:nth( C, Lo ),
-  io:format( "Looking up {~p, ~p} in ~p~n", [N, R, Omega] ),
   maps:get( {N, R}, Omega, [S] );
 
 % Conditional

@@ -120,8 +120,12 @@ Erlang code.
 
 string( S ) ->
   {ok, TokenList, _} = cf_scan:string( S ),
-  {ok, ParseTree} = cf_parse:parse( TokenList ),
-  ParseTree.
+
+  % parse
+  case parse( TokenList ) of
+    {error, R2}     -> error( R2 );
+    {ok, ParseTree} -> ParseTree
+  end.
 
 
 
