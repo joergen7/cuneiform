@@ -1,7 +1,0 @@
-deftask greet( out : inp ) in bash *{
-  out="Hello $inp"
-}*
-
-x = greet( inp: "Jorgen" "Marc" );
-
-x;
