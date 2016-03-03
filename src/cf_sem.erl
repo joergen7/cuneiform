@@ -82,7 +82,7 @@ when X :: #{string() => [expr()]} | [expr()] | expr().
 
 pfinal( F ) when is_map( F )  -> pfinal( maps:values( F ) );                    % (20)
 pfinal( L ) when is_list( L ) -> lists:all( fun pfinal/1, L );                  % (21,22)
-pfinal( {str, _S} )            -> true;                                          % (23)
+pfinal( {str, _S} )           -> true;                                          % (23)
 pfinal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
