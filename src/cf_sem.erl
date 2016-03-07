@@ -35,8 +35,7 @@
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
 -type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
--type fut()     :: {fut, Name::string(), R::pos_integer(),                      % (5)
-                         Fp::#{string() => boolean()}}.
+-type fut()     :: {fut, Name::string(), R::pos_integer(), Lo::[param()]}.      % (5)
 -type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
 -type app()     :: {app, Line::pos_integer(), C::pos_integer(),                 % (7)
@@ -95,7 +94,7 @@ psing( {app, _, _C, {lam, _, _, {sign, _Lo, Li}, _B}, Fa} ) ->                  
 -spec psing_argpair( Z::argpair() ) -> boolean().                               % (26)
 
 psing_argpair( {[], _F} ) -> true;                                              % (27)
-psing_argpair( {[{param, _, Pl}|T], F} )                            % (28)
+psing_argpair( {[{param, _, Pl}|T], F} )                                        % (28)
 when Pl ->
   psing_argpair( {T, F} );
 psing_argpair( {[{param, {name, N, _}, _Pl}|T], F} ) ->                         % (29)
@@ -304,6 +303,126 @@ corrstep( [{name, H, _}|T], Facc, F0 ) ->
 %% =============================================================================
 
 -ifdef( TEST ).
+
+
+%% =============================================================================
+%% Predicates
+%% =============================================================================
+
+%% Finality %%
+
+str_should_be_final_test() ->
+  S = {str, "blub"},
+  ?assert( pfinal( S ) ).
+
+app_should_not_be_final_test() ->
+  A = {app, 12, 1, {var, "f"}, #{}},
+  ?assertNot( pfinal( A ) ).
+
+cnd_should_not_be_final_test() ->
+  C = {cnd, 12, [{str, "a"}], [{str, "b"}], [{str, "c"}]},
+  ?assertNot( pfinal( C ) ).
+
+select_should_not_be_final_test() ->
+  Fut = {fut, "f", 1234, [{param, "out", false}]},
+  S = {select, 12, 1, Fut},
+  ?assertNot( pfinal( S ) ).
+
+var_should_not_be_final_test() ->
+  V = {var, 12, "x"},
+  ?assertNot( pfinal( V ) ).
+
+all_str_should_be_final_test() ->
+  X = [{str, "bla"}, {str, "blub"}],
+  ?assert( pfinal( X ) ).
+
+empty_lst_should_be_final_test() ->
+  ?assert( pfinal( [] ) ).
+
+one_var_lst_should_not_be_final_test() ->
+  X = [{str, "bla"}, {str, "blub"}, {var, 12, "x"}],
+  ?assertNot( pfinal( X ) ).
+
+all_var_lst_should_not_be_final_test() ->
+  X = [{var, 10, "bla"}, {var, 11, "blub"}, {var, 12, "x"}],
+  ?assertNot( pfinal( X ) ).
+
+empty_map_should_be_final_test() ->
+  ?assert( pfinal( #{} ) ).
+
+only_str_map_should_be_final_test() ->
+  M = #{"x" => [{str, "bla"}, {str, "blub"}], "y" => [{str, "shalala"}]},
+  ?assert( pfinal( M ) ).
+
+one_var_map_should_not_be_final_test() ->
+  M = #{"x" => [{str, "bla"}, {str, "blub"}],
+        "y" => [{str, "shalala"}, {var, 12, "x"}]},
+  ?assertNot( pfinal( M ) ).
+
+all_var_map_should_not_be_final_test() ->
+  M = #{"x" => [{var, 10, "bla"}, {var, 11, "blub"}],
+        "y" => [{var, 12, "shalala"}, {var, 13, "x"}]},
+  ?assertNot( pfinal( M ) ).
+
+%% Singularity %%
+
+app_without_arg_should_be_singular_test() ->
+  S = {sign, [{param, {name, "out", false}, false}], []},
+  B = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", S, B},
+  App = {app, 13, 1, Lam, #{}},
+  ?assert( psing( App ) ).
+
+app_binding_single_str_should_be_singular_test() ->
+  S = {sign, [{param, {name, "out", false}, false}], [{param, {name, "x", false}, false}]},
+  B = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", S, B},
+  App = {app, 13, 1, Lam, #{"x" => [{str, "bla"}]}},
+  ?assert( psing( App ) ).
+
+app_binding_str_lst_should_not_be_singular_test() ->
+  S = {sign, [{param, {name, "out", false}, false}], [{param, {name, "x", false}, false}]},
+  B = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", S, B},
+  App = {app, 13, 1, Lam, #{"x" => [{str, "bla"}, {str, "blub"}]}},
+  ?assertNot( psing( App ) ).
+
+app_with_only_aggregate_args_should_be_singular_test() ->
+  S = {sign, [{param, {name, "out", false}, false}], [{param, {name, "x", false}, true}]},
+  B = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", S, B},
+  App = {app, 13, 1, Lam, #{"x" => [{str, "bla"}, {str, "blub"}]}},
+  ?assert( psing( App ) ).
+
+%% Enumerability %%
+
+empty_lst_should_be_enumerable_test() ->
+  ?assert( pen( [] ) ).
+
+str_lst_should_be_enumerable_test() ->
+  ?assert( pen( [{str, "a"}, {str, "b"}] ) ).
+
+one_var_lst_should_not_be_enumerable_test() ->
+  ?assertNot( pen( [{str, "a"}, {var, 12, "x"}] ) ).
+
+all_var_lst_should_not_be_enumerable_test() ->
+  ?assertNot( pen( [{var, 12, "x"}, {var, 13, "y"}] ) ).
+
+str_should_be_enumerable_test() ->
+  ?assert( pen( {str, "blub"} ) ).
+
+single_str_branch_cnd_should_be_enumerable_test() ->
+  ?assert( pen( {cnd, 12, [], [{str, "a"}], [{str, "b"}]} ) ).
+
+empty_then_branch_cnd_should_not_be_enumerable_test() ->
+  ?assertNot( pen( {cnd, 12, [], [], [{str, "b"}]} ) ).
+
+empty_else_branch_cnd_should_not_be_enumerable_test() ->
+  ?assertNot( pen( {cnd, 12, [], [{str, "a"}]} ) ).
+
+%% =============================================================================
+%% Enumeration
+%% =============================================================================
 
 %% The enum Function %%
 
