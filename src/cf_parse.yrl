@@ -184,7 +184,7 @@ multi_element_compoundexpr_should_be_recognized_test() ->
   ?assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
                  string( "bla blub;" ) ).
 
-multiple_targets_should_be_joined_test() ->
+multiple_queries_should_be_joined_test() ->
   ?assertEqual( {[{var, 1, "bla"}, {var, 1, "blub"}], #{}, #{}},
                  string( "bla; blub;" ) ).
 
