@@ -71,11 +71,11 @@ expr         -> app    : '$1'.
 exprlist     -> expr          : ['$1'].
 exprlist     -> expr exprlist : ['$1'|'$2'].
 
-cnd          -> beginif compoundexpr then compoundexpr else
-                compoundexpr endif                          : {cnd, get_line( '$1' ), '$2', '$4', '$6'}.
+cnd          -> beginif compoundexpr then compoundexpr
+                else compoundexpr endif                : {cnd, get_line( '$1' ), '$2', '$4', '$6'}.
 
-app          -> id lparen rparen                            : {app, get_line( '$1' ), 1, mk_var( '$1' ), #{}}.
-app          -> id lparen bindinglist rparen                : {app, get_line( '$1' ), 1, mk_var( '$1' ), '$3'}.
+app          -> id lparen rparen             : {app, get_line( '$1' ), 1, mk_var( '$1' ), #{}}.
+app          -> id lparen bindinglist rparen : {app, get_line( '$1' ), 1, mk_var( '$1' ), '$3'}.
 
 binding      -> id colon compoundexpr : mk_binding( '$1', '$3' ).
 
@@ -85,8 +85,8 @@ bindinglist  -> binding comma bindinglist : maps:merge( '$1', '$3' ).
 sign         -> lparen paramlist colon rparen             : {sign, '$2', []}.
 sign         -> lparen paramlist colon inparamlist rparen : {sign, '$2', '$4'}.
 
-inparam      -> param                                          : '$1'.
-inparam      -> lsquarebr namelist rsquarebr                   : {correl, '$2'}.
+inparam      -> param                        : '$1'.
+inparam      -> lsquarebr namelist rsquarebr : {correl, '$2'}.
 
 inparamlist  -> inparam             : ['$1'].
 inparamlist  -> inparam inparamlist : ['$1'|'$2'].
@@ -252,10 +252,6 @@ sign_with_inparam_should_be_recognized_test() ->
                                                     {param, {name, "b", false}, false}]},
                                             {forbody, python, "(defparameter out \"A\")"}}}},
                   string( "deftask f( out : a b )in python *{(defparameter out \"A\")}*" ) )].
-
-%% =============================================================================
-%% Failing Tests
-%% =============================================================================
 
 param_should_be_recognized_test() ->
   [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
