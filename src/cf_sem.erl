@@ -420,6 +420,40 @@ empty_then_branch_cnd_should_not_be_enumerable_test() ->
 empty_else_branch_cnd_should_not_be_enumerable_test() ->
   ?assertNot( pen( {cnd, 12, [], [{str, "a"}]} ) ).
 
+select_non_lst_app_should_be_enumerable_test() ->
+  Sign = {sign, [{param, {name, "out", false}, false}], []},
+  Body = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", Sign, Body},
+  App = {app, 13, 1, Lam, #{}},
+  ?assert( pen( App ) ).
+
+select_lst_app_should_not_be_enumerable_test() ->
+  Sign = {sign, [{param, {name, "out", false}, true}], []},
+  Body = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", Sign, Body},
+  App = {app, 13, 1, Lam, #{}},
+  ?assertNot( pen( App ) ).
+
+non_singular_app_should_not_be_enumerable_test() ->
+  Sign = {sign, [{param, {name, "out", false}, false}], [{param, {name, "x", false}, false}]},
+  Body = {forbody, bash, "shalala"},
+  Lam = {lam, 12, "f", Sign, Body},
+  Fa = #{"x" => [{str, "bla"}, {str, "blub"}]},
+  App = {app, 13, 1, Lam, Fa},
+  ?assertNot( pen( App ) ).
+
+non_lst_select_should_be_enumerable_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  Fut = {fut, "f", 1234, Lo},
+  Select = {select, 12, 1, Fut},
+  ?assert( pen( Select ) ).
+
+lst_select_should_not_be_enumerable_test() ->
+  Lo = [{param, {name, "out", false}, true}],
+  Fut = {fut, "f", 1234, Lo},
+  Select = {select, 12, 1, Fut},
+  ?assertNot( pen( Select ) ).
+
 %% =============================================================================
 %% Enumeration
 %% =============================================================================
