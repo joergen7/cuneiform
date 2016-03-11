@@ -16,7 +16,7 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
--module( cf ).
+-module( cuneiform ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
@@ -27,7 +27,7 @@
 %% =============================================================================
 
 start() ->
-  application:start( cf ).
+  application:start( cuneiform ).
 
 -spec string( S::string(), DataDir::string() ) -> [cf_sem:str()].
 

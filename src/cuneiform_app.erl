@@ -16,7 +16,7 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
--module( cf_app ).
+-module( cuneiform_app ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( application ).

@@ -1,4 +1,4 @@
-{application, cf,
+{application, cuneiform,
  [
   {description, "Cuneiform: A Functional Language for Large Scale Scientific Data Analysis"},
   {vsn, "2.2.0"},
@@ -7,6 +7,6 @@
                   kernel,
                   stdlib
                  ]},
-  {mod, { cf_app, []}},
+  {mod, { cuneiform_app, []}},
   {env, []}
  ]}.

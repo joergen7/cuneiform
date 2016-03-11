@@ -12,3 +12,5 @@ rel/example_project
 src/cf_lexer.erl
 src/cf_parser.erl
 doc
+_build
+rebar.lock
