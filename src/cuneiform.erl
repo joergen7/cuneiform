@@ -100,7 +100,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
-          R   = maps:get( prefix, Summary ),
+          % R   = maps:get( prefix, Summary ),
           Delta = lists:foldl(
                     fun( N, Delta0 ) ->
                       acc_delta( N, Delta0, Ret, R )
