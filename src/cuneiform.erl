@@ -100,7 +100,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
-          % R   = maps:get( prefix, Summary ),
+          R   = maps:get( id, Summary ),
           Delta = lists:foldl(
                     fun( N, Delta0 ) ->
                       acc_delta( N, Delta0, Ret, R )
@@ -121,4 +121,4 @@ when N      :: string(),
      R      :: pos_integer().
 
 acc_delta( N, Delta0, Ret, R ) ->
-  Delta0#{{N, R} => [{str, S} || S <- maps:get( N, Ret )]}.
+  Delta0#{{N, R} => maps:get( N, Ret )}.
