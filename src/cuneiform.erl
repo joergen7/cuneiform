@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
--export( [start/0, string/2, file/1, file/2] ).
+-export( [start/0, string/2, file/1, file/2, reduce/4] ).
 
 %% =============================================================================
 %% API functions
