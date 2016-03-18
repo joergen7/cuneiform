@@ -23,8 +23,8 @@
 
 -define( THETA0, {#{}, fun mu/1, #{}, #{}} ).
 
-mu( {app, _AppLine, _C, {lam, _LamLine, Name, {sign, Lo, _Li}, _B}, _Fa} ) ->
-  {fut, Name, random:uniform( 1000000000 ), Lo}.
+mu( {app, _AppLine, _C, {lam, _LamLine, LamName, {sign, Lo, _Li}, _B}, _Fa} ) ->
+  {fut, LamName, random:uniform( 1000000000 ), Lo}.
 
 nil_should_eval_itself_test() ->
   ?assertEqual( [], cf_sem:eval( [], ?THETA0 ) ).
@@ -35,7 +35,7 @@ str_should_eval_itself_test() ->
 
 undef_var_should_fail_test() ->
   E = [{var, 1, "x"}],
-  ?assertError( {badkey, "x"}, cf_sem:eval( E, ?THETA0 ) ).
+  ?assertThrow( {1, cf_sem, _}, cf_sem:eval( E, ?THETA0 ) ).
 
 def_var_should_eval_to_bound_value_test() ->
   E = [{str, "blub"}],
@@ -95,7 +95,7 @@ fn_call_should_insert_lam_test() ->
 
 app_with_unbound_lam_should_fail_test() ->
   F = [{app, 1, 1, {var, 2, "f"}, #{}}],
-  ?assertError( {badkey, "f"}, cf_sem:eval( F, ?THETA0 ) ).
+  ?assertThrow( {1, cf_sem, _}, cf_sem:eval( F, ?THETA0 ) ).
 
 identity_fn_should_eval_arg_test() ->
   E = [{str, "bla"}],
@@ -122,7 +122,7 @@ app_should_ignore_calling_context_test() ->
   Lam = {lam, 2, "f", Sign, Body},
   X = [{app, 3, 1, Lam, #{}}],
   Rho = #{"x" => [{str, "blub"}]},
-  ?assertError( {badkey, "x"}, cf_sem:eval( X, {Rho, fun mu/1, #{}, #{}} ) ).
+  ?assertThrow( {1, cf_sem, _}, cf_sem:eval( X, {Rho, fun mu/1, #{}, #{}} ) ).
 
 app_should_hand_down_gamma_test() ->
   Sign = {sign, [{param, {name, "out", false}, false}], []},

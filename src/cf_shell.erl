@@ -38,17 +38,13 @@
 -define( BUILD, "2016-03-17" ).
 
 -define( RED( Str ), "\e[31m" ++ Str ++ "\e[0m" ).
--define( GRN( Str ), "\e[1;32m" ++ Str ++ "\e[0m" ).
--define( YLW( Str ), "\e[1;33m" ++ Str ++ "\e[0m" ).
+-define( BRED( Str ), "\e[1;31m" ++ Str ++ "\e[0m" ).
+-define( GRN( Str ), "\e[32m" ++ Str ++ "\e[0m" ).
+-define( YLW( Str ), "\e[33m" ++ Str ++ "\e[0m" ).
+-define( BYLW( Str ), "\e[1;33m" ++ Str ++ "\e[0m" ).
 -define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
 -define( PROMPT, "> " ).
-
-
-
-
-
-
 
 %% =============================================================================
 %% Internal Functions
@@ -57,22 +53,39 @@
 
 server() ->
   process_flag( trap_exit, true ),
-  io:format( "~s", [get_banner()] ),
+  io:format( "~s~n~n~n", [get_banner()] ),
   server_loop( #{}, #{} ).
 
 server_loop( Rho, Gamma ) ->
-
-  {Query, DRho, DGamma} = read_expression( ?PROMPT ),
-
-  Rho1 = maps:merge( Rho, DRho ),
-  Gamma1 = maps:merge( Gamma, DGamma ),
-  case Query of
-
-    undef -> server_loop( Rho1, Gamma1 );
-    _     ->
-      cuneiform:reduce( Query, Rho, Gamma, "." ),
-      server_loop( Rho, Gamma )
-
+  case read_expression( ?PROMPT ) of
+    {ctl, quit}                 ->
+      ok;
+    {ctl, help}                 ->
+      io:format( "~n~s~n~n", [get_help()] ),
+      server_loop( Rho, Gamma );
+    {ctl, state}                ->
+      io:format( "~p~n", [Rho] ),
+      server_loop( Rho, Gamma );
+    {ctl, tasks}                ->
+      io:format( "~p~n", [Gamma] ),
+      server_loop( Rho, Gamma );
+    {error, ErrorInfo}          ->
+      S = format_error( ErrorInfo ),
+      io:format( "~s~n", [S] ),
+      server_loop( Rho, Gamma );
+    {ok, {Query, DRho, DGamma}} ->
+      Rho1 = maps:merge( Rho, DRho ),
+      Gamma1 = maps:merge( Gamma, DGamma ),
+      case Query of
+        undef -> server_loop( Rho1, Gamma1 );
+        _     ->
+          try cuneiform:reduce( Query, Rho, Gamma, "." ) of
+            X -> io:format( "~s~n", [format_result( X )] )
+          catch
+            throw:T -> io:format( "~s~n", [format_error( T )] )
+          end,
+          server_loop( Rho, Gamma )
+      end
   end.
 
 
@@ -80,24 +93,67 @@ server_loop( Rho, Gamma ) ->
 read_expression( Prompt ) ->
   Read = fun() ->
            io:format( Prompt ),
-           Ret = read(),
+           Ret = read( [] ),
            exit( Ret )
          end,
   Rdr = spawn_link( Read ),
-  read_expression_1( Rdr ).
-
-read_expression_1( Rdr ) ->
   receive
     {'EXIT', Rdr, Ret} -> Ret;
     Msg                -> error( {bad_msg, Msg} )
   end.
 
-read() ->
+read( Buf ) ->
   S = io:get_line( "" ),
-  {ok, TokenLst, _} = cf_scan:string( S ),
-  {ok, Ret} = cf_parse:parse( TokenLst ),
-  Ret.
+  {ok, TokenLst, _} = pre_scan:string( S ),
+  case TokenLst of
+    [] ->
+      case Buf of
+        []    -> {ok, {undef, #{}, #{}}};
+        [_|_] -> read( Buf )
+      end;
+    [_|_] ->
+      case lists:last( TokenLst ) of
+        terminal -> parse_string( Buf++S );
+        nonws    -> read( Buf++S );
+        C        -> {ctl, C}
+      end
+  end.
 
+parse_string( S ) ->
+  case cf_scan:string( S ) of
+    {error, ScanErrorInfo, _} -> {error, ScanErrorInfo};
+    {ok, TokenLst, _}         ->
+      case cf_parse:parse( TokenLst ) of
+        {error, ParseErrorInfo} -> {error, ParseErrorInfo};
+        {ok, Triple}            -> {ok, Triple}
+      end
+  end.
+
+
+format_error( {Line, cf_scan, {illegal, Token}} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "illegal token ~s" ), [Line, Token] );
+
+format_error( {Line, cf_parse, S} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
+
+format_error( {Line, cf_sem, S} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
+
+format_error( {LamLine, cuneiform, {R, script_error, LamName, _Fa, {ActScript, Out}}} ) ->
+  io_lib:format(
+    ?BYLW( "[out]~n" )++?RED( "~s~n" )
+    ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
+    ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
+    [format_out( Out ), format_script( ActScript ), LamLine, LamName, R] );
+
+format_error( ErrorInfo ) ->
+  io_lib:format( ?RED( "Error: " )++?BRED( "~p" ), [ErrorInfo] ).
+
+format_result( StrLst ) ->
+  F = fun( {str, S}, AccIn ) ->
+        io_lib:format( "~s\"~s\" ", [AccIn, S] )
+      end,
+  io_lib:format( ?GRN( "~s" ), [lists:foldl( F, "", StrLst )] ).
 
 
 get_banner() ->
@@ -106,10 +162,31 @@ get_banner() ->
      "           @@WB      Cuneiform",
      "          @@E_____   "++?VSN++" "++?BUILD,
      "     _g@@@@@WWWWWWL",
-     "   g@@#*`3@B         Type "++?GRN( "help;" )++" for usage info.",
-     "  @@P    3@B",
-     "  @N____ 3@B         Home: "++?BLU( "http://www.cuneiform-lang.org" ),
-     "  \"W@@@WF3@B",
-     "", ""
+     "   g@@#*`3@B         Type "++?BYLW( "help" )++" for usage info.",
+     "  @@P    3@B         Type "++?BYLW( "quit" )++" to quit.",
+     "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
+     "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
     ], "\n" ).
 
+get_help() ->
+  string:join(
+    ["help  -- Show this usage info",
+     "quit  -- Quit the shell",
+     "state -- Show variable bindings",
+     "tasks -- Show task definitions"
+    ], "\n" ).
+
+
+
+
+
+
+format_out( Out ) ->
+  [io_lib:format( "~s~n", [Line] ) || Line <- Out].
+
+format_script( ActScript ) ->
+  {_, S} = lists:foldl( fun( Line, {N, S} ) ->
+                          {N+1, io_lib:format( "~s~4.B  ~s~n", [S, N, Line] )}
+                        end,
+                        {1, []}, re:split( ActScript, "\n" ) ),
+  S.

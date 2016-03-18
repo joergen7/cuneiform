@@ -77,26 +77,8 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
     false ->
       receive
 
-        {failed, script_error, {ActScript, Out}} ->
-
-          % print tool output
-          ok = lists:foreach( fun( Line ) ->
-                                io:format( "~s~n", [Line] )
-                              end,
-                              Out ),
-
-          % print actual script
-          ok = io:format( "[script]~n" ),
-          _ = lists:foldl( fun( Line, N ) ->
-                             ok = io:format( "~4.B  ~s~n", [N, Line] ),
-                             N+1
-                           end,
-                           1, re:split( ActScript, "\n" ) ),
-
-          error( script_error );
-
-        {failed, Reason, Data} ->
-          error( {Reason, Data} );
+        {failed, R, R2, {LamLine, LamName, Fa1}, Data} ->
+          throw( {LamLine, cuneiform, {R, R2, LamName, Fa1, Data}} );
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),

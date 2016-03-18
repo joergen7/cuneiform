@@ -35,7 +35,7 @@
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
 -type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
--type fut()     :: {fut, Name::string(), R::pos_integer(), Lo::[param()]}.      % (5)
+-type fut()     :: {fut, LamName::string(), R::pos_integer(), Lo::[param()]}.   % (5)
 -type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
 -type app()     :: {app, Line::pos_integer(), C::pos_integer(),                 % (7)
@@ -88,21 +88,30 @@ pfinal( _T )                  -> false.
 
 -spec psing( A::app() ) -> boolean().                                           % (24)
 
-psing( {app, _, _C, {lam, _, _, {sign, _Lo, Li}, _B}, Fa} ) ->                  % (25)
-  psing_argpair( {Li, Fa} ).
+psing( {app, Line, _C, {lam, _, LamName, {sign, _Lo, Li}, _B}, Fa} ) ->         % (25)
+  case psing_argpair( {Li, Fa} ) of
+    {ok, P}    -> P;
+    {error, N} ->
+      throw( {Line, cf_sem,
+              "argument "++N++" is unbound in application of "++LamName} )
+  end.
 
--spec psing_argpair( Z::argpair() ) -> boolean().                               % (26)
+-spec psing_argpair( Z::argpair() ) -> {ok, boolean()} | {error, string()}.                               % (26)
 
-psing_argpair( {[], _F} ) -> true;                                              % (27)
+psing_argpair( {[], _F} ) -> {ok, true};                                        % (27)
 psing_argpair( {[{param, _, Pl}|T], F} )                                        % (28)
 when Pl ->
   psing_argpair( {T, F} );
 psing_argpair( {[{param, {name, N, _}, _Pl}|T], F} ) ->                         % (29)
-  case length( maps:get( N, F ) ) of
-    1 -> psing_argpair( {T, F} );
-    _ -> false
+  case maps:is_key( N, F ) of
+    false -> {error, N};
+    true  ->
+      case length( maps:get( N, F ) ) of
+        1 -> psing_argpair( {T, F} );
+        _ -> {ok, false}
+      end
   end;
-psing_argpair( _Z ) -> false.
+psing_argpair( _Z ) -> {ok, false}.
 
 %% Enumerability %% ============================================================
 
@@ -163,7 +172,10 @@ step( X={str, _S}, _Theta ) -> [X];                                             
 
 % Variable
 step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
-  maps:get( N, Rho );
+  case maps:is_key( N, Rho ) of
+    true  -> maps:get( N, Rho );
+    false -> throw( {1, cf_sem, "unbound variable "++N} )
+  end;
 
 % Future Channel Selection
 step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
@@ -180,7 +192,10 @@ step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
 
 % Application
 step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->          % (52)
-  [{app, Line, C, maps:get( N, Gamma ), Fa}];
+  case maps:is_key( N, Gamma ) of
+    true  -> [{app, Line, C, maps:get( N, Gamma ), Fa}];
+    false -> throw( {Line, cf_sem, "undefined task "++N} )
+  end;
 
 step( X={app, AppLine, C,
       Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B}, Fa},

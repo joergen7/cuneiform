@@ -24,7 +24,14 @@ string( S ) ->
 
 
 combine( {Target1, Rho1, Global1}, {Target2, Rho2, Global2} ) ->
-  {Target1++Target2, maps:merge( Rho1, Rho2 ), maps:merge( Global1, Global2 )}.
+  case Target1 of
+    undef -> {Target2, maps:merge( Rho1, Rho2 ), maps:merge( Global1, Global2 )};
+    _     ->
+      case Target2 of
+        undef -> {undef, maps:merge( Rho1, Rho2 ), maps:merge( Global1, Global2 )};
+        _     -> {Target1++Target2, maps:merge( Rho1, Rho2 ), maps:merge( Global1, Global2 )}
+      end
+  end.
 
 mk_var( {id, Line, Name} ) -> {var, Line, Name}.
 
@@ -103,42 +110,42 @@ app_should_be_recognized_test() ->
 
 
 assign_should_be_recognized_test() ->
-  [?assertEqual( {[], #{"x" => [{str, "x"}]}, #{}}, string( "x = \"x\";" ) ),
-   ?assertEqual( {[], #{"x" => [{app, 1, 1, {var, 1, "f"}, #{}}], "y" => [{app, 1, 2, {var, 1, "f"}, #{}}]}, #{}}, string( "x y = f();" ) ),
+  [?assertEqual( {undef, #{"x" => [{str, "x"}]}, #{}}, string( "x = \"x\";" ) ),
+   ?assertEqual( {undef, #{"x" => [{app, 1, 1, {var, 1, "f"}, #{}}], "y" => [{app, 1, 2, {var, 1, "f"}, #{}}]}, #{}}, string( "x y = f();" ) ),
    ?assertError( {parser, nonapp_expr, str, "A"}, string( "x y = \"A\";" ) ),
    ?assertError( {parser, nonvar_expr_left_of_eq, str, "a"}, string( "\"a\" = \"A\";" ) )].
 
 native_deftask_should_be_recognized_test() ->
-  ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+  ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                            {sign, [{param, {name, "out", false}, false}],
                                                   []},
                                            {natbody, #{"out" => [{str, "A"}]}}}}},
                  string( "deftask f( out : ) { out = \"A\"; }" ) ).
 
 foreign_deftask_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+  [?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
                                             {forbody, bash, "out=A"}}}},
                   string( "deftask f( out : )in bash *{out=A}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
                                             {forbody, r, "out=\"A\""}}}},
                   string( "deftask f( out : )in R *{out=\"A\"}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    []},
                                             {forbody, python, ""}}}},
                   string( "deftask f( out : )in python *{}*" ) )].
 
 sign_with_inparam_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+  [?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "inp", false}, false}]},
                                             {forbody, python, "(defparameter out \"A\")"}}}},
                   string( "deftask f( out : inp )in python *{(defparameter out \"A\")}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "a", false}, false},
                                                     {param, {name, "b", false}, false}]},
@@ -146,40 +153,40 @@ sign_with_inparam_should_be_recognized_test() ->
                   string( "deftask f( out : a b )in python *{(defparameter out \"A\")}*" ) )].
 
 param_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+  [?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{param, {name, "inp", false}, false}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( out( String ) : inp( String ) )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, false}],
                                                    [{param, {name, "inp", true}, false}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( out( File ) : inp( File ) )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
                                                    [{param, {name, "inp", false}, true}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( <out> : <inp> )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, true}],
                                                    [{param, {name, "inp", false}, true}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( <out( String )> : <inp( String )> )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", true}, true}],
                                                    [{param, {name, "inp", true}, true}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( <out( File )> : <inp( File )> )in bash *{blub}*" ) )].
 
 correl_inparam_should_be_recognized_test() ->
-  [?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+  [?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]}]},
                                             {forbody, bash, "blub"}}}},
                   string( "deftask f( out : [a( File ) b( File )] )in bash *{blub}*" ) ),
-   ?assertEqual( {[], #{}, #{"f" => {lam, 1, "f",
+   ?assertEqual( {undef, #{}, #{"f" => {lam, 1, "f",
                                             {sign, [{param, {name, "out", false}, false}],
                                                    [{correl, [{name, "a", true},
                                                               {name, "b", true}]},
@@ -365,7 +372,7 @@ yecctoken2string(Other) ->
 
 
 
--file("/home/jorgen/git/cuneiform/_build/default/lib/cuneiform/src/cf_parse.erl", 368).
+-file("/home/jorgen/git/cuneiform/_build/default/lib/cuneiform/src/cf_parse.erl", 375).
 
 -dialyzer({nowarn_function, yeccpars2/7}).
 yeccpars2(0=S, Cat, Ss, Stack, T, Ts, Tzr) ->
@@ -1200,7 +1207,7 @@ yeccpars2_5_(__Stack0) ->
 yeccpars2_6_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
-   { [ ] , # { } , __1 }
+   { undef , # { } , __1 }
   end | __Stack].
 
 -compile({inline,yeccpars2_9_/1}).
@@ -1208,7 +1215,7 @@ yeccpars2_6_(__Stack0) ->
 yeccpars2_9_(__Stack0) ->
  [__1 | __Stack] = __Stack0,
  [begin
-   { [ ] , __1 , # { } }
+   { undef , __1 , # { } }
   end | __Stack].
 
 -compile({inline,yeccpars2_13_/1}).
@@ -1476,4 +1483,4 @@ yeccpars2_79_(__Stack0) ->
   end | __Stack].
 
 
--file("/home/jorgen/git/cuneiform/_build/default/lib/cuneiform/src/cf_parse.yrl", 301).
+-file("/home/jorgen/git/cuneiform/_build/default/lib/cuneiform/src/cf_parse.yrl", 308).
