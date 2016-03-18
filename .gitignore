@@ -9,8 +9,9 @@ rel/example_project
 .concrete/DEV_MODE
 .rebar
 *~
-src/cf_lexer.erl
-src/cf_parser.erl
+src/cf_scan.erl
+src/cf_parse.erl
+src/cf_prescan.erl
 doc
 _build
 rebar.lock
