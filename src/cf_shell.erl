@@ -141,10 +141,13 @@ format_error( {Line, cf_sem, S} ) ->
 
 format_error( {LamLine, cuneiform, {R, script_error, LamName, _Fa, {ActScript, Out}}} ) ->
   io_lib:format(
-    ?BYLW( "[out]~n" )++?RED( "~s~n" )
+    ?BYLW( "[out]~n" )++?YLW( "~s~n" )
     ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
     ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
     [format_out( Out ), format_script( ActScript ), LamLine, LamName, R] );
+
+format_error( {LamLine, cuneiform, {R, not_found, LamName, _Fa, MissingLst}} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "precondition not met in call to ~s (~p)~n" )++?RED( "Missing files: ~p" ), [LamLine, LamName, R, MissingLst] );
 
 format_error( ErrorInfo ) ->
   io_lib:format( ?RED( "Error: " )++?BRED( "~p" ), [ErrorInfo] ).
