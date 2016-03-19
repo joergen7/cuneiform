@@ -112,24 +112,9 @@ Erlang code.
 
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--export( [string/1] ).
-
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
 -endif.
-
-string( S ) ->
-  {ok, TokenList, _} = cf_scan:string( S ),
-
-  % parse
-  case parse( TokenList ) of
-    {error, R2}     -> error( R2 );
-    {ok, ParseTree} -> ParseTree
-  end.
-
-
-
-
 
 combine( {Target1, Rho1, Global1}, {Target2, Rho2, Global2} ) ->
   case Target1 of

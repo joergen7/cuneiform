@@ -20,11 +20,15 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
--export( [start/0, string/2, file/1, file/2, reduce/4] ).
+-export( [main/1, start/0, string/2, file/1, file/2, reduce/4] ).
 
 %% =============================================================================
 %% API functions
 %% =============================================================================
+
+main( _ ) ->
+  start(),
+  cf_shell:start().
 
 start() ->
   application:start( cuneiform ).
@@ -32,7 +36,19 @@ start() ->
 -spec string( S::string(), DataDir::string() ) -> [cf_sem:str()].
 
 string( S, DataDir ) ->
-  {Query, Rho, Gamma} = cf_parse:string( S ),
+
+  % scan
+  TokenLst = case cf_scan:string( S ) of
+    {error, R1, _}    -> error( R1 );
+    {ok, X, _} -> X
+  end,
+
+  % parse
+  {Query, Rho, Gamma} = case cf_parse:parse( TokenLst ) of
+    {error, R2} -> error( R2 );
+    {ok, Ret}   -> Ret
+  end,
+
   reduce( Query, Rho, Gamma, DataDir ).
 
 -spec file( Filename::string() ) -> [cf_sem:str()].
