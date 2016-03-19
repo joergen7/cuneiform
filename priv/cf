@@ -1,0 +1,3 @@
+#!/bin/bash
+
+erl -s cuneiform -s cf_shell server -s init stop -noshell
