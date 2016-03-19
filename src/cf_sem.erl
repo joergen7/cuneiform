@@ -34,11 +34,11 @@
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
--type select()  :: {select, Line::pos_integer(), C::pos_integer(), U::fut()}.   % (4)
+-type select()  :: {select, AppLine::pos_integer(), C::pos_integer(), U::fut()}.% (4)
 -type fut()     :: {fut, LamName::string(), R::pos_integer(), Lo::[param()]}.   % (5)
 -type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
--type app()     :: {app, Line::pos_integer(), C::pos_integer(),                 % (7)
+-type app()     :: {app, AppLine::pos_integer(), C::pos_integer(),              % (7)
                          Lambda::lam() | var(), Fa::#{string() => [expr()]}}.
 
 %% Lambda %% ===================================================================

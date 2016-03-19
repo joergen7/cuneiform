@@ -139,15 +139,15 @@ format_error( {Line, cf_parse, S} ) ->
 format_error( {Line, cf_sem, S} ) ->
   io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
 
-format_error( {LamLine, cuneiform, {R, script_error, LamName, _Fa, {ActScript, Out}}} ) ->
+format_error( {AppLine, cuneiform, {script_error, LamName, R, {ActScript, Out}}} ) ->
   io_lib:format(
     ?BYLW( "[out]~n" )++?YLW( "~s~n" )
     ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
     ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
-    [format_out( Out ), format_script( ActScript ), LamLine, LamName, R] );
+    [format_out( Out ), format_script( ActScript ), AppLine, LamName, R] );
 
-format_error( {LamLine, cuneiform, {R, not_found, LamName, _Fa, MissingLst}} ) ->
-  io_lib:format( ?RED( "Line ~p: " )++?BRED( "precondition not met in call to ~s (~p)~n" )++?RED( "Missing files: ~p" ), [LamLine, LamName, R, MissingLst] );
+format_error( {AppLine, cuneiform, {precond, LamName, R, MissingLst}} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "precondition not met in call to ~s (~p)~n" )++?RED( "Missing files: ~p" ), [AppLine, LamName, R, MissingLst] );
 
 format_error( ErrorInfo ) ->
   io_lib:format( ?RED( "Error: " )++?BRED( "~p" ), [ErrorInfo] ).

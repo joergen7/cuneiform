@@ -77,8 +77,10 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
     false ->
       receive
 
-        {failed, R, R2, {LamLine, LamName, Fa1}, Data} ->
-          throw( {LamLine, cuneiform, {R, R2, LamName, Fa1, Data}} );
+        {failed, R2, R, Data} ->
+          {AppLine, LamName} = hd( find_select( R, X1 ) ),
+          throw( {AppLine, cuneiform, {R2, LamName, R, Data}} );
+          
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
@@ -104,3 +106,20 @@ when N      :: string(),
 
 acc_delta( N, Delta0, Ret, R ) ->
   Delta0#{{N, R} => maps:get( N, Ret )}.
+
+
+find_select( R, L ) when is_list( L ) ->
+  lists:flatmap( fun( X ) -> find_select( R, X ) end, L );
+
+find_select( R, Fa ) when is_map( Fa ) ->
+  find_select( R, maps:values( Fa ) );
+
+find_select( R, {select, AppLine, _C, {fut, LamName, R, _Lo}} ) ->
+  [{AppLine, LamName}];
+
+find_select( R, {app, _AppLine, _C, _Lambda, Fa} ) ->
+  find_select( R, Fa );
+
+find_select( _, _ ) ->
+  [].
+
