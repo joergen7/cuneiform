@@ -57,7 +57,7 @@ start() ->
   server_loop( #{}, #{} ).
 
 server_loop( Rho, Gamma ) ->
-  case read_expression( ?PROMPT ) of
+  case read_expression2( ?PROMPT ) of
     {ctl, quit}                 ->
       ok;
     {ctl, help}                 ->
@@ -89,16 +89,8 @@ server_loop( Rho, Gamma ) ->
   end.
 
 read_expression( Prompt ) ->
-  Read = fun() ->
-           io:format( Prompt ),
-           Ret = read( [] ),
-           exit( Ret )
-         end,
-  Rdr = spawn_link( Read ),
-  receive
-    {'EXIT', Rdr, Ret} -> Ret;
-    Msg                -> error( {bad_msg, Msg} )
-  end.
+  io:format( Prompt ),
+  read( [] ).
 
 read( Buf ) ->
   case io:get_line( "" ) of
