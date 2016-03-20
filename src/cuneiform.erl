@@ -36,7 +36,7 @@ start() ->
 -spec string( S::string(), DataDir::string() ) -> [cf_sem:str()].
 
 string( S, DataDir ) ->
-  {Query, Rho, Gamma} = cf_parse:string( S ),
+  {ok, {Query, Rho, Gamma}} = cf_parse:string( S ),
   reduce( Query, Rho, Gamma, DataDir ).
 
 -spec file( Filename::string() ) -> [cf_sem:str()].

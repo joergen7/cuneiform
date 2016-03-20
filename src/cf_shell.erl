@@ -113,7 +113,7 @@ read( Buf ) ->
       end;
     [_|_] ->
       case lists:last( TokenLst ) of
-        terminal -> {ok, cf_parse:string( Buf++S )};
+        terminal -> cf_parse:string( Buf++S );
         nonws    -> read( Buf++S );
         C        -> {ctl, C}
       end
