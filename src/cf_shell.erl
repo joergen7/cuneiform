@@ -104,7 +104,7 @@ read_expression( Prompt ) ->
 
 read( Buf ) ->
   S = io:get_line( "" ),
-  {ok, TokenLst, _} = pre_scan:string( S ),
+  {ok, TokenLst, _} = cf_prescan:string( S ),
   case TokenLst of
     [] ->
       case Buf of
@@ -113,7 +113,7 @@ read( Buf ) ->
       end;
     [_|_] ->
       case lists:last( TokenLst ) of
-        terminal -> cf_parse:string( Buf++S );
+        terminal -> {ok, cf_parse:string( Buf++S )};
         nonws    -> read( Buf++S );
         C        -> {ctl, C}
       end
