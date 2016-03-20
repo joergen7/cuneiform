@@ -113,21 +113,12 @@ read( Buf ) ->
       end;
     [_|_] ->
       case lists:last( TokenLst ) of
-        terminal -> parse_string( Buf++S );
+        terminal -> cf_parse:string( Buf++S );
         nonws    -> read( Buf++S );
         C        -> {ctl, C}
       end
   end.
 
-parse_string( S ) ->
-  case cf_scan:string( S ) of
-    {error, ScanErrorInfo, _} -> {error, ScanErrorInfo};
-    {ok, TokenLst, _}         ->
-      case cf_parse:parse( TokenLst ) of
-        {error, ParseErrorInfo} -> {error, ParseErrorInfo};
-        {ok, Triple}            -> {ok, Triple}
-      end
-  end.
 
 
 format_error( {Line, cf_scan, {illegal, Token}} ) ->
