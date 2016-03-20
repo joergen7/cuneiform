@@ -88,8 +88,6 @@ server_loop( Rho, Gamma ) ->
       end
   end.
 
-
-
 read_expression( Prompt ) ->
   Read = fun() ->
            io:format( Prompt ),
@@ -103,19 +101,22 @@ read_expression( Prompt ) ->
   end.
 
 read( Buf ) ->
-  S = io:get_line( "" ),
-  {ok, TokenLst, _} = cf_prescan:string( S ),
-  case TokenLst of
-    [] ->
-      case Buf of
-        []    -> {ok, {undef, #{}, #{}}};
-        [_|_] -> read( Buf )
-      end;
-    [_|_] ->
-      case lists:last( TokenLst ) of
-        terminal -> cf_parse:string( Buf++S );
-        nonws    -> read( Buf++S );
-        C        -> {ctl, C}
+  case io:get_line( "" ) of
+    eof -> {ctl, quit};
+    S   ->
+      {ok, TokenLst, _} = cf_prescan:string( S ),
+      case TokenLst of
+        [] ->
+          case Buf of
+            []    -> {ok, {undef, #{}, #{}}};
+            [_|_] -> read( Buf )
+          end;
+        [_|_] ->
+          case lists:last( TokenLst ) of
+            terminal -> cf_parse:string( Buf++S );
+            nonws    -> read( Buf++S );
+            C        -> {ctl, C}
+          end
       end
   end.
 

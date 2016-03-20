@@ -125,7 +125,7 @@ string( S ) ->
     try parse( TokenLst ) of
       Ret -> Ret
     catch
-      error:E -> {error, E}
+      throw:E -> {error, E}
     end
   end.
 
@@ -159,13 +159,13 @@ mk_assign( Line, [{var, _Line, Name}|Rest], ExprList, Channel ) ->
   Value = lists:flatmap( fun( E ) -> set_channel( Line, E, Channel ) end, ExprList ),
   Rho#{Name => Value};
 
-mk_assign( Line, [E|_Rest], _ExprList, _Channel ) ->
-  error( {Line, cf_parse, {nonvar_expr_left_of_eq, element( 1, E )}} ).
+mk_assign( Line, [_E|_Rest], _ExprList, _Channel ) ->
+  throw( {Line, cf_parse, "non-variable expression on left-hand side of assignment."} ).
 
 
 set_channel( _Line, {app, AppLine, _Channel, LamList, Binding}, N ) -> [{app, AppLine, N, LamList, Binding}];
 set_channel( _Line, E, 1 ) -> [E];
-set_channel( Line, E, _ )  -> error( {Line, cf_parse, {set_channel_on_nonapp_expr, element( 1, E )}} ).
+set_channel( Line, _, _ )  -> throw( {Line, cf_parse, "multiple value bind on non-application expression"} ).
 
 mk_natlam( {deftask, Line, _}, {id, _, Name}, Sign, Block ) ->
   #{Name => {lam, Line, Name, Sign, {natbody, Block}}}.
@@ -221,10 +221,8 @@ assign_should_be_recognized_test() ->
    ?assertEqual( {ok, {undef, #{"x" => [{app, 1, 1, {var, 1, "f"}, #{}}],
                                 "y" => [{app, 1, 2, {var, 1, "f"}, #{}}]},
                               #{}}}, string( "x y = f();" ) ),
-   ?assertEqual( {error, {1, cf_parse, {set_channel_on_nonapp_expr, str}}},
-                 string( "x y = \"A\";" ) ),
-   ?assertEqual( {error, {1, cf_parse, {nonvar_expr_left_of_eq, str}}},
-                 string( "\"a\" = \"A\";" ) )].
+   ?assertMatch( {error, {1, cf_parse, _}}, string( "x y = \"A\";" ) ),
+   ?assertMatch( {error, {1, cf_parse, _}}, string( "\"a\" = \"A\";" ) )].
 
 native_deftask_should_be_recognized_test() ->
   ?assertEqual( {ok, {undef, #{}, #{"f" => {lam, 1, "f",

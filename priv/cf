@@ -1,3 +1,0 @@
-#!/bin/bash
-
-erl -s cuneiform -s cf_shell -s init stop -noshell
