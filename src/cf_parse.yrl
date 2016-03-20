@@ -160,7 +160,7 @@ mk_assign( Line, [{var, _Line, Name}|Rest], ExprList, Channel ) ->
   Rho#{Name => Value};
 
 mk_assign( Line, [_E|_Rest], _ExprList, _Channel ) ->
-  throw( {Line, cf_parse, "non-variable expression on left-hand side of assignment."} ).
+  throw( {Line, cf_parse, "non-variable expression on left-hand side of assignment"} ).
 
 
 set_channel( _Line, {app, AppLine, _Channel, LamList, Binding}, N ) -> [{app, AppLine, N, LamList, Binding}];
