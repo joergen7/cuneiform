@@ -1,5 +1,5 @@
 all:
-	rebar3 do compile, eunit, dialyzer
+	rebar3 do escriptize, eunit, dialyzer
 
 clean:
 	rebar3 clean
