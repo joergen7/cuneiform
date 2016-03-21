@@ -103,24 +103,28 @@ read( Buf ) ->
   case io:get_line( "" ) of
     eof -> {ctl, quit};
     S   ->
-      {ok, TokenLst, _} = cf_prescan:string( Buf++S ),
+      T = Buf++S
+      {ok, TokenLst, _} = cf_prescan:string( T ),
       case TokenLst of
         [] ->
           case Buf of
-            []    -> {ok, {undef, #{}, #{}}};
-            [_|_] -> read( Buf )
+            []    -> {ok, {undef, #{}, #{}}};      % nothing entered or buffered
+            [_|_] -> read( Buf )                   % nothing new entered
           end;
-        [_|_] ->
+        [_|_] ->                                   % something was entered
           case is_open( TokenLst ) of
-            true  -> read( Buf++S );
+            true  -> read( T );                    % closing paren missing
             false ->
               case lists:last( TokenLst ) of
-                semicolon -> cf_parse:string( Buf++S );
-                rbrace    -> cf_parse:string( Buf++S );
-                lbrace    -> cf_parse:string( Buf++S );
-                rmmecb    -> cf_parse:string( Buf++S );
-                lmmecb    -> cf_parse:string( Buf++S );
-                nonws     -> read( Buf++S );
+                semicolon -> cf_parse:string( T );
+                rbrace    -> cf_parse:string( T );
+                rmmecb    -> cf_parse:string( T );
+
+                lbrace    -> cf_parse:string( T ); % these are in fact error
+                lmmecb    -> cf_parse:string( T ); % cases but cf_parse will
+                                                   % figure it out
+
+                nonws     -> read( T );
                 C         -> {ctl, C}
               end
           end
