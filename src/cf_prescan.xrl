@@ -23,6 +23,8 @@
 
 Definitions.
 
+LS        = ls
+CWD       = cwd
 HELP      = help
 NONWS     = .
 QUIT      = quit
@@ -39,6 +41,8 @@ WS        = [\000-\s]
 
 Rules.
 
+{LS}        : {token, ls}.
+{CWD}       : {token, cwd}.
 {TASKS}     : {token, tasks}.
 {STATE}     : {token, state}.
 {QUIT}      : {token, quit}.

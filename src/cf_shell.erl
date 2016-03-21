@@ -60,8 +60,17 @@ server_loop( Rho, Gamma ) ->
   case read_expression( ?PROMPT ) of
     {ctl, quit}                 ->
       ok;
+    {ctl, ls}                   ->
+      {ok, Dir} = file:get_cwd(),
+      {ok, FileLst} = file:list_dir( Dir ),
+      io:format( "~p~n", [FileLst] ),
+      server_loop( Rho, Gamma );
+    {ctl, cwd}                  ->
+      {ok, Dir} = file:get_cwd(),
+      io:format( "~s~n", [Dir] ),
+      server_loop( Rho, Gamma );
     {ctl, help}                 ->
-      io:format( "~n~s~n~n", [get_help()] ),
+      io:format( "~s~n", [get_help()] ),
       server_loop( Rho, Gamma );
     {ctl, state}                ->
       io:format( "~p~n", [Rho] ),
@@ -149,18 +158,20 @@ get_banner() ->
      "           @@WB      Cuneiform",
      "          @@E_____   "++?VSN++" "++?BUILD,
      "     _g@@@@@WWWWWWL",
-     "   g@@#*`3@B         Type "++?BYLW( "help" )++" for usage info.",
-     "  @@P    3@B         Type "++?BYLW( "quit" )++" to quit.",
+     "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
+     "  @@P    3@B",
      "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
      "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
     ], "\n" ).
 
 get_help() ->
   string:join(
-    ["help  -- Show this usage info",
-     "quit  -- Quit the shell",
-     "state -- Show variable bindings",
-     "tasks -- Show task definitions"
+    [?YLW( "help" )++"  show this usage info",
+     ?YLW( "state" )++" show variable bindings",
+     ?YLW( "tasks" )++" show task definitions",
+     ?YLW( "ls" )++"    list files",
+     ?YLW( "cwd" )++"   current working directory",
+     ?YLW( "quit" )++"  quit the shell"
     ], "\n" ).
 
 
