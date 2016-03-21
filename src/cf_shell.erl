@@ -54,46 +54,44 @@
 start() ->
   process_flag( trap_exit, true ),
   io:format( "~s~n~n~n", [get_banner()] ),
-  server_loop( #{}, #{} ).
+  server_loop( #{}, #{}, "." ).
 
-server_loop( Rho, Gamma ) ->
+server_loop( Rho, Gamma, Cwd ) ->
   case read_expression( ?PROMPT ) of
     {ctl, quit}                 ->
       ok;
     {ctl, ls}                   ->
-      {ok, Dir} = file:get_cwd(),
-      {ok, FileLst} = file:list_dir( Dir ),
+      {ok, FileLst} = file:list_dir( Cwd ),
       io:format( "~p~n", [FileLst] ),
-      server_loop( Rho, Gamma );
+      server_loop( Rho, Gamma, Cwd );
     {ctl, cwd}                  ->
-      {ok, Dir} = file:get_cwd(),
-      io:format( "~s~n", [Dir] ),
-      server_loop( Rho, Gamma );
+      io:format( "~s~n", [Cwd] ),
+      server_loop( Rho, Gamma, Cwd );
     {ctl, help}                 ->
       io:format( "~s~n", [get_help()] ),
-      server_loop( Rho, Gamma );
+      server_loop( Rho, Gamma, Cwd );
     {ctl, state}                ->
       io:format( "~p~n", [Rho] ),
-      server_loop( Rho, Gamma );
+      server_loop( Rho, Gamma, Cwd );
     {ctl, tasks}                ->
       io:format( "~p~n", [Gamma] ),
-      server_loop( Rho, Gamma );
+      server_loop( Rho, Gamma, Cwd );
     {error, ErrorInfo}          ->
       S = format_error( ErrorInfo ),
       io:format( "~s~n", [S] ),
-      server_loop( Rho, Gamma );
+      server_loop( Rho, Gamma, Cwd );
     {ok, {Query, DRho, DGamma}} ->
       Rho1 = maps:merge( Rho, DRho ),
       Gamma1 = maps:merge( Gamma, DGamma ),
       case Query of
-        undef -> server_loop( Rho1, Gamma1 );
+        undef -> server_loop( Rho1, Gamma1, Cwd );
         _     ->
           try cuneiform:reduce( Query, Rho, Gamma, "." ) of
             X -> io:format( "~s~n", [format_result( X )] )
           catch
             throw:T -> io:format( "~s~n", [format_error( T )] )
           end,
-          server_loop( Rho, Gamma )
+          server_loop( Rho, Gamma, Cwd )
       end
   end.
 
@@ -105,7 +103,7 @@ read( Buf ) ->
   case io:get_line( "" ) of
     eof -> {ctl, quit};
     S   ->
-      {ok, TokenLst, _} = cf_prescan:string( S ),
+      {ok, TokenLst, _} = cf_prescan:string( Buf++S ),
       case TokenLst of
         [] ->
           case Buf of
@@ -113,15 +111,28 @@ read( Buf ) ->
             [_|_] -> read( Buf )
           end;
         [_|_] ->
-          case lists:last( TokenLst ) of
-            terminal -> cf_parse:string( Buf++S );
-            nonws    -> read( Buf++S );
-            C        -> {ctl, C}
+          case is_open( TokenLst ) of
+            true  -> read( Buf++S );
+            false ->
+              case lists:last( TokenLst ) of
+                semicolon -> cf_parse:string( Buf++S );
+                rbrace    -> cf_parse:string( Buf++S );
+                lbrace    -> cf_parse:string( Buf++S );
+                rmmecb    -> cf_parse:string( Buf++S );
+                lmmecb    -> cf_parse:string( Buf++S );
+                nonws     -> read( Buf++S );
+                C         -> {ctl, C}
+              end
           end
       end
   end.
 
-
+is_open( TokenLst ) ->
+  NOpen1 = length( [lbrace || lbrace <- TokenLst] ),
+  NClose1 = length( [rbrace || rbrace <- TokenLst] ),
+  NOpen2 = length( [lmmecb || lmmecb <- TokenLst] ),
+  NClose2 = length( [rmmecb || rmmecb <- TokenLst] ),
+  NOpen1 > NClose1 orelse NOpen2 > NClose2.
 
 format_error( {Line, cf_scan, {illegal, Token}} ) ->
   io_lib:format( ?RED( "Line ~p: " )++?BRED( "illegal token ~s" ), [Line, Token] );

@@ -28,8 +28,11 @@ CWD       = cwd
 HELP      = help
 NONWS     = .
 QUIT      = quit
-RMMECB    = \}\*
 SEMICOLON = ;
+LBRACE    = \{
+LMMECB    = \*\{
+RBRACE    = \}
+RMMECB    = \}\*
 STATE     = state
 TASKS     = tasks
 WS        = [\000-\s]
@@ -47,8 +50,11 @@ Rules.
 {STATE}     : {token, state}.
 {QUIT}      : {token, quit}.
 {HELP}      : {token, help}.
-{RMMECB}    : {token, terminal}.
-{SEMICOLON} : {token, terminal}.
+{SEMICOLON} : {token, semicolon}.
+{LBRACE}    : {token, lbrace}.
+{RBRACE}    : {token, rbrace}.
+{LMMECB}    : {token, lmmecb}.
+{RMMECB}    : {token, rmmecb}.
 {WS}        : skip_token.
 {NONWS}     : {token, nonws}.
 
