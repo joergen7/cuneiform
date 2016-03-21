@@ -65,7 +65,7 @@ server_loop( Rho, Gamma, Cwd ) ->
       io:format( "~p~n", [FileLst] ),
       server_loop( Rho, Gamma, Cwd );
     {ctl, cwd}                  ->
-      io:format( "~s~n", [Cwd] ),
+      io:format( "~s~n", [filename:absname( Cwd )] ),
       server_loop( Rho, Gamma, Cwd );
     {ctl, help}                 ->
       io:format( "~s~n", [get_help()] ),
@@ -103,7 +103,7 @@ read( Buf ) ->
   case io:get_line( "" ) of
     eof -> {ctl, quit};
     S   ->
-      T = Buf++S
+      T = Buf++S,
       {ok, TokenLst, _} = cf_prescan:string( T ),
       case TokenLst of
         [] ->
