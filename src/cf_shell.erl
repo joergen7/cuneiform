@@ -57,7 +57,7 @@ start() ->
   server_loop( #{}, #{} ).
 
 server_loop( Rho, Gamma ) ->
-  case read_expression2( ?PROMPT ) of
+  case read_expression( ?PROMPT ) of
     {ctl, quit}                 ->
       ok;
     {ctl, help}                 ->
