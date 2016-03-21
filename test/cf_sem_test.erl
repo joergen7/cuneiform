@@ -251,11 +251,22 @@ foreign_app_with_select_param_is_left_untouched_test() ->
 
 app_non_final_result_preserves_app_test() ->
   Sign = {sign, [{param, {name, "out", false}, false}], []},
-  Body = {natbody, #{"out" => [{select, 1, 1, {fut, "f", 1234, [{param, {name, "out", false}, false}]}}]}},
+  Select = [{select, 1, 1, {fut, "f", 1234, [{param, {name, "out", false}, false}]}}],
+  Cnd = [{cnd, 1, Select, [{var, 2, "x"}], [{var, 3, "y"}]}],
+  Body = {natbody, #{"out" => Cnd}},
   Lam = {lam, 3, "g", Sign, Body},
   App = [{app, 4, 1, Lam, #{}}],
   X = cf_sem:eval( App, ?THETA0 ),
   ?assertMatch( App, X ).
+
+app_tail_recursion_is_optimized_test() ->
+  Sign = {sign, [{param, {name, "out", false}, false}], []},
+  Select = [{select, 1, 1, {fut, "f", 1234, [{param, {name, "out", false}, false}]}}],
+  Body = {natbody, #{"out" => Select}},
+  Lam = {lam, 3, "g", Sign, Body},
+  App = [{app, 4, 1, Lam, #{}}],
+  X = cf_sem:eval( App, ?THETA0 ),
+  ?assertMatch( Select, X ).
 
 app_non_final_result_preserves_app_with_new_lam_test() ->
   CSign = {sign, [{param, {name, "out", false}, true}], []},
@@ -279,8 +290,7 @@ nested_app_undergoes_reduction_test() ->
   Lam2 = {lam, 3, "g", Sign, Body2},
   App2 = [{app, 4, 1, Lam2, #{}}],
   X = cf_sem:eval( App2, ?THETA0 ),
-  [{app, 4, 1, {lam, 3, "g", _, {natbody, Fb}}, _}] = X,
-  [{select, 2, 1, {fut, "f", R, _}}] = maps:get( "out", Fb ),
+  [{select, 2, 1, {fut, "f", R, _}}] = X,
   Omega = #{{"out", R} => [{str, "A"}]},
   Y = cf_sem:eval( X, {#{}, fun mu/1, #{}, Omega} ),
   ?assertEqual( [{str, "A"}], Y ).

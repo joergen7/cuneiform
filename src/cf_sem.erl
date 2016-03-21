@@ -133,6 +133,18 @@ pen( {select, _, C, {fut, _, _R, Lo}} ) ->                                      
   not Pl;
 pen( _T ) -> false.
 
+-spec pindep( X ) -> boolean()                                                  % (37)
+when X :: #{string() => [expr()]} | [expr()] | expr().
+
+pindep( Fa ) when is_map( Fa ) -> pindep( maps:values( Fa ) );                  % (38)
+pindep( X ) when is_list( X )  -> lists:all( fun pindep/1, X );                 % (39,40)
+pindep( {str, _} )             -> true;                                         % (41)
+pindep( {select, _, _, _} )       -> true;                                      % (42)
+pindep( {cnd, _, Xc, Xt, Xe} )    ->                                            % (43)
+  pindep( Xc ) andalso pindep( Xt ) andalso pindep( Xe );
+pindep( {app, _, _, _, Fa} )      -> pindep( Fa );                              % (44)
+pindep( _ )                    -> false.
+
 %% =============================================================================
 %% Evaluation
 %% =============================================================================
@@ -212,7 +224,7 @@ step( X={app, AppLine, C,
               {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
               V0 = maps:get( N, Fb ),
               V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
-              case pfinal( V1 ) of
+              case pindep( V1 ) of
                 false -> [{app, AppLine, C,                                     % (56)
                                 {lam, LamLine, LamName, S,
                                       {natbody, Fb#{ N => V1}}},
