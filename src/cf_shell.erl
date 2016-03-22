@@ -18,6 +18,7 @@
 
 -module( cf_shell ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.0" ).
 
 %% =============================================================================
 %% Function Exports
@@ -34,8 +35,7 @@
 %% Macro Definitions
 %% =============================================================================
 
--define( VSN, "2.2.0" ).
--define( BUILD, "2016-03-17" ).
+-define( BUILD, "2016-03-22" ).
 
 -define( RED( Str ), "\e[31m" ++ Str ++ "\e[0m" ).
 -define( BRED( Str ), "\e[1;31m" ++ Str ++ "\e[0m" ).
@@ -167,17 +167,21 @@ format_result( StrLst ) ->
   io_lib:format( ?GRN( "~s" ), [lists:foldl( F, "", StrLst )] ).
 
 
+-spec get_banner() -> iolist().
+
 get_banner() ->
   string:join(
     ["            ___",
      "           @@WB      Cuneiform",
-     "          @@E_____   "++?VSN++" "++?BUILD,
+     "          @@E_____   "++get_vsn()++" "++?BUILD,
      "     _g@@@@@WWWWWWL",
      "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
      "  @@P    3@B",
      "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
      "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
     ], "\n" ).
+
+-spec get_help() -> iolist().
 
 get_help() ->
   string:join(
@@ -192,10 +196,14 @@ get_help() ->
 
 
 
-
+-spec format_out( [binary()] ) -> iolist().
 
 format_out( Out ) ->
   [io_lib:format( "~s~n", [Line] ) || Line <- Out].
+
+
+
+-spec format_script( ActScript::iolist() ) -> iolist().
 
 format_script( ActScript ) ->
   {_, S} = lists:foldl( fun( Line, {N, S} ) ->
@@ -203,3 +211,55 @@ format_script( ActScript ) ->
                         end,
                         {1, []}, re:split( ActScript, "\n" ) ),
   S.
+
+
+-spec get_vsn() -> string().
+
+get_vsn() ->
+  {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
+  Vsn.
+
+
+%% print_bibtex/0
+%
+-spec print_bibtex() -> ok.
+
+print_bibtex() -> io:format( "~n~s~n~n", [get_bibtex()] ).
+
+
+%% get_bibtex/0
+%
+-spec get_bibtex() -> iolist().
+
+get_bibtex() ->
+  string:join( ["@InProceedings{Brandt2015,",
+         "  Title                    = {Cuneiform: A Functional Language for Large Scale Scientific Data Analysis},",
+         "  Author                   = {Brandt, J{\"o}rgen and Bux, Marc and Leser, Ulf},",
+         "  Booktitle                = {Proceedings of the Workshops of the EDBT/ICDT},",
+         "  Year                     = {2015},",
+         "  Address                  = {Brussels, Belgium},",
+         "  Month                    = {March},",
+         "  Pages                    = {17--26},",
+         "  Volume                   = {1330},",
+         "  Abstract                 = {The need to analyze massive scientific data sets on the one hand and the availability of distributed compute resources with an increasing number of CPU cores on the other hand have promoted the development of a variety of languages and systems for parallel, distributed data analysis. Among them are data-parallel query languages such as Pig Latin or Spark as well as scientific workflow languages such as Swift or Pegasus DAX. While data-parallel query languages focus on the exploitation of data parallelism, scientific workflow languages focus on the integration of external tools and libraries. However, a language that combines easy integration of arbitrary tools, treated as black boxes, with the ability to fully exploit data parallelism does not exist yet. Here, we present Cuneiform, a novel language for large-scale scientific data analysis. We highlight its functionality with respect to a set of desirable features for such languages, introduce its syntax and semantics by example, and show its flexibility and conciseness with use cases, including a complex real-life workflow from the area of genome research. Cuneiform scripts are executed dynamically on the workflow execution platform Hi-WAY which is based on Hadoop YARN. The language Cuneiform, including tool support for programming, workflow visualization, debugging, logging, and provenance-tracing, and the parallel execution engine Hi-WAY are fully implemented.},",
+         "  Doi                      = {10.13140/RG.2.1.3547.6561},",
+         "  Url                      = {http://ceur-ws.org/Vol-1330/paper-03.pdf}",
+         "}"], "\n" ).
+
+%% print_usage/0
+%
+-spec print_usage() -> ok.
+
+print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "<scriptfile>" ).
+
+
+%% opt_spec_list/0
+%
+-spec get_optspec_lst() -> [{atom(), char(), string(), undefined, string()}].
+
+get_optspec_lst() ->
+  [
+   {version,  $v, "version",  undefined,         "Show Cuneiform version"},
+   {help,     $h, "help",     undefined,         "Show command line options"},
+   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"}
+  ].
