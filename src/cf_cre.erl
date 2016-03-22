@@ -27,7 +27,7 @@
 %%           +-----+'''
 
 
--module( cre ).
+-module( cf_cre ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -behaviour( gen_server ).
 
@@ -56,8 +56,8 @@
 -callback init() -> {ok, State::term()}.
 
 -callback handle_submit( Lam, Fa, R, DataDir, ModState ) -> ok
-when Lam      :: cuneiform:lam(),
-     Fa       :: #{string() => [cuneiform:str()]},
+when Lam      :: cf_sem:lam(),
+     Fa       :: #{string() => [cf_sem:str()]},
      R        :: pos_integer(),
      DataDir  :: string(),
      ModState :: term().
@@ -66,7 +66,7 @@ when Lam      :: cuneiform:lam(),
 %% Type Definitions
 %% =============================================================================
 
--type ckey()      :: {cuneiform:lam(), #{string() => [cuneiform:str()]}, string()}.
+-type ckey()      :: {cf_sem:lam(), #{string() => [cf_sem:str()]}, string()}.
 
 -type response()  :: {failed, pos_integer(), atom(), term()}
                    | {finished, #{atom() => term()}}.
@@ -74,11 +74,11 @@ when Lam      :: cuneiform:lam(),
 -type cre_state() :: {Mod::atom(),
                       SubscrMap::#{pos_integer() => sets:set( pid() )},
                       ReplyMap::#{pos_integer() => response()},
-                      Cache::#{ckey() => cuneiform:fut()},
+                      Cache::#{ckey() => cf_sem:fut()},
                       R::pos_integer(),
                       ModState::term()}.
 
--type submit()    :: {submit, cuneiform:app(), string()}.
+-type submit()    :: {submit, cf_sem:app(), string()}.
 
 %% =============================================================================
 %% Generic Server Functions
@@ -119,7 +119,7 @@ init( [] ) ->
 %%      If the future is served from the cache and a reply has already been
 %%      received, the subscriber is immediately notified.
 %%
--spec handle_call( Request, From, State ) -> {reply, cuneiform:fut(), cre_state()}
+-spec handle_call( Request, From, State ) -> {reply, cf_sem:fut(), cre_state()}
 when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
@@ -215,7 +215,7 @@ start_link() ->
   gen_server:start_link( {local, ?MODULE}, ?MODULE, [], [] ).
 
 
--spec submit( App::cuneiform:app(), DataDir::string() ) -> cuneiform:fut().
+-spec submit( App::cf_sem:app(), DataDir::string() ) -> cf_sem:fut().
 
 submit( App, DataDir ) ->
   gen_server:call( ?MODULE, {submit, App, DataDir} ).

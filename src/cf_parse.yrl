@@ -112,7 +112,7 @@ Erlang code.
 
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--export( [string/1] ).
+-export( [string/1, file/1] ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
@@ -128,6 +128,15 @@ string( S ) ->
       throw:E -> {error, E}
     end
   end.
+
+file( Filename ) ->
+  case file:read_file( Filename ) of
+    {error, Reason} -> {error, Reason};
+    {ok, B}         ->
+      S = binary_to_list( B ),
+      string( S )
+  end.
+
 
 
 combine( {Target1, Rho1, Global1}, {Target2, Rho2, Global2} ) ->

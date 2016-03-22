@@ -44,7 +44,7 @@
 -spec server( Cwd::string() ) -> ok.
 
 server( Cwd ) ->
-  io:format( "~s~n~n~n", [cuneiform:get_banner()] ),
+  io:format( "~s~n~n~n", [get_banner()] ),
   server_loop( #{}, #{}, Cwd ).
 
 -spec server_loop( Rho, Gamma, Cwd ) -> ok
@@ -73,7 +73,7 @@ server_loop( Rho, Gamma, Cwd ) ->
       io:format( "~p~n", [Gamma] ),
       server_loop( Rho, Gamma, Cwd );
     {error, ErrorInfo}          ->
-      S = format_error( ErrorInfo ),
+      S = cuneiform:format_error( ErrorInfo ),
       io:format( "~s~n", [S] ),
       server_loop( Rho, Gamma, Cwd );
     {ok, {Query, DRho, DGamma}} ->
@@ -83,9 +83,9 @@ server_loop( Rho, Gamma, Cwd ) ->
         undef -> server_loop( Rho1, Gamma1, Cwd );
         _     ->
           try cuneiform:reduce( Query, Rho, Gamma, "." ) of
-            X -> io:format( "~s~n", [format_result( X )] )
+            X -> io:format( "~s~n", [cuneiform:format_result( X )] )
           catch
-            throw:T -> io:format( "~s~n", [format_error( T )] )
+            throw:T -> io:format( "~s~n", [cuneiform:format_error( T )] )
           end,
           server_loop( Rho, Gamma, Cwd )
       end
@@ -134,33 +134,7 @@ is_open( TokenLst ) ->
   NClose2 = length( [rmmecb || rmmecb <- TokenLst] ),
   NOpen1 > NClose1 orelse NOpen2 > NClose2.
 
-format_error( {Line, cf_scan, {illegal, Token}} ) ->
-  io_lib:format( ?RED( "Line ~p: " )++?BRED( "illegal token ~s" ), [Line, Token] );
 
-format_error( {Line, cf_parse, S} ) ->
-  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
-
-format_error( {Line, cf_sem, S} ) ->
-  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
-
-format_error( {AppLine, cuneiform, {script_error, LamName, R, {ActScript, Out}}} ) ->
-  io_lib:format(
-    ?BYLW( "[out]~n" )++?YLW( "~s~n" )
-    ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
-    ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
-    [format_out( Out ), format_script( ActScript ), AppLine, LamName, R] );
-
-format_error( {AppLine, cuneiform, {precond, LamName, R, MissingLst}} ) ->
-  io_lib:format( ?RED( "Line ~p: " )++?BRED( "precondition not met in call to ~s (~p)~n" )++?RED( "Missing files: ~p" ), [AppLine, LamName, R, MissingLst] );
-
-format_error( ErrorInfo ) ->
-  io_lib:format( ?RED( "Error: " )++?BRED( "~p" ), [ErrorInfo] ).
-
-format_result( StrLst ) ->
-  F = fun( {str, S}, AccIn ) ->
-        io_lib:format( "~s\"~s\" ", [AccIn, S] )
-      end,
-  io_lib:format( ?GRN( "~s" ), [lists:foldl( F, "", StrLst )] ).
 
 -spec get_help() -> iolist().
 
@@ -177,20 +151,22 @@ get_help() ->
 
 
 
--spec format_out( [binary()] ) -> iolist().
-
-format_out( Out ) ->
-  [io_lib:format( "~s~n", [Line] ) || Line <- Out].
 
 
 
--spec format_script( ActScript::iolist() ) -> iolist().
 
-format_script( ActScript ) ->
-  {_, S} = lists:foldl( fun( Line, {N, S} ) ->
-                          {N+1, io_lib:format( "~s~4.B  ~s~n", [S, N, Line] )}
-                        end,
-                        {1, []}, re:split( ActScript, "\n" ) ),
-  S.
+-spec get_banner() -> iolist().
+
+get_banner() ->
+  string:join(
+    ["            ___",
+     "           @@WB      Cuneiform",
+     "          @@E_____   "++cuneiform:get_vsn()++" "++?BUILD,
+     "     _g@@@@@WWWWWWL",
+     "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
+     "  @@P    3@B",
+     "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
+     "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
+    ], "\n" ).
 
 

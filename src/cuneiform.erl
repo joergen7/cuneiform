@@ -21,7 +21,7 @@
 -vsn( "2.2.0" ).
 
 % API
--export( [main/1, start/0, string/2, file/1, file/2, reduce/4, get_banner/0] ).
+-export( [main/1, file/2, start/0, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -31,47 +31,47 @@
 %% =============================================================================
 
 main( CmdLine ) ->
-
   case getopt:parse( get_optspec_lst(), CmdLine ) of
     {error, {Reason, Data}}   -> error( {Reason, Data} );
-    {ok, {OptLst, _NonOptLst}} ->
+    {ok, {OptLst, NonOptLst}} ->
       case lists:member( version, OptLst ) of
         true  -> print_vsn();
         false ->
           case lists:member( help, OptLst ) of
-            true ->
-              print_usage();
+            true  -> print_usage();
             false ->
               case lists:member( cite, OptLst ) of
-                true -> print_bibtex();
+                true  -> print_bibtex();
                 false ->
-                  {workdir, WorkDir} = lists:keyfind( workdir, 1, OptLst ),
+                  {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
+                  {nthread, _NSlot} = lists:keyfind( nthread, 1, OptLst ),
                   start(),
-                  cf_shell:server( WorkDir )
+                  case NonOptLst of
+                    []     -> cf_shell:server( Cwd );
+                    [File] -> file( File, Cwd )
+                  end
               end
           end
       end
   end.
 
+
+file( File, Cwd ) ->
+  case cf_parse:file( File ) of
+    {error, ErrorInfo}        ->
+      io:format( "~s", [format_error( ErrorInfo )] );
+    {ok, {Query, Rho, Gamma}} ->
+      try cuneiform:reduce( Query, Rho, Gamma, Cwd ) of
+        X -> io:format( "~s~n", [format_result( X )] )
+      catch
+        throw:T -> io:format( "~s~n", [format_error( T )] )
+      end
+  end.
+
+
 start() ->
   application:start( cuneiform ).
 
--spec string( S::string(), DataDir::string() ) -> [cf_sem:str()].
-
-string( S, DataDir ) ->
-  {ok, {Query, Rho, Gamma}} = cf_parse:string( S ),
-  reduce( Query, Rho, Gamma, DataDir ).
-
--spec file( Filename::string() ) -> [cf_sem:str()].
-
-file( Filename ) -> file( Filename, "." ).
-
--spec file( Filename::string(), DataDir::string() ) -> [cf_sem:str()].
-
-file( Filename, DataDir ) ->
-  {ok, B} = file:read_file( Filename ),
-  S = binary_to_list( B ),
-  string( S, DataDir ).
 
 
 
@@ -88,7 +88,7 @@ when X0      :: [cf_sem:expr()],
      DataDir :: string().
 
 reduce( X0, Rho, Gamma, DataDir ) ->
-  Mu = fun( A ) -> cre:submit( A, DataDir ) end,
+  Mu = fun( A ) -> cf_cre:submit( A, DataDir ) end,
   reduce( X0, {Rho, Mu, Gamma, #{}}, DataDir ).
 
 -spec reduce( X0, Theta, DataDir ) -> [cf_sem:str()]
@@ -157,11 +157,13 @@ find_select( _, _ ) ->
 -spec get_optspec_lst() -> [{atom(), char(), string(), undefined, string()}].
 
 get_optspec_lst() ->
+  NSlot = erlang:system_info( logical_processors_available ),
   [
-   {version,  $v, "version",  undefined,         "Show Cuneiform version"},
-   {help,     $h, "help",     undefined,         "Show command line options"},
-   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
-   {workdir,  $w, "workdir",  {string, "."},     "Working directory"}
+   {version,  $v, "version",  undefined,            "show Cuneiform version"},
+   {help,     $h, "help",     undefined,            "show command line options"},
+   {cite,     $c, "cite",     undefined,            "show Bibtex entry for citation"},
+   {workdir,  $w, "workdir",  {string, "."},        "working directory"},
+   {nslot,    $t, "nthread",  {pos_integer, NSlot}, "number of threads in local mode"}
   ].
 
 -spec get_vsn() -> string().
@@ -201,7 +203,7 @@ get_bibtex() ->
 %
 -spec print_usage() -> ok.
 
-print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "[scriptfile]" ).
+print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "[<scriptfile>]" ).
 
 
 %% print_vsn/0
@@ -210,16 +212,50 @@ print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "[scriptfile]" ).
 
 print_vsn() -> io:format( "~s~n", [get_vsn()] ).
 
--spec get_banner() -> iolist().
+-spec format_result( StrLst::[cf_sem:str()] ) -> iolist().
 
-get_banner() ->
-  string:join(
-    ["            ___",
-     "           @@WB      Cuneiform",
-     "          @@E_____   "++get_vsn()++" "++?BUILD,
-     "     _g@@@@@WWWWWWL",
-     "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
-     "  @@P    3@B",
-     "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
-     "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
-    ], "\n" ).
+format_result( StrLst ) ->
+  F = fun( {str, S}, AccIn ) ->
+        io_lib:format( "~s\"~s\" ", [AccIn, S] )
+      end,
+  io_lib:format( ?GRN( "~s" ), [lists:foldl( F, "", StrLst )] ).
+
+
+-spec format_out( [binary()] ) -> iolist().
+
+format_out( Out ) ->
+  [io_lib:format( "~s~n", [Line] ) || Line <- Out].
+
+
+
+-spec format_script( ActScript::iolist() ) -> iolist().
+
+format_script( ActScript ) ->
+  {_, S} = lists:foldl( fun( Line, {N, S} ) ->
+                          {N+1, io_lib:format( "~s~4.B  ~s~n", [S, N, Line] )}
+                        end,
+                        {1, []}, re:split( ActScript, "\n" ) ),
+  S.
+
+
+format_error( {Line, cf_scan, {illegal, Token}} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "illegal token ~s" ), [Line, Token] );
+
+format_error( {Line, cf_parse, S} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
+
+format_error( {Line, cf_sem, S} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "~s" ), [Line, S] );
+
+format_error( {AppLine, cuneiform, {script_error, LamName, R, {ActScript, Out}}} ) ->
+  io_lib:format(
+    ?BYLW( "[out]~n" )++?YLW( "~s~n" )
+    ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
+    ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
+    [format_out( Out ), format_script( ActScript ), AppLine, LamName, R] );
+
+format_error( {AppLine, cuneiform, {precond, LamName, R, MissingLst}} ) ->
+  io_lib:format( ?RED( "Line ~p: " )++?BRED( "precondition not met in call to ~s (~p)~n" )++?RED( "Missing files: ~p" ), [AppLine, LamName, R, MissingLst] );
+
+format_error( ErrorInfo ) ->
+  io_lib:format( ?RED( "Error: " )++?BRED( "~p" ), [ErrorInfo] ).

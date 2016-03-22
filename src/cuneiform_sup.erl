@@ -49,7 +49,7 @@ init( [] ) ->
   Restart = temporary,
   Shutdown = 2000,
   Type = worker,
-  Cre = {cre, {cre, start_link, []}, Restart, Shutdown, Type, [cre]},
+  Cre = {cre, {cf_cre, start_link, []}, Restart, Shutdown, Type, [cf_cre]},
 
   {ok, {SupFlags, [Cre]}}.
 

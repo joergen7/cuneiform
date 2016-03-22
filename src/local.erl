@@ -19,7 +19,7 @@
 -module( local ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( cre ).
+-behaviour( cf_cre ).
 -export( [init/0, handle_submit/5, stage/4] ).
 
 -define( BASEDIR, "/tmp/cf" ).
