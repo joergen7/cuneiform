@@ -166,11 +166,11 @@ find_select( _, _ ) ->
 get_optspec_lst() ->
   NSlot = erlang:system_info( logical_processors_available ),
   [
-   {version,  $v, "version",  undefined,            "show Cuneiform version"},
-   {help,     $h, "help",     undefined,            "show command line options"},
-   {cite,     $c, "cite",     undefined,            "show Bibtex entry for citation"},
-   {workdir,  $w, "workdir",  {string, "."},        "working directory"},
-   {nthread,  $t, "nthread",  {integer, NSlot}, "number of threads in local mode"}
+   {version, $v, "version", undefined,        "show Cuneiform version"},
+   {help,    $h, "help",    undefined,        "show command line options"},
+   {cite,    $c, "cite",    undefined,        "show Bibtex entry for citation"},
+   {workdir, $w, "workdir", {string, "."},    "working directory"},
+   {nthread, $t, "nthread", {integer, NSlot}, "number of threads in local mode"}
   ].
 
 -spec get_vsn() -> string().
