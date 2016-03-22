@@ -56,8 +56,8 @@
 -callback init() -> {ok, State::term()}.
 
 -callback handle_submit( Lam, Fa, R, DataDir, ModState ) -> ok
-when Lam      :: lam(),
-     Fa       :: #{string() => [str()]},
+when Lam      :: cuneiform:lam(),
+     Fa       :: #{string() => [cuneiform:str()]},
      R        :: pos_integer(),
      DataDir  :: string(),
      ModState :: term().
@@ -66,28 +66,7 @@ when Lam      :: lam(),
 %% Type Definitions
 %% =============================================================================
 
--type str()       :: {str, S::string()}.
-
--type lam()       :: {lam, LamLine::pos_integer(), Name::string(),
-                           S::sign(), B::forbody()}.
-
--type sign()      :: {sign, Lo::[param()], Li::[param()]}.
-
--type param()     :: {param, M::name(), Pl::boolean()}.
-
--type name()      :: {name, N::string(), Pf::boolean()}.
-
--type forbody()   :: {forbody, L::lang(), S::string()}.
-
--type lang()      :: bash | python | r.
-
--type fut()       :: {fut, LamName::string(), R::pos_integer(),
-                           Lo::[param()]}.
-
--type app()       :: {app, AppLine::pos_integer(), C::pos_integer(),
-                           Lambda::lam(), Fa::#{string() => [str()]}}.
-
--type ckey()      :: {lam(), #{string() => [str()]}, string()}.
+-type ckey()      :: {cuneiform:lam(), #{string() => [cuneiform:str()]}, string()}.
 
 -type response()  :: {failed, pos_integer(), atom(), term()}
                    | {finished, #{atom() => term()}}.
@@ -95,11 +74,11 @@ when Lam      :: lam(),
 -type cre_state() :: {Mod::atom(),
                       SubscrMap::#{pos_integer() => sets:set( pid() )},
                       ReplyMap::#{pos_integer() => response()},
-                      Cache::#{ckey() => fut()},
+                      Cache::#{ckey() => cuneiform:fut()},
                       R::pos_integer(),
                       ModState::term()}.
 
--type submit()    :: {submit, app(), string()}.
+-type submit()    :: {submit, cuneiform:app(), string()}.
 
 %% =============================================================================
 %% Generic Server Functions
@@ -140,7 +119,7 @@ init( [] ) ->
 %%      If the future is served from the cache and a reply has already been
 %%      received, the subscriber is immediately notified.
 %%
--spec handle_call( Request, From, State ) -> {reply, fut(), cre_state()}
+-spec handle_call( Request, From, State ) -> {reply, cuneiform:fut(), cre_state()}
 when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
@@ -236,7 +215,7 @@ start_link() ->
   gen_server:start_link( {local, ?MODULE}, ?MODULE, [], [] ).
 
 
--spec submit( App::app(), DataDir::string() ) -> fut().
+-spec submit( App::cuneiform:app(), DataDir::string() ) -> cuneiform:fut().
 
 submit( App, DataDir ) ->
   gen_server:call( ?MODULE, {submit, App, DataDir} ).
