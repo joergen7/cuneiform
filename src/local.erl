@@ -20,17 +20,17 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( cf_cre ).
--export( [init/0, handle_submit/5, stage/4] ).
+-export( [init/1, handle_submit/5, stage/4] ).
 
 -define( BASEDIR, "/tmp/cf" ).
 -define( WORK, "work" ).
 -define( REPO, "repo" ).
 
--spec init() -> {ok, pid()}.
+-spec init( NSlot::pos_integer() ) -> {ok, pid()}.
 
-init() ->
+init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
   _Output = os:cmd( string:join( ["rm", "-rf", ?BASEDIR], " " ) ),
-  gen_queue:start_link().
+  gen_queue:start_link( NSlot ).
 
 
 -spec handle_submit( Lam, Fa, R, DataDir, QueueRef ) -> ok

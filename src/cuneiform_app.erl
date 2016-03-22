@@ -1,3 +1,4 @@
+
 %% -*- erlang -*-
 %
 % Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
@@ -28,11 +29,5 @@
 %% Application callbacks
 %% =============================================================================
 
-start( normal, [] ) ->
-
-  % TODO: load and hand down configuration
-
-  cuneiform_sup:start_link().
-
-stop( _State ) ->
-  ok.
+start( normal, [] ) -> cf_sup:start_link().
+stop( _State ) -> ok.

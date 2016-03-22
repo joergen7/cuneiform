@@ -16,13 +16,13 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
--module(cuneiform_sup).
+-module( cf_sup ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( supervisor ).
 
 %% API
--export( [start_link/0] ).
+-export( [start_link/0, start_cre/2] ).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -46,10 +46,15 @@ init( [] ) ->
   MaxSecondsBetweenRestarts = 10,
   SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
+
+  {ok, {SupFlags, []}}.
+
+start_cre( Mod, ModArg ) ->
+
   Restart = temporary,
   Shutdown = 2000,
   Type = worker,
-  Cre = {cre, {cf_cre, start_link, []}, Restart, Shutdown, Type, [cf_cre]},
 
-  {ok, {SupFlags, [Cre]}}.
+  Cre = {cre, {cf_cre, start_link, [Mod, ModArg]}, Restart, Shutdown, Type, [cf_cre]},
 
+  supervisor:start_child( cf_sup, Cre ).

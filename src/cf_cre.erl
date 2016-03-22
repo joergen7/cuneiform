@@ -35,7 +35,7 @@
 %% Function Exports
 %% =============================================================================
 
--export( [start_link/0, submit/2] ).
+-export( [start_link/2, submit/2] ).
 
 -export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
           handle_call/3] ).
@@ -53,7 +53,7 @@
 %% =============================================================================
 
 
--callback init() -> {ok, State::term()}.
+-callback init( Arg::term() ) -> {ok, State::term()}.
 
 -callback handle_submit( Lam, Fa, R, DataDir, ModState ) -> ok
 when Lam      :: cf_sem:lam(),
@@ -90,17 +90,16 @@ terminate( _Reason, _State ) -> ok.
 
 %% @doc Generates the initial state of the CRE.
 
--spec init( [] ) -> {ok, cre_state()}.
+-spec init( {Mod::atom(), ModArg::term()} ) -> {ok, cre_state()}.
 
-init( [] ) ->
-  Mod       = local,      % CRE callback module implementing the stage function
+init( {Mod, ModArg} ) ->
   SubscrMap = #{},        % mapping of a future to a set of subscriber pids
   ReplyMap  = #{},        % mapping of a future to a response
   Cache     = #{},        % cache mapping a cache key to a future
   R         = 1,          % next id
 
   % initialize CRE
-  {ok, ModState} = apply( Mod, init, [] ),
+  {ok, ModState} = apply( Mod, init, [ModArg] ),
 
   {ok, {Mod, SubscrMap, ReplyMap, Cache, R, ModState}}.
 
@@ -208,17 +207,19 @@ handle_info( Info={finished, Sum}, {Mod, SubscrMap, ReplyMap, Cache, R, ModState
 %% API Functions
 %% =============================================================================
 
--spec start_link() -> {ok, pid()} | ignore | {error, Error}
-when Error :: {already_started, pid()} | term().
+-spec start_link( Mod, ModArg ) -> {ok, pid()} | ignore | {error, Error}
+when Mod    :: atom(),
+     ModArg :: term(),
+     Error  :: {already_started, pid()} | term().
 
-start_link() ->
-  gen_server:start_link( {local, ?MODULE}, ?MODULE, [], [] ).
+start_link( Mod, ModArg ) ->
+  gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg}, [] ).
 
 
 -spec submit( App::cf_sem:app(), DataDir::string() ) -> cf_sem:fut().
 
 submit( App, DataDir ) ->
-  gen_server:call( ?MODULE, {submit, App, DataDir} ).
+  gen_server:call( cre, {submit, App, DataDir} ).
 
 %% =============================================================================
 %% Internal Functions

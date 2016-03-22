@@ -21,7 +21,7 @@
 -vsn( "2.2.0" ).
 
 % API
--export( [main/1, file/2, start/0, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
+-export( [main/1, file/2, start/2, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -46,18 +46,21 @@ main( CmdLine ) ->
                 true  -> print_bibtex();
                 false ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
-                  {nthread, _NSlot} = lists:keyfind( nthread, 1, OptLst ),
-                  start(),
+                  {nthread, NSlot} = lists:keyfind( nthread, 1, OptLst ),
+                  {ok, CrePid} = start( local, NSlot ),
+                  link( CrePid ),
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
-                    [File] -> file( File, Cwd )
+                    [File] ->
+                      Ret = file( File, Cwd ),
+                      io:format( "~s~n", [format_result( Ret )] )
                   end
               end
           end
       end
   end.
 
--spec file( File::string(), Cwd::string() ) -> ok.
+-spec file( File::string(), Cwd::string() ) -> [cf_sem:str()].
 
 file( File, Cwd ) ->
   case cf_parse:file( File ) of
@@ -65,15 +68,16 @@ file( File, Cwd ) ->
       io:format( "~s", [format_error( ErrorInfo )] );
     {ok, {Query, Rho, Gamma}} ->
       try cuneiform:reduce( Query, Rho, Gamma, Cwd ) of
-        X -> io:format( "~s~n", [format_result( X )] )
+        X -> X
       catch
         throw:T -> io:format( "~s~n", [format_error( T )] )
       end
   end.
 
 
-start() ->
-  application:start( cuneiform ).
+start( Mod, ModArg ) ->
+  application:start( cuneiform ),
+  cf_sup:start_cre( Mod, ModArg ).
 
 
 
@@ -166,7 +170,7 @@ get_optspec_lst() ->
    {help,     $h, "help",     undefined,            "show command line options"},
    {cite,     $c, "cite",     undefined,            "show Bibtex entry for citation"},
    {workdir,  $w, "workdir",  {string, "."},        "working directory"},
-   {nthread,  $t, "nthread",  {pos_integer, NSlot}, "number of threads in local mode"}
+   {nthread,  $t, "nthread",  {integer, NSlot}, "number of threads in local mode"}
   ].
 
 -spec get_vsn() -> string().

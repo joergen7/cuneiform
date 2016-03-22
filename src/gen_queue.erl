@@ -24,7 +24,7 @@
 %% Function Exports
 %% =============================================================================
 
--export( [start_link/0, start_link/1, stage_reply/2] ).
+-export( [start_link/1, stage_reply/2] ).
 
 -export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
           handle_call/3] ).
@@ -71,12 +71,6 @@ handle_cast( Request, {NSlot, []} ) ->
 %% =============================================================================
 %% API Functions
 %% =============================================================================
-
--spec start_link() -> {ok, pid()} | ignore | {error, term()}.
-
-start_link() ->
-  NSlot = erlang:system_info( logical_processors_available ),
-  start_link( NSlot ).
 
 -spec start_link( NSlot ) -> {ok, pid()} | ignore | {error, term()}
 when NSlot :: pos_integer().
