@@ -30,6 +30,8 @@
 %% API functions
 %% =============================================================================
 
+-spec main( CmdLine::list() ) -> ok.
+
 main( CmdLine ) ->
   case getopt:parse( get_optspec_lst(), CmdLine ) of
     {error, {Reason, Data}}   -> error( {Reason, Data} );
@@ -55,6 +57,7 @@ main( CmdLine ) ->
       end
   end.
 
+-spec file( File::string(), Cwd::string() ) -> ok.
 
 file( File, Cwd ) ->
   case cf_parse:file( File ) of
@@ -163,7 +166,7 @@ get_optspec_lst() ->
    {help,     $h, "help",     undefined,            "show command line options"},
    {cite,     $c, "cite",     undefined,            "show Bibtex entry for citation"},
    {workdir,  $w, "workdir",  {string, "."},        "working directory"},
-   {nslot,    $t, "nthread",  {pos_integer, NSlot}, "number of threads in local mode"}
+   {nthread,  $t, "nthread",  {pos_integer, NSlot}, "number of threads in local mode"}
   ].
 
 -spec get_vsn() -> string().
