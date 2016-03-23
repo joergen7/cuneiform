@@ -53,27 +53,29 @@ main( CmdLine ) ->
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
                     [File] ->
-                      Ret = file( File, Cwd ),
-                      io:format( "~s~n", [format_result( Ret )] )
+                      case file( File, Cwd ) of
+                        {ok, Ret}  -> io:format( "~s~n", [format_result( Ret )] );
+                        {error, T} -> io:format( "~s~n", [format_error( T )] )
+                      end
                   end
               end
           end
       end
   end.
 
--spec file( File, Cwd ) -> [cf_sem:str()]
+-spec file( File, Cwd ) -> {ok, [cf_sem:str()]} | {error, term()}
 when File   :: string(),
      Cwd    :: string().
 
 file( File, Cwd ) ->
   case cf_parse:file( File ) of
     {error, ErrorInfo}        ->
-      io:format( "~s", [format_error( ErrorInfo )] );
+      {error, ErrorInfo};
     {ok, {Query, Rho, Gamma}} ->
       try cuneiform:reduce( Query, Rho, Gamma, Cwd ) of
-        X -> X
+        X -> {ok, X}
       catch
-        throw:T -> io:format( "~s~n", [format_error( T )] )
+        throw:T -> {error, T}
       end
   end.
 
