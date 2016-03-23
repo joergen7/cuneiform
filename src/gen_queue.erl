@@ -89,5 +89,7 @@ when is_pid( QueueRef ),
      is_atom( Mod ),
      is_atom( Fun ),
      is_list( ArgLst ) ->
-  Pid ! apply( Mod, Fun, ArgLst ),
+
+  Reply = apply( Mod, Fun, ArgLst ),
+  Pid ! Reply,
   gen_server:cast( QueueRef, continue ).

@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( cf_cre ).
--export( [init/1, handle_submit/5, stage/4] ).
+-export( [init/1, handle_submit/6, stage/5] ).
 
 -define( BASEDIR, "/tmp/cf" ).
 -define( WORK, "work" ).
@@ -33,25 +33,33 @@ init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
   gen_queue:start_link( NSlot ).
 
 
--spec handle_submit( Lam, Fa, R, DataDir, QueueRef ) -> ok
+-spec handle_submit( Lam, Fa, R, DataDir, LibMap, QueueRef ) -> ok
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
      R        :: pos_integer(),
      DataDir  :: string(),
+     LibMap   :: #{cf_sem:lang() => [string()]},
      QueueRef :: pid().
 
-handle_submit( Lam, Fa, R, DataDir, QueueRef ) ->
-  gen_server:cast( QueueRef, {request, self(), {?MODULE, stage, [Lam, Fa, R, DataDir]}} ).
+handle_submit( Lam, Fa, R, DataDir, LibMap, QueueRef ) ->
+  gen_server:cast( QueueRef, {request, self(), {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap]}} ).
 
 
--spec stage( Lam, Fa, R, DataDir ) -> cre:response()
+-spec stage( Lam, Fa, R, DataDir, LibMap ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
      R       :: pos_integer(),
-     DataDir :: string().
+     DataDir :: string(),
+     LibMap  :: #{cf_sem:lang() => [string()]}.
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, R, DataDir ) ->
+       Fa, R, DataDir, LibMap )
+when is_list( Lo ),
+     is_list( Li ),
+     is_map( Fa ),
+     is_integer( R ), R > 0,
+     is_list( DataDir ),
+     is_map( LibMap ) ->
 
   Dir = string:join( [?BASEDIR, ?WORK, integer_to_list( R )], "/" ),
   RepoDir = string:join( [?BASEDIR, ?REPO], "/" ),
@@ -74,11 +82,11 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
       refactor:apply_refactoring( RefactorLst1 ),
 
       % start effi
-      case effi:check_run( Lam, Fa1, R, Dir ) of
+      case effi:check_run( Lam, Fa1, R, Dir, LibMap ) of
 
         {failed, R2, R, Data} -> {failed, R2, R, Data};
 
-        {finished, Sum}    ->
+        {finished, Sum}       ->
 
           Ret1 = maps:get( ret, Sum ),
 

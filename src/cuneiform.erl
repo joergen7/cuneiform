@@ -21,7 +21,7 @@
 -vsn( "2.2.0" ).
 
 % API
--export( [main/1, file/2, start/2, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
+-export( [main/1, file/2, start/3, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -47,7 +47,8 @@ main( CmdLine ) ->
                 false ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
                   {nthread, NSlot} = lists:keyfind( nthread, 1, OptLst ),
-                  {ok, CrePid} = start( local, NSlot ),
+                  LibMap = get_libmap( OptLst ),
+                  {ok, CrePid} = start( local, NSlot, LibMap ),
                   link( CrePid ),
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
@@ -60,7 +61,9 @@ main( CmdLine ) ->
       end
   end.
 
--spec file( File::string(), Cwd::string() ) -> [cf_sem:str()].
+-spec file( File, Cwd ) -> [cf_sem:str()]
+when File   :: string(),
+     Cwd    :: string().
 
 file( File, Cwd ) ->
   case cf_parse:file( File ) of
@@ -75,9 +78,10 @@ file( File, Cwd ) ->
   end.
 
 
-start( Mod, ModArg ) ->
+start( Mod, ModArg, LibMap )
+when is_atom( Mod ), is_map( LibMap ) ->
   application:start( cuneiform ),
-  cf_sup:start_cre( Mod, ModArg ).
+  cf_sup:start_cre( Mod, ModArg, LibMap ).
 
 
 
@@ -86,24 +90,30 @@ start( Mod, ModArg ) ->
 %% Internal Functions
 %% =============================================================================
 
+get_libmap( OptLst ) ->
+  RLib = [P || {rlib, P} <- OptLst],
+  PyLib = [P || {pylib, P} <- OptLst],
+  #{python => PyLib, r => RLib}.
+
+
 %% Reduction %%
 
--spec reduce( X0, Rho, Gamma, DataDir ) -> [cf_sem:str()]
-when X0      :: [cf_sem:expr()],
-     Rho     :: #{string() => [cf_sem:expr()]},
-     Gamma   :: #{string() => cf_sem:lam()},
-     DataDir :: string().
+-spec reduce( X0, Rho, Gamma, Cwd ) -> [cf_sem:str()]
+when X0     :: [cf_sem:expr()],
+     Rho    :: #{string() => [cf_sem:expr()]},
+     Gamma  :: #{string() => cf_sem:lam()},
+     Cwd    :: string().
 
-reduce( X0, Rho, Gamma, DataDir ) ->
-  Mu = fun( A ) -> cf_cre:submit( A, DataDir ) end,
-  reduce( X0, {Rho, Mu, Gamma, #{}}, DataDir ).
+reduce( X0, Rho, Gamma, Cwd ) ->
+  Mu = fun( A ) -> cf_cre:submit( A, Cwd ) end,
+  reduce( X0, {Rho, Mu, Gamma, #{}}, Cwd ).
 
--spec reduce( X0, Theta, DataDir ) -> [cf_sem:str()]
-when X0      :: [cf_sem:expr()],
-     Theta   :: cf_sem:ctx(),
-     DataDir :: string().
+-spec reduce( X0, Theta, Cwd ) -> [cf_sem:str()]
+when X0     :: [cf_sem:expr()],
+     Theta  :: cf_sem:ctx(),
+     Cwd    :: string().
 
-reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
+reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
 
   X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
   case cf_sem:pfinal( X1 ) of
@@ -125,7 +135,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, DataDir ) ->
                     end,
                     #{}, maps:keys( Ret ) ),
 
-          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, DataDir );
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, Cwd );
 
         Msg -> error( {bad_msg, Msg} )
 
@@ -166,11 +176,13 @@ find_select( _, _ ) ->
 get_optspec_lst() ->
   NSlot = erlang:system_info( logical_processors_available ),
   [
-   {version, $v, "version", undefined,        "show Cuneiform version"},
-   {help,    $h, "help",    undefined,        "show command line options"},
-   {cite,    $c, "cite",    undefined,        "show Bibtex entry for citation"},
-   {workdir, $w, "workdir", {string, "."},    "working directory"},
-   {nthread, $t, "nthread", {integer, NSlot}, "number of threads in local mode"}
+   {version, $v,        "version", undefined,        "show Cuneiform version"},
+   {help,    $h,        "help",    undefined,        "show command line options"},
+   {cite,    $c,        "cite",    undefined,        "show Bibtex entry for citation"},
+   {workdir, $w,        "workdir", {string, "."},    "working directory"},
+   {nthread, $t,        "nthread", {integer, NSlot}, "number of threads in local mode"},
+   {rlib,    undefined, "rlib",    string,           "include R library path"},
+   {pylib,   undefined, "pylib",   string,           "include Python library path"}
   ].
 
 -spec get_vsn() -> string().

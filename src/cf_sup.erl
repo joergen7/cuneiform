@@ -22,7 +22,7 @@
 -behaviour( supervisor ).
 
 %% API
--export( [start_link/0, start_cre/2] ).
+-export( [start_link/0, start_cre/3] ).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -49,12 +49,18 @@ init( [] ) ->
 
   {ok, {SupFlags, []}}.
 
-start_cre( Mod, ModArg ) ->
+-spec start_cre( Mod, ModArg, LibMap ) -> {ok, pid()}
+when Mod    :: atom(),
+     ModArg :: term(),
+     LibMap :: #{cf_sem:lang() => [string()]}.
+
+start_cre( Mod, ModArg, LibMap )
+when is_atom( Mod ), is_map( LibMap ) ->
 
   Restart = temporary,
   Shutdown = 2000,
   Type = worker,
 
-  Cre = {cre, {cf_cre, start_link, [Mod, ModArg]}, Restart, Shutdown, Type, [cf_cre]},
+  Cre = {cre, {cf_cre, start_link, [Mod, ModArg, LibMap]}, Restart, Shutdown, Type, [cf_cre]},
 
   supervisor:start_child( cf_sup, Cre ).

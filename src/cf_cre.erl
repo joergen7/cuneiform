@@ -35,7 +35,7 @@
 %% Function Exports
 %% =============================================================================
 
--export( [start_link/2, submit/2] ).
+-export( [start_link/3, submit/2] ).
 
 -export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
           handle_call/3] ).
@@ -55,11 +55,12 @@
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, R, DataDir, ModState ) -> ok
+-callback handle_submit( Lam, Fa, R, DataDir, LibMap, ModState ) -> ok
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
      R        :: pos_integer(),
      DataDir  :: string(),
+     LibMap   :: #{cf_sem:lang() => [string()]},
      ModState :: term().
 
 %% =============================================================================
@@ -76,9 +77,10 @@ when Lam      :: cf_sem:lam(),
                       ReplyMap::#{pos_integer() => response()},
                       Cache::#{ckey() => cf_sem:fut()},
                       R::pos_integer(),
+                      LibMap::#{cf_sem:lang() => [string()]},
                       ModState::term()}.
 
--type submit()    :: {submit, cf_sem:app(), string()}.
+-type submit()    :: {submit, App::cf_sem:app(), Cwd::string()}.
 
 %% =============================================================================
 %% Generic Server Functions
@@ -90,9 +92,14 @@ terminate( _Reason, _State ) -> ok.
 
 %% @doc Generates the initial state of the CRE.
 
--spec init( {Mod::atom(), ModArg::term()} ) -> {ok, cre_state()}.
+-spec init( {Mod, ModArg, LibMap} ) -> {ok, cre_state()}
+when Mod    :: atom(),
+     ModArg :: term(),
+     LibMap :: #{cf_sem:lang() => [string()]}.
 
-init( {Mod, ModArg} ) ->
+init( {Mod, ModArg, LibMap} )
+when is_atom( Mod ), is_map( LibMap ) ->
+
   SubscrMap = #{},        % mapping of a future to a set of subscriber pids
   ReplyMap  = #{},        % mapping of a future to a response
   Cache     = #{},        % cache mapping a cache key to a future
@@ -101,7 +108,7 @@ init( {Mod, ModArg} ) ->
   % initialize CRE
   {ok, ModState} = apply( Mod, init, [ModArg] ),
 
-  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, ModState}}.
+  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState}}.
 
 %% @doc On receiving a call containing a subission, a future is generated and
 %%      returned.
@@ -123,13 +130,25 @@ when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
 
-handle_call( {submit, App, DataDir}, {Pid, _Tag}, {Mod, SubscrMap, ReplyMap, Cache, R, ModState} ) ->
+handle_call( {submit, App, Cwd},
+             {Pid, _Tag},
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+
+when is_tuple( App ),
+     is_list( Cwd ),
+     is_pid( Pid ),
+     is_atom( Mod ),
+     is_map( SubscrMap ),
+     is_map( ReplyMap ),
+     is_map( Cache ),
+     is_integer( R ), R > 0,
+     is_map( LibMap ) ->
 
   {app, _AppLine, _Channel, Lam, Fa} = App,
   {lam, _LamLine, LamName, {sign, Lo, _Li}, _Body} = Lam,
 
   % construct cache key
-  Ckey = {Lam, Fa, DataDir},
+  Ckey = {Lam, Fa, Cwd},
 
   case maps:is_key( Ckey, Cache ) of
 
@@ -139,13 +158,13 @@ handle_call( {submit, App, DataDir}, {Pid, _Tag}, {Mod, SubscrMap, ReplyMap, Cac
       Fut = {fut, LamName, R, Lo},
 
       % start process
-      apply( Mod, handle_submit, [Lam, Fa, R, DataDir, ModState] ),
+      apply( Mod, handle_submit, [Lam, Fa, R, Cwd, LibMap, ModState] ),
 
       SubscrMap1 = SubscrMap#{R => sets:from_list( [Pid] )},
       Cache1 = Cache#{Ckey => Fut},
       R1 = R+1,
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, ModState}};
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState}};
 
     true ->
 
@@ -162,7 +181,7 @@ handle_call( {submit, App, DataDir}, {Pid, _Tag}, {Mod, SubscrMap, ReplyMap, Cac
         true  -> Pid ! maps:get( S, ReplyMap )
       end,
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, ModState}}
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState}}
   end.
 
 %% Info Handler %%
@@ -171,7 +190,8 @@ handle_call( {submit, App, DataDir}, {Pid, _Tag}, {Mod, SubscrMap, ReplyMap, Cac
 when Info  :: response(),
      State :: cre_state().
 
-handle_info( Info={failed, Reason, S, Data}, {Mod, SubscrMap, ReplyMap, Cache, R, ModState} ) ->
+handle_info( Info={failed, Reason, S, Data},
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} ) ->
 
   % retrieve subscriber set
   #{S := SubscrSet} = SubscrMap,
@@ -184,9 +204,10 @@ handle_info( Info={failed, Reason, S, Data}, {Mod, SubscrMap, ReplyMap, Cache, R
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, ModState}};
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
 
-handle_info( Info={finished, Sum}, {Mod, SubscrMap, ReplyMap, Cache, R, ModState} ) ->
+handle_info( Info={finished, Sum},
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} ) ->
 
   % retrieve subscriber set
   #{id := S} = Sum,
@@ -201,25 +222,32 @@ handle_info( Info={finished, Sum}, {Mod, SubscrMap, ReplyMap, Cache, R, ModState
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, ModState}}.
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
+
+handle_info( Info, _State ) -> error( {bad_msg, Info} ).
 
 %% =============================================================================
 %% API Functions
 %% =============================================================================
 
--spec start_link( Mod, ModArg ) -> {ok, pid()} | ignore | {error, Error}
+-spec start_link( Mod, ModArg, LibMap ) -> {ok, pid()} | ignore | {error, Error}
 when Mod    :: atom(),
      ModArg :: term(),
+     LibMap :: #{cf_sem:lang() => [string()]},
      Error  :: {already_started, pid()} | term().
 
-start_link( Mod, ModArg ) ->
-  gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg}, [] ).
+start_link( Mod, ModArg, LibMap )
+when is_atom( Mod ), is_map( LibMap ) ->
+  gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg, LibMap}, [] ).
 
 
--spec submit( App::cf_sem:app(), DataDir::string() ) -> cf_sem:fut().
+-spec submit( App, Cwd ) -> cf_sem:fut()
+when App    :: cf_sem:app(),
+     Cwd    :: string().
 
-submit( App, DataDir ) ->
-  gen_server:call( cre, {submit, App, DataDir} ).
+submit( App, Cwd )
+when is_tuple( App ), is_list( Cwd ) ->
+  gen_server:call( cre, {submit, App, Cwd} ).
 
 %% =============================================================================
 %% Internal Functions

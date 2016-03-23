@@ -1,10 +1,12 @@
 all:
-	rebar3 escriptize
+	rebar3 do compile, escriptize
 
 dev:
-	git pull
-	rebar3 do upgrade, escriptize, eunit, dialyzer, cover, edoc
+	rebar3 do compile, escriptize, eunit, dialyzer, cover, edoc
 
 clean:
-	rebar3 clean
+	rm -rf .rebar
+	rm -rf _build
+	rm -rf doc
+	rm rebar.lock
 
