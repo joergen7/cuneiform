@@ -47,8 +47,9 @@ main( CmdLine ) ->
                 false ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
                   {nthread, NSlot} = lists:keyfind( nthread, 1, OptLst ),
+                  {platform, Platform} = lists:keyfind( platform, 1, OptLst ),
                   LibMap = get_libmap( OptLst ),
-                  {ok, CrePid} = start( local, NSlot, LibMap ),
+                  {ok, CrePid} = start( Platform, NSlot, LibMap ),
                   link( CrePid ),
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
@@ -178,13 +179,14 @@ find_select( _, _ ) ->
 get_optspec_lst() ->
   NSlot = erlang:system_info( logical_processors_available ),
   [
-   {version, $v,        "version", undefined,        "show Cuneiform version"},
-   {help,    $h,        "help",    undefined,        "show command line options"},
-   {cite,    $c,        "cite",    undefined,        "show Bibtex entry for citation"},
-   {workdir, $w,        "workdir", {string, "."},    "working directory"},
-   {nthread, $t,        "nthread", {integer, NSlot}, "number of threads in local mode"},
-   {rlib,    undefined, "rlib",    string,           "include R library path"},
-   {pylib,   undefined, "pylib",   string,           "include Python library path"}
+   {version,  $v,        "version",  undefined,        "show Cuneiform version"},
+   {help,     $h,        "help",     undefined,        "show command line options"},
+   {cite,     $c,        "cite",     undefined,        "show Bibtex entry for citation"},
+   {workdir,  $w,        "workdir",  {string, "."},    "working directory"},
+   {nthread,  $t,        "nthread",  {integer, NSlot}, "number of threads in local mode"},
+   {platform, $p,        "platform", {atom, local},    "platform to use: local, condor"},
+   {rlib,     undefined, "rlib",     string,           "include R library path"},
+   {pylib,    undefined, "pylib",    string,           "include Python library path"}
   ].
 
 -spec get_vsn() -> string().

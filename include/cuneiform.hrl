@@ -6,3 +6,8 @@
 -define( YLW( Str ), "\e[33m" ++ Str ++ "\e[0m" ).
 -define( BYLW( Str ), "\e[1;33m" ++ Str ++ "\e[0m" ).
 -define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
+
+-define( BASEDIR, "/tmp/cf" ).
+-define( WORK, "work" ).
+-define( REPO, "repo" ).
+

@@ -19,17 +19,20 @@
 -module( local ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( cf_cre ).
--export( [init/1, handle_submit/6, stage/6] ).
+-include( "cuneiform.hrl" ).
 
--define( BASEDIR, "/tmp/cf" ).
--define( WORK, "work" ).
--define( REPO, "repo" ).
+-behaviour( cf_cre ).
+-export( [init/1, handle_submit/6, stage/6, create_basedir/2,
+          create_workdir/3] ).
 
 -spec create_basedir( Prefix::string(), I::pos_integer() ) -> iolist().
 
-create_basedir( Prefix, I ) ->
+create_basedir( Prefix, I )
+when is_list( Prefix ),
+     is_integer( I ), I > 0 ->
+
   BaseDir = [Prefix, "-", integer_to_list( I )],
+
   case filelib:is_file( BaseDir ) of
     true  -> create_basedir( Prefix, I+1 );
     false ->
@@ -68,6 +71,25 @@ when is_tuple( Lam ),
                    {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap, BaseDir]}} ).
 
 
+-spec create_workdir( BaseDir, Work, R ) -> string()
+when BaseDir :: string(),
+     Work    :: string(),
+     R       :: pos_integer().
+
+create_workdir( BaseDir, Work, R )
+when is_list( BaseDir ),
+     is_list( Work ),
+     is_integer( R ), R > 0 ->
+
+  Dir = string:join( [BaseDir, Work, integer_to_list( R )], "/" ),
+
+  % create working directory
+  case filelib:ensure_dir( [Dir, "/"] ) of
+    {error, R1} -> error( {R1, ensure_dir, [Dir, "/"]} );
+    ok          -> Dir
+  end.
+
+
 -spec stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
@@ -86,14 +108,10 @@ when is_list( Lo ),
      is_map( LibMap ),
      is_list( BaseDir ) ->
 
-  Dir = string:join( [BaseDir, ?WORK, integer_to_list( R )], "/" ),
-  RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
-  % create working directory
-  case filelib:ensure_dir( [Dir, "/"] ) of
-    {error, R1} -> error( {R1, ensure_dir, [Dir, "/"]} );
-    ok          -> ok
-  end,
+  Dir = create_workdir( BaseDir, ?WORK, R ),
+  
+  RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
   % resolve input files
   Triple1 = refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
