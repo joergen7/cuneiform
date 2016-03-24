@@ -20,49 +20,74 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( cf_cre ).
--export( [init/1, handle_submit/6, stage/5] ).
+-export( [init/1, handle_submit/6, stage/6] ).
 
 -define( BASEDIR, "/tmp/cf" ).
 -define( WORK, "work" ).
 -define( REPO, "repo" ).
 
--spec init( NSlot::pos_integer() ) -> {ok, pid()}.
+-spec create_basedir( Prefix::string(), I::pos_integer() ) -> iolist().
+
+create_basedir( Prefix, I ) ->
+  BaseDir = [Prefix, "-", integer_to_list( I )],
+  case filelib:is_file( BaseDir ) of
+    true  -> create_basedir( Prefix, I+1 );
+    false ->
+      case filelib:ensure_dir( [BaseDir, "/"] ) of
+        {error, Reason} -> error( {Reason, ensure_dir, [BaseDir, "/"]} );
+        ok              -> BaseDir
+      end
+  end.
+
+-spec init( NSlot::pos_integer() ) -> {ok, {iolist(), pid()}}.
 
 init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
-  _Output = os:cmd( string:join( ["rm", "-rf", ?BASEDIR], " " ) ),
-  gen_queue:start_link( NSlot ).
+  BaseDir = create_basedir( ?BASEDIR, 1 ),
+  {ok, QueueRef} = gen_queue:start_link( NSlot ),
+  {ok, {BaseDir, QueueRef}}.
 
 
--spec handle_submit( Lam, Fa, R, DataDir, LibMap, QueueRef ) -> ok
+-spec handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} ) -> ok
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
      R        :: pos_integer(),
      DataDir  :: string(),
      LibMap   :: #{cf_sem:lang() => [string()]},
+     BaseDir  :: iolist(),
      QueueRef :: pid().
 
-handle_submit( Lam, Fa, R, DataDir, LibMap, QueueRef ) ->
-  gen_server:cast( QueueRef, {request, self(), {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap]}} ).
+handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_integer( R ), R > 0,
+     is_list( DataDir ),
+     is_map( LibMap ),
+     is_list( BaseDir ),
+     is_pid( QueueRef ) ->
+  gen_server:cast( QueueRef, {request, self(),
+                   {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap, BaseDir]}} ).
 
 
--spec stage( Lam, Fa, R, DataDir, LibMap ) -> cre:response()
+-spec stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
      R       :: pos_integer(),
      DataDir :: string(),
-     LibMap  :: #{cf_sem:lang() => [string()]}.
+     LibMap  :: #{cf_sem:lang() => [string()]},
+     BaseDir :: iolist().
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, R, DataDir, LibMap )
+       Fa, R, DataDir, LibMap, BaseDir )
 when is_list( Lo ),
      is_list( Li ),
      is_map( Fa ),
      is_integer( R ), R > 0,
      is_list( DataDir ),
-     is_map( LibMap ) ->
+     is_map( LibMap ),
+     is_list( BaseDir ) ->
 
-  Dir = string:join( [?BASEDIR, ?WORK, integer_to_list( R )], "/" ),
-  RepoDir = string:join( [?BASEDIR, ?REPO], "/" ),
+  Dir = string:join( [BaseDir, ?WORK, integer_to_list( R )], "/" ),
+  RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
   % create working directory
   case filelib:ensure_dir( [Dir, "/"] ) of

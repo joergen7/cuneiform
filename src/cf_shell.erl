@@ -56,10 +56,6 @@ server_loop( Rho, Gamma, Cwd ) ->
   case read_expression( ?PROMPT ) of
     {ctl, quit}                 ->
       ok;
-    {ctl, ls}                   ->
-      {ok, FileLst} = file:list_dir( Cwd ),
-      io:format( "~p~n", [FileLst] ),
-      server_loop( Rho, Gamma, Cwd );
     {ctl, cwd}                  ->
       io:format( "~s~n", [filename:absname( Cwd )] ),
       server_loop( Rho, Gamma, Cwd );
