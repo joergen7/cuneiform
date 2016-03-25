@@ -58,7 +58,8 @@ handle_cast( continue, {NSlot, []} ) ->
   {noreply, {NSlot+1, []}};
 
 handle_cast( continue, {NSlot, [H|T]} ) ->
-  stage_reply( self(), H ),
+  QueueRef = self(),
+  spawn_link( fun() -> stage_reply( QueueRef, H ) end ),
   {noreply, {NSlot, T}};
 
 handle_cast( Request, {0, Q} ) ->

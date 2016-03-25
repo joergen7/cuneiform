@@ -177,7 +177,10 @@ find_select( _, _ ) ->
 -spec get_optspec_lst() -> [{atom(), char(), string(), undefined, string()}].
 
 get_optspec_lst() ->
-  NSlot = erlang:system_info( logical_processors_available ),
+  NSlot = case erlang:system_info( logical_processors_available ) of
+    unknown -> 1;
+    N       -> N
+  end,
   [
    {version,  $v,        "version",  undefined,        "show Cuneiform version"},
    {help,     $h,        "help",     undefined,        "show command line options"},
@@ -274,7 +277,7 @@ format_error( {AppLine, cuneiform, {script_error, LamName, R, {ActScript, Out}}}
   io_lib:format(
     ?BYLW( "[out]~n" )++?YLW( "~s~n" )
     ++?BYLW( "[script]~n" )++?YLW( "~s~n" )
-    ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (~p)" ),
+    ++?RED( "Line ~p: " )++?BRED( "script error in call to ~s (id: ~p)" ),
     [format_out( Out ), format_script( ActScript ), AppLine, LamName, R] );
 
 format_error( {AppLine, cuneiform, {precond, LamName, R, MissingLst}} ) ->
