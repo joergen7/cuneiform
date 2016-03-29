@@ -16,6 +16,8 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
 -module( cf_sup ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 

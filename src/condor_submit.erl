@@ -1,43 +1,82 @@
-%%%-------------------------------------------------------------------
-%%% @author mac
-%%% @copyright (C) 2016, <COMPANY>
-%%% @doc
-%%%
-%%% @end
-%%% Created : 21. Feb 2016 8:49 PM
-%%%
-%%% This is utility module that produces condor_submit file contents from 3 sources of possible inputs,
-%%% in the following order of priority if there is a parameter key conflict:
-%%%
-%%% 1. Mandatory CF condor parameters: executable, log, error, output
-%%% 2. Optional task-level condor parameters, i.e. universe, RequestMemory, RequestCpus
-%%% 3. Optional default condor parameters, i.e. universe, should_transfer_files, etc.
-%%%
-%%% One exception is transfer_input_files: instead of choosing just one of the corresponding
-%%% lists, the lists are merged.  This way any custom input files can be specified as well.
-%%% Also, input file names are validated to be real files, therefore transfer_input_files param
-%%% is the only one expected to be a list of files rather than a complete string and it will
-%%% be converted back to comma-separated string once the validation and possibly merging is done
-%%%
-%%% Mandatory condor parameters that aren't provided in either of the "sources"
-%%% will be filled in with VANILLA_DEFAULS
-%%%-------------------------------------------------------------------
+%% -*- erlang -*-
+%
+% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%
+% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+%
+
+%% @author Irina Guberman <irina.guberman@gmail.com>
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%%
+%% @doc Management Condor submit files.
+%%
+%% This utility module produces the content of a condor_submit file from 3
+%% sources of possible inputs in the following order of priority if there is a
+%% parameter key conflict:
+%%
+%% 1. Mandatory CF condor parameters: executable, log, error, output
+%%
+%% 2. Optional task-level condor parameters, i.e. universe, RequestMemory, RequestCpus
+%%
+%% 3. Optional default condor parameters, i.e. universe, should_transfer_files, etc.
+%%
+%% One exception is transfer_input_files: instead of choosing just one of the corresponding
+%% lists, the lists are merged.  This way any custom input files can be specified as well.
+%%
+%% <i>
+%% Is specifying custom input files actually a good idea?
+%% (i)  It is a way to introduce a file avoiding to define it as a tasks
+%%      argument. (It is a side-effect.)
+%% (ii) Imho, the semantics of the workflow script should never change due to
+%%      an annotation. Annotations should only be for giving additional
+%%      info to speed up execution.
+%% </i>
+%%
+%% Also, input file names are validated to be real files, therefore transfer_input_files param
+%% is the only one expected to be a list of files rather than a complete string and it will
+%% be converted back to comma-separated string once the validation and possibly merging is done
+%%
+%% <i>
+%% Validation is not necessary here. Effi checks if all files exist, before it
+%% starts and fails if something is missing. It doesn't depend on Condor submit
+%% info, though. Representing lists in the Condor submit file as lists in the
+%% submit map is an excellent idea though.
+%% </i>
+%%
+%% Mandatory condor parameters that aren't provided in either of the sources of
+%% possible inputs will be filled in with VANILLA_DEFAULTS.
+
 -module(condor_submit).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
 -endif.
 
-%% API
--export([
-  generate_condor_submit/1,
-  generate_condor_submit/2,
-  generate_condor_submit/3]).
+% API
+-export( [generate_condor_submit/1, generate_condor_submit/2,
+          generate_condor_submit/3] ).
+
+% provisionary export to make all module functions, their prototypes and
+% documentations visible in the docs.
+-export( [validate_input_files/1, combine_params/2, input_files_to_cs_string/1,
+          create_submitfile/1] ).
 
 -define(VANILLA_DEFAULTS,
   #{universe => "vanilla",
     should_transfer_files => "YES",
-    run_as_owner => "True",
+    run_as_owner => "True",                 % is this one really necessary?
     when_to_transfer_output => "ON_EXIT"}).
 
 %%
@@ -80,20 +119,39 @@ generate_condor_submit(CFParams, DeclaredDefaultParams, DeclaredTaskParams)
 
 %% INTERNAL methods
 
+
+%% @doc Extracts the transfer_input_files field from a Condor submit map and
+%%      checks if all listed files exist.
+%%
+%%      Returns a Condor submit map having a non-empty transfer_input_files
+%%      field or none at all. Throws an error if an input file does not exist.
+%%
+-spec validate_input_files( Params ) -> #{atom() => string() | [string()]}
+when Params :: #{atom() => string() | [string()]}.
+
 validate_input_files( #{ transfer_input_files := [] } = Params) ->
   maps:remove(transfer_input_files, Params);
+
 validate_input_files( #{ transfer_input_files := InputFiles} = Params)
   when is_list(InputFiles) ->
   case lists:all(fun(Elem) -> filelib:is_file(Elem) end, InputFiles) of
     true -> Params;
     false -> {error, io_lib:format("Invalid input file(s) in ~p!", [InputFiles])}
   end;
+
 validate_input_files(#{} = Params) -> Params.
 
 
-%%% This method will combine parameters from two maps in such a a way that
-%% Params1 will take precedence over Params2, but if there is tranfer_input_files parameter
-%% present in both it will merge the list of input files into one
+%% @doc Combines parameters from two Condor submit maps.
+%%
+%%      In compination, Params1 will take precedence over Params2. If there is
+%%      tranfer_input_files parameter present in both it will merge the list of
+%%      input files into one.
+%%
+-spec combine_params( Params1, Params2 ) -> #{atom() => string() | [string()]}
+when Params1 :: #{atom() => string() | [string()]},
+     Params2 :: #{atom() => string() | [string()]}.
+
 combine_params( #{ transfer_input_files := InputFiles1 } = Params1,
                 #{ transfer_input_files := InputFiles2 } = Params2 )
   when is_list(InputFiles1), is_list(InputFiles2) ->
@@ -102,28 +160,54 @@ combine_params( #{ transfer_input_files := InputFiles1 } = Params1,
     maps:put(transfer_input_files, InputFiles, Params1),
     maps:remove(transfer_input_files, Params2)
   );
+
 combine_params(Params1, Params2) when is_map(Params1), is_map(Params2) ->
   maps:merge(validate_input_files(Params2), validate_input_files(Params1)).
 
 
-%%% The only parameter that might come here as a list instead of complete cs-string
-%%% is transfer_input_files because it might be generated by cuneiform and it needs file validation
-%%% Therefore any decalred transfer_input_files params need to be first parsed from cs-string
-%%% into a list, and once they are validated and possibly merged, they are converted back to cs-string here
+%% @doc Converts the transfer_input_files field from a Condor submit map to a
+%%      comma-separated string.
+%%
+%%      The only parameter that might come here as a list instead of complete
+%%      cs-string is transfer_input_files because it might be generated by
+%%      Cuneiform and it needs file validation. Therefore any declared
+%%      transfer_input_files params need to be first parsed from cs-string
+%%      into a list, and once they are validated and possibly merged, they are
+%%      converted back to cs-string here.
+%%
+-spec input_files_to_cs_string( CondorParams ) -> #{atom() => string()}
+when CondorParams :: #{atom() => string() | [string()]}.
+
 input_files_to_cs_string(#{transfer_input_files := InputFiles} = CondorParams) ->
   InputFilesCS = string:join(InputFiles, ", "),
   maps:put(transfer_input_files, InputFilesCS, CondorParams);
+
 input_files_to_cs_string(CondorParams) -> CondorParams.
 
-%%% Just take the param map and output into a string having 'key = value' format
-%%% The order of key-value pairs in condor config file doesn't matter at all (I tested)
-%%% The resulting string is a complete valid condor submit file contents --
-%%% leaving it to cre_htcondor module to decide the name of the file to write them to
+%% @doc Takes a Condor submit map and formats it as a binary.
+%%
+%%      Takes the Condor submit map and produces a string having 'key = value'
+%%      format. The order of key-value pairs in the output binary is undefined.
+%%      The resulting binary is a complete, valid condor submit file leaving it
+%%      to the caller to write the content to disk.
+%%
+-spec create_submitfile( Condorparams0 ) -> binary()
+when Condorparams0::#{atom() => string() | [string()]}.
+
 create_submitfile(CondorParams0) ->
   CondorParams1 = input_files_to_cs_string(CondorParams0),
   LineSep = io_lib:nl(),
   SubmitFileStr = maps:fold(fun(K, V, Acc) -> [Acc, io_lib:format("~p = ~s", [K,V]), LineSep] end, "", CondorParams1),
   iolist_to_binary([LineSep, lists:flatten(SubmitFileStr), LineSep, "Queue", LineSep]).
+
+
+
+
+
+
+
+
+
 
 
 -ifdef( TEST ).

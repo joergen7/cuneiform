@@ -17,6 +17,8 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
 -module( cuneiform_app ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
