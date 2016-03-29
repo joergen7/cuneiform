@@ -80,12 +80,12 @@ server_loop( Rho, Gamma, Cwd ) ->
       case Query of
         undef -> server_loop( Rho1, Gamma1, Cwd );
         _     ->
-          try cuneiform:reduce( Query, Rho, Gamma, "." ) of
+          try cuneiform:reduce( Query, Rho1, Gamma1, "." ) of
             X -> io:format( "~s~n", [cuneiform:format_result( X )] )
           catch
             throw:T -> io:format( "~s~n", [cuneiform:format_error( T )] )
           end,
-          server_loop( Rho, Gamma, Cwd )
+          server_loop( Rho1, Gamma1, Cwd )
       end
   end.
 

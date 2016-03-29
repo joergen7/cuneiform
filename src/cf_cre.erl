@@ -191,7 +191,9 @@ when Info  :: response(),
      State :: cre_state().
 
 handle_info( Info={failed, Reason, S, Data},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} ) ->
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+when is_atom( Reason ),
+     is_integer( S ), S > 0 ->
 
   % retrieve subscriber set
   #{S := SubscrSet} = SubscrMap,
@@ -222,9 +224,7 @@ handle_info( Info={finished, Sum},
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
-
-handle_info( Info, _State ) -> error( {bad_msg, Info} ).
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
 
 %% =============================================================================
 %% API Functions

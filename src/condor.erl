@@ -35,24 +35,63 @@ init( _ModArg ) ->
 
 handle_submit( _Lam, _Fa, R, _DataDir, _LibMap, BaseDir ) ->
 
-  _Dir = local:create_workdir( BaseDir, ?WORK, R ),
+  Dir = local:create_workdir( BaseDir, ?WORK, R ),
   
   _RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
-  SubmitStr = "", % TODO
+  LogFile = string:join( [Dir, "_log.txt"], "/" ),
+  SumFile = string:join( [Dir, "_summary.txt"], "/" ),
+  OutputFile = string:join( [Dir, "_output.txt"], "/" ),
 
-  Port = open_port( {spawn, "condor_submit -terse -"},
-                    [exit_status,
-                     stderr_to_stdout,
-                     binary,
-                     {cd, "."}, % TODO
-                     {line, 1024}] ),
+  SubmitMap = #{universe                => "VANILLA",
+                executable              => "/usr/local/bin/effi",
+                arguments               => string:join( ["_request.txt",
+                                                         SumFile], " " ),
+                should_transfer_files   => "IF_NEEDED",
+                when_to_transfer_output => "ON_EXIT",
+                log                     => LogFile,
+                output                  => OutputFile,
+                environment             => ["\"",
+                                            string:join( ["HOME=.",
+                                                          "PATH=/bin:/usr/bin:/usr/local/bin"], " " ),
+                                            "\""],
+                initialdir              => Dir
+              },
 
-  true = port_command( Port, SubmitStr ),
+  SubmitStr = condor_submit:format_submit( SubmitMap ),
+  error_logger:info_msg( "~s~n", [SubmitStr] ),
 
-  receive
+  SubmitFile = string:join( [Dir, "_job.sub"], "/" ),
 
-    % TODO
+  ok = file:write_file( SubmitFile, SubmitStr ),
 
-    Msg -> error( {bad_msg, Msg} )
+  _Response = os:cmd( string:join( ["condor_submit", SubmitFile], " " ) ),
+  
+  CreRef = self(),
+  F = fun() -> condor_wait( CreRef, R, LogFile, SumFile, OutputFile ) end,
+  _Pid = spawn_link( F ),
+
+  ok.
+
+  
+
+condor_wait( CreRef, R, LogFile, SumFile, OutputFile ) ->
+
+  % wait until the job terminates
+  _Response = os:cmd( string:join( ["condor_wait", LogFile], " " ) ),
+
+  case filelib:is_file( SumFile ) of
+
+    false ->
+      {ok, Out} = file:read_file( OutputFile ),
+      CreRef ! {failed, script_error, R, {"", re:split( Out, "\\n" )}}; % TODO: extract actual script
+
+    true  ->
+      {ok, B} = file:read_file( SumFile ),
+      {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
+      {ok, Sum} = erl_parse:parse_term( Tokens ),
+      CreRef ! {finished, Sum}
   end.
+
+
+

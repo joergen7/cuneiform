@@ -71,7 +71,7 @@
 % provisionary export to make all module functions, their prototypes and
 % documentations visible in the docs.
 -export( [validate_input_files/1, combine_params/2, input_files_to_cs_string/1,
-          create_submitfile/1] ).
+          format_submit/1] ).
 
 -define(VANILLA_DEFAULTS,
   #{universe => "vanilla",
@@ -103,7 +103,7 @@ generate_condor_submit(#{ executable := Executable,
   is_map(DeclaredParams) ->
   CondorParams0  = combine_params(CFParams, DeclaredParams),
   CondorParams = maps:merge(?VANILLA_DEFAULTS, CondorParams0),
-  create_submitfile(CondorParams).
+  format_submit(CondorParams).
 
 %%
 %% This method expects 3 arguments:
@@ -191,10 +191,10 @@ input_files_to_cs_string(CondorParams) -> CondorParams.
 %%      The resulting binary is a complete, valid condor submit file leaving it
 %%      to the caller to write the content to disk.
 %%
--spec create_submitfile( Condorparams0 ) -> binary()
+-spec format_submit( Condorparams0 ) -> binary()
 when Condorparams0::#{atom() => string() | [string()]}.
 
-create_submitfile(CondorParams0) ->
+format_submit(CondorParams0) ->
   CondorParams1 = input_files_to_cs_string(CondorParams0),
   LineSep = io_lib:nl(),
   SubmitFileStr = maps:fold(fun(K, V, Acc) -> [Acc, io_lib:format("~p = ~s", [K,V]), LineSep] end, "", CondorParams1),
