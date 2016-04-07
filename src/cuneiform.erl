@@ -20,7 +20,7 @@
 
 -module( cuneiform ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0" ).
+-vsn( "2.2.0-snapshot" ).
 
 % API
 -export( [main/1, file/2, start/3, reduce/4, get_vsn/0, format_result/1, format_error/1] ).

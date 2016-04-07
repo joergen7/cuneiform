@@ -20,6 +20,8 @@
 
 -module( cf_shell ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.0-snapshot" ).
+
 
 %% =============================================================================
 %% Function Exports
@@ -141,16 +143,9 @@ get_help() ->
     [?YLW( "help" )++"  show this usage info",
      ?YLW( "state" )++" show variable bindings",
      ?YLW( "tasks" )++" show task definitions",
-     ?YLW( "ls" )++"    list files",
      ?YLW( "cwd" )++"   current working directory",
      ?YLW( "quit" )++"  quit the shell"
     ], "\n" ).
-
-
-
-
-
-
 
 
 -spec get_banner() -> iolist().
@@ -163,8 +158,8 @@ get_banner() ->
      "     _g@@@@@WWWWWWL",
      "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
      "  @@P    3@B",
-     "  @N____ 3@B         Docs: "++?BLU( "http://www.cuneiform-lang.org" ),
-     "  \"W@@@WF3@B         Code: "++?BLU( "https://github.com/joergen7/cuneiform" )
+     "  @N____ 3@B         "++?BLU( "http://www.cuneiform-lang.org" ),
+     "  \"W@@@WF3@B"
     ], "\n" ).
 
 

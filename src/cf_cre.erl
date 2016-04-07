@@ -29,6 +29,8 @@
 
 -module( cf_cre ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.0-snapshot" ).
+
 -behaviour( gen_server ).
 
 %% =============================================================================

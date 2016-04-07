@@ -20,6 +20,8 @@
 
 -module( condor ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.0-snapshot" ).
+
 
 -include( "cuneiform.hrl" ).
 
@@ -29,69 +31,101 @@
 
 
 init( _ModArg ) ->
-
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
   {ok, BaseDir}.
 
-handle_submit( _Lam, _Fa, R, _DataDir, _LibMap, BaseDir ) ->
-
-  Dir = local:create_workdir( BaseDir, ?WORK, R ),
-  
-  _RepoDir = string:join( [BaseDir, ?REPO], "/" ),
-
-  LogFile = string:join( [Dir, "_log.txt"], "/" ),
-  SumFile = string:join( [Dir, "_summary.txt"], "/" ),
-  OutputFile = string:join( [Dir, "_output.txt"], "/" ),
-
-  SubmitMap = #{universe                => "VANILLA",
-                executable              => "/usr/local/bin/effi",
-                arguments               => string:join( ["_request.txt",
-                                                         SumFile], " " ),
-                should_transfer_files   => "IF_NEEDED",
-                when_to_transfer_output => "ON_EXIT",
-                log                     => LogFile,
-                output                  => OutputFile,
-                environment             => ["\"",
-                                            string:join( ["HOME=.",
-                                                          "PATH=/bin:/usr/bin:/usr/local/bin"], " " ),
-                                            "\""],
-                initialdir              => Dir
-              },
-
-  SubmitStr = condor_submit:format_submit( SubmitMap ),
-  error_logger:info_msg( "~s~n", [SubmitStr] ),
-
-  SubmitFile = string:join( [Dir, "_job.sub"], "/" ),
-
-  ok = file:write_file( SubmitFile, SubmitStr ),
-
-  _Response = os:cmd( string:join( ["condor_submit", SubmitFile], " " ) ),
-  
+handle_submit( Lam, Fa, R, DataDir, LibMap, BaseDir ) ->
   CreRef = self(),
-  F = fun() -> condor_wait( CreRef, R, LogFile, SumFile, OutputFile ) end,
-  _Pid = spawn_link( F ),
-
+  _Pid = spawn_link( fun() -> CreRef ! stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) end ),
   ok.
 
   
 
-condor_wait( CreRef, R, LogFile, SumFile, OutputFile ) ->
+stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
+       LibMap, BaseDir ) ->
 
-  % wait until the job terminates
-  _Response = os:cmd( string:join( ["condor_wait", LogFile], " " ) ),
+  Dir = local:create_workdir( BaseDir, ?WORK, R ),
+  
+  RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
-  case filelib:is_file( SumFile ) of
+  % resolve input files
+  Triple1 = refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
+  {RefactorLst1, MissingLst1, Fa1} = Triple1,
 
-    false ->
-      {ok, Out} = file:read_file( OutputFile ),
-      CreRef ! {failed, script_error, R, {"", re:split( Out, "\\n" )}}; % TODO: extract actual script
+  case MissingLst1 of
+    [_|_] -> {failed, precond, R, MissingLst1};
+    []    ->
 
-    true  ->
-      {ok, B} = file:read_file( SumFile ),
+      % link in input files
+      refactor:apply_refactoring( RefactorLst1 ),
+
+
+      LogFile = string:join( [Dir, "_log.txt"], "/" ),
+      OutputFile = string:join( [Dir, "_output.txt"], "/" ),
+      SubmitFile = string:join( [Dir, "_job.sub"], "/" ),
+      EffiSumFile = string:join( [Dir, "_summary.effi"], "/" ),
+      EffiRequestFile = string:join( [Dir, "_request.effi"], "/" ),
+
+      SubmitMap = #{universe                => "VANILLA",
+                    executable              => "/usr/local/bin/effi",
+                    arguments               => string:join( [EffiRequestFile,
+                                                             EffiSumFile], " " ),
+                    should_transfer_files   => "IF_NEEDED",
+                    when_to_transfer_output => "ON_EXIT",
+                    log                     => LogFile,
+                    output                  => OutputFile,
+                    environment             => ["\"",
+                                                string:join( ["HOME=.",
+                                                              "PATH=/bin:/usr/bin:/usr/local/bin"], " " ),
+                                                "\""],
+                    initialdir              => Dir
+                  },
+
+      % write Effi submit file
+      EffiRequest = {Lam, Fa1, R},
+      EffiRequestStr = io_lib:format( "~p.~n", [EffiRequest] ),
+      ok = file:write_file( EffiRequestFile, EffiRequestStr ),
+
+      % write HTCondor submit file
+      SubmitStr = condor_submit:format_submit( SubmitMap ),
+      ok = file:write_file( SubmitFile, SubmitStr ),
+      error_logger:info_msg( "~s~n", [SubmitStr] ),
+
+      % submit job
+      _Response1 = os:cmd( string:join( ["condor_submit", SubmitFile], " " ) ),
+      
+      % wait until the job terminates
+      _Response2 = os:cmd( string:join( ["condor_wait", LogFile], " " ) ),
+
+      {ok, B} = file:read_file( EffiSumFile ),
       {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
       {ok, Sum} = erl_parse:parse_term( Tokens ),
-      CreRef ! {finished, Sum}
+
+      case maps:get( state, Sum ) of
+
+        ok           ->
+
+          % resolve output files
+          RMap = maps:get( ret, Sum ),
+          {lam, _Line, _LamName, Sign, _Body} = Lam,
+          {sign, Lo, _Li} = Sign,
+          {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, Dir, [Dir], R ),
+          ok = refactor:apply_refactoring( RefactorLst ),
+
+          {finished, maps:put( ret, RMap1, Sum )};
+
+
+
+        script_error ->
+          #{actscript := ActScript, out := Out} = Sum,
+          {failed, script_error, R, {ActScript, Out}};
+
+        R1           ->
+          #{missing := MissingLst2} = Sum,
+          {failed, R1, R, MissingLst2}
+      end
   end.
+
 
 
 

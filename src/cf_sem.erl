@@ -20,6 +20,8 @@
 
 -module( cf_sem ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.0-snapshot" ).
+
 
 -export( [eval/2, pfinal/1] ).
 
