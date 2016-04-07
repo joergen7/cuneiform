@@ -109,7 +109,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
           RMap = maps:get( ret, Sum ),
           {lam, _Line, _LamName, Sign, _Body} = Lam,
           {sign, Lo, _Li} = Sign,
-          {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, Dir, [Dir], R ),
+          {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, RepoDir, [Dir], R ),
           ok = refactor:apply_refactoring( RefactorLst ),
 
           {finished, maps:put( ret, RMap1, Sum )};
