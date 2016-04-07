@@ -82,7 +82,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
                   },
 
       % write Effi submit file
-      EffiRequest = {Lam, Fa1, R},
+      EffiRequest = {Lam, Fa1, R, LibMap},
       EffiRequestStr = io_lib:format( "~p.~n", [EffiRequest] ),
       ok = file:write_file( EffiRequestFile, EffiRequestStr ),
 
