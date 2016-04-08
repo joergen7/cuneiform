@@ -1,10 +1,10 @@
 all: compile
 
 compile:
-	rebar3 do compile, escriptize
+	rebar3 escriptize
 
 dev:
-	rebar3 do compile, escriptize, eunit, dialyzer, cover, edoc
+	rebar3 do escriptize, eunit, dialyzer, cover, edoc
 
 clean:
 	rm -rf .rebar
