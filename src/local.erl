@@ -119,7 +119,7 @@ when is_list( Lo ),
   RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
   % resolve input files
-  Triple1 = refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
+  Triple1 = lib_refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
   {RefactorLst1, MissingLst1, Fa1} = Triple1,
 
   case MissingLst1 of
@@ -127,7 +127,7 @@ when is_list( Lo ),
     []    ->
 
       % link in input files
-      refactor:apply_refactoring( RefactorLst1 ),
+      lib_refactor:apply_refactoring( RefactorLst1 ),
 
       % start effi
       case effi:check_run( Lam, Fa1, R, Dir, LibMap ) of
@@ -139,11 +139,11 @@ when is_list( Lo ),
           Ret1 = maps:get( ret, Sum ),
 
           % resolve output files
-          Triple2 = refactor:get_refactoring( Lo, Ret1, RepoDir, [Dir], R ),
+          Triple2 = lib_refactor:get_refactoring( Lo, Ret1, RepoDir, [Dir], R ),
           {RefactorLst2, [], Ret2} = Triple2,
 
           % link out output files
-          refactor:apply_refactoring( RefactorLst2 ),
+          lib_refactor:apply_refactoring( RefactorLst2 ),
 
           % update result map
           {finished, Sum#{ret => Ret2}}

@@ -49,7 +49,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
   RepoDir = string:join( [BaseDir, ?REPO], "/" ),
 
   % resolve input files
-  Triple1 = refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
+  Triple1 = lib_refactor:get_refactoring( Li, Fa, Dir, [DataDir, RepoDir], R ),
   {RefactorLst1, MissingLst1, Fa1} = Triple1,
 
   case MissingLst1 of
@@ -57,7 +57,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
     []    ->
 
       % link in input files
-      refactor:apply_refactoring( RefactorLst1 ),
+      lib_refactor:apply_refactoring( RefactorLst1 ),
 
 
       LogFile = string:join( [Dir, "_log.txt"], "/" ),
@@ -87,7 +87,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
       ok = file:write_file( EffiRequestFile, EffiRequestStr ),
 
       % write HTCondor submit file
-      SubmitStr = condor_submit:format_submit( SubmitMap ),
+      SubmitStr = format_submit( SubmitMap ),
       ok = file:write_file( SubmitFile, SubmitStr ),
       error_logger:info_msg( "~s~n", [SubmitStr] ),
 
@@ -115,8 +115,8 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
                   RMap = maps:get( ret, Sum ),
                   {lam, _Line, _LamName, Sign, _Body} = Lam,
                   {sign, Lo, _Li} = Sign,
-                  {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, RepoDir, [Dir], R ),
-                  ok = refactor:apply_refactoring( RefactorLst ),
+                  {RefactorLst, [], RMap1} = lib_refactor:get_refactoring( Lo, RMap, RepoDir, [Dir], R ),
+                  ok = lib_refactor:apply_refactoring( RefactorLst ),
 
                   {finished, maps:put( ret, RMap1, Sum )};
 
@@ -136,4 +136,19 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
 
 
 
+%% @doc Takes a Condor submit map and formats it as a binary.
+%%
+%%      Takes the Condor submit map and produces a string having 'key = value'
+%%      format. The order of key-value pairs in the output binary is undefined.
+%%      The resulting binary is a complete, valid condor submit file leaving it
+%%      to the caller to write the content to disk.
+%%
+-spec format_submit( Condorparams0 ) -> binary()
+when Condorparams0::#{atom() => string() | [string()]}.
+
+format_submit(CondorParams0) ->
+  CondorParams1 = input_files_to_cs_string(CondorParams0),
+  LineSep = io_lib:nl(),
+  SubmitFileStr = maps:fold(fun(K, V, Acc) -> [Acc, io_lib:format("~p = ~s", [K,V]), LineSep] end, "", CondorParams1),
+  iolist_to_binary([LineSep, lists:flatten(SubmitFileStr), LineSep, "Queue", LineSep]).
 
