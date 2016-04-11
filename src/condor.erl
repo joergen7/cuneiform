@@ -17,9 +17,11 @@
 %% limitations under the License.
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Irina Guberman <irina.guberman@gmail.com>
 
 -module( condor ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Irina Guberman <irina.guberman@gmail.com>" ).
 -vsn( "2.2.0-snapshot" ).
 
 
