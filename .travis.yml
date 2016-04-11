@@ -1,6 +1,7 @@
-language: java
-jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk7
-
+language: erlang
+otp_release:
+#  - 18.3
+  - 18.2.1
+  - 18.2
+  - 18.1
+  - 18.0
