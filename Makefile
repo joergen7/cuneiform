@@ -1,15 +1,11 @@
-XRL=cf_scan cf_prescan
-YRL=cf_parse
-SRC=cf_cre cf_sem cf_shell cf_sup condor cuneiform cuneiform_app gen_queue lib_os local
-INC=cuneiform
 PWD=$(shell pwd)
 
-all: _build/default/bin/cuneiform
+all: compile
 
-install: _build/default/bin/cuneiform
+install: compile
 	ln -sf $(PWD)/_build/default/bin/cuneiform /usr/local/bin/cuneiform
 
-_build/default/bin/cuneiform: $(SRC:%=src/%.erl) $(INC:%=include/%.hrl) $(XRL:%=src/%.xrl) $(YRL:%=src/%.yrl)
+compile:
 	rebar3 escriptize
 
 dev:
