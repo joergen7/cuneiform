@@ -1,20 +1,20 @@
 %% -*- erlang -*-
-%
-% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
-%
-% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
-%
-% Licensed under the Apache License, Version 2.0 (the "License");
-% you may not use this file except in compliance with the License.
-% You may obtain a copy of the License at
-%
-%    http://www.apache.org/licenses/LICENSE-2.0
-%
-% Unless required by applicable law or agreed to in writing, software
-% distributed under the License is distributed on an "AS IS" BASIS,
-% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-% See the License for the specific language governing permissions and
-% limitations under the License.
+%%
+%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%%
+%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%%
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%%    http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
@@ -92,37 +92,45 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
       error_logger:info_msg( "~s~n", [SubmitStr] ),
 
       % submit job
-      _Response1 = os:cmd( string:join( ["condor_submit", SubmitFile], " " ) ),
-      
-      % wait until the job terminates
-      _Response2 = os:cmd( string:join( ["condor_wait", LogFile], " " ) ),
+      case lib_os:cmd( string:join( ["condor_submit", SubmitFile], " " ), Dir ) of
 
-      {ok, B} = file:read_file( EffiSumFile ),
-      {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
-      {ok, Sum} = erl_parse:parse_term( Tokens ),
+        {error, B1} -> {failed, cre_error, R, B1};
+        ok          ->
 
-      case maps:get( state, Sum ) of
+          % wait until the job terminates
+          case lib_os:cmd( string:join( ["condor_wait", LogFile], " " ), Dir ) of
 
-        ok           ->
+            {error, B2} -> {failed, cre_error, R, B2};
+            ok          ->
 
-          % resolve output files
-          RMap = maps:get( ret, Sum ),
-          {lam, _Line, _LamName, Sign, _Body} = Lam,
-          {sign, Lo, _Li} = Sign,
-          {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, RepoDir, [Dir], R ),
-          ok = refactor:apply_refactoring( RefactorLst ),
+              {ok, B} = file:read_file( EffiSumFile ),
+              {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
+              {ok, Sum} = erl_parse:parse_term( Tokens ),
 
-          {finished, maps:put( ret, RMap1, Sum )};
+              case maps:get( state, Sum ) of
 
+                ok           ->
 
+                  % resolve output files
+                  RMap = maps:get( ret, Sum ),
+                  {lam, _Line, _LamName, Sign, _Body} = Lam,
+                  {sign, Lo, _Li} = Sign,
+                  {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, RepoDir, [Dir], R ),
+                  ok = refactor:apply_refactoring( RefactorLst ),
 
-        script_error ->
-          #{actscript := ActScript, out := Out} = Sum,
-          {failed, script_error, R, {ActScript, Out}};
+                  {finished, maps:put( ret, RMap1, Sum )};
 
-        R1           ->
-          #{missing := MissingLst2} = Sum,
-          {failed, R1, R, MissingLst2}
+                script_error ->
+
+                  #{actscript := ActScript, out := Out} = Sum,
+                  {failed, script_error, R, {ActScript, Out}};
+
+                R1           ->
+
+                  #{missing := MissingLst2} = Sum,
+                  {failed, R1, R, MissingLst2}
+              end
+          end
       end
   end.
 

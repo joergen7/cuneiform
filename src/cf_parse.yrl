@@ -1,20 +1,23 @@
 %% -*- erlang -*-
-%
-% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
-%
-% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
-%
-% Licensed under the Apache License, Version 2.0 (the "License");
-% you may not use this file except in compliance with the License.
-% You may obtain a copy of the License at
-%
-%    http://www.apache.org/licenses/LICENSE-2.0
-%
-% Unless required by applicable law or agreed to in writing, software
-% distributed under the License is distributed on an "AS IS" BASIS,
-% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-% See the License for the specific language governing permissions and
-% limitations under the License.
+%%
+%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%%
+%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%%
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%%    http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
+
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
 
 %% =============================================================================
 %% Symbol Declaration
@@ -28,7 +31,7 @@ Nonterminals
 Terminals
   intlit strlit body bash beginif colon comma deftask else endif eq file in
   python r lbrace lparen lsquarebr ltag nil rbrace rparen rsquarebr rtag
-  semicolon string then id.
+  semicolon string then id perl.
 
 
 %% =============================================================================
@@ -56,6 +59,7 @@ defun        -> deftask id sign lbrace assignlist rbrace : mk_natlam( '$1', '$2'
 defun        -> deftask id sign in lang body             : mk_forlam( '$1', '$2', '$3', '$5', '$6' ).
 
 lang         -> bash   : bash.
+lang         -> perl   : perl.
 lang         -> python : python.
 lang         -> r      : r.
 

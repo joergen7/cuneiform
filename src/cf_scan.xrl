@@ -1,20 +1,23 @@
 %% -*- erlang -*-
-%
-% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
-%
-% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
-%
-% Licensed under the Apache License, Version 2.0 (the "License");
-% you may not use this file except in compliance with the License.
-% You may obtain a copy of the License at
-%
-%    http://www.apache.org/licenses/LICENSE-2.0
-%
-% Unless required by applicable law or agreed to in writing, software
-% distributed under the License is distributed on an "AS IS" BASIS,
-% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-% See the License for the specific language governing permissions and
-% limitations under the License.
+%%
+%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%%
+%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%%
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%%    http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
+
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
 
 %% =============================================================================
 %% Definitions
@@ -24,6 +27,7 @@
 Definitions.
 
 BASH      = [Bb]ash
+PERL      = [Pp]erl
 PYTHON    = [Pp]ython
 R         = [Rr]
 
@@ -69,6 +73,7 @@ WS        = [\000-\s]
 Rules.
 
 {BASH}      : {token, {bash, TokenLine, TokenChars}}.
+{PERL}      : {token, {perl, TokenLine, TokenChars}}.
 {PYTHON}    : {token, {python, TokenLine, TokenChars}}.
 {R}         : {token, {r, TokenLine, TokenChars}}.
 
