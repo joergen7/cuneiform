@@ -294,7 +294,7 @@ estep( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
   case Pen of
     false -> [{L, F}];                                                          % (72)
     true  ->
-      Z = corrstep( Lc, F, F ),
+      Z = corr( Lc, F ),
       aug( [{T, G} || G <- Z], H )                                              % (73)
   end.
 
@@ -315,8 +315,18 @@ aug_argpair( {L0, F}, {correl, Lc} ) ->                                         
 
 %% Correlation %%
 
+-spec corr( Lc, F ) -> [#{string() => [expr()]}]
+when Lc :: [name()],
+     F  :: #{string() => [expr()]}.
+
+corr( Lc, F ) ->
+  case corrstep( Lc, F, F ) of
+    []    -> [];
+    [H,T] -> [H|corr( Lc, T )]
+  end.
+
 -spec corrstep( Lc, Facc, F0 ) -> [#{string() => [expr()]}]                     % (79)
-when Lc   :: [string()],
+when Lc   :: [name()],
      Facc :: #{string() => [expr()]},
      F0   :: #{string() => [expr()]}.
 
@@ -556,7 +566,19 @@ can_augment_argpairlist_with_correl_test() ->
 
 %% Correlation %%
 
+corrstep_should_separate_first_value_single_test() ->
+  Lc = [{name, "a", false}],
+  F0 = #{"a" => [{str, "1"}, {str, "2"}, {str, "3"}]},
+  Y = [#{"a" => [{str, "1"}]}, #{"a" => [{str, "2"}, {str, "3"}]}],
+  X = corrstep( Lc, F0, F0 ),
+  ?assertEqual( Y, X ).
 
+corrstep_should_separate_first_value_two_test() ->
+  Lc = [{name, "a", false}, {name, "b", false}],
+  F0 = #{"a" => [{str, "1"}, {str, "2"}, {str, "3"}], "b" => [{str, "A"}, {str, "B"}, {str, "C"}]},
+  Y = [#{"a" => [{str, "1"}], "b" => [{str, "A"}]}, #{"a" => [{str, "2"}, {str, "3"}], "b" => [{str, "B"}, {str, "C"}]}],
+  X = corrstep( Lc, F0, F0 ),
+  ?assertEqual( Y, X ).
 
 
 

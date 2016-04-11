@@ -164,11 +164,37 @@ cross_product_should_be_derivable_test() ->
   [?assertEqual( F1, cf_sem:eval( App1, ?THETA0 ) ),
    ?assertEqual( F2, cf_sem:eval( App2, ?THETA0 ) )].
 
-dot_product_should_be_derivable_test() ->
+dot_product_should_be_derivable1_test() ->
+  Sign = {sign, [{param, {name, "out1", false}, false}, {param, {name, "out2", false}, false}],
+                [{correl, [{name, "p1", false}, {name, "p2", false}]}]},
+  E1 = [{str, "A"}],
+  E2 = [{str, "1"}],
+  Body = {natbody, #{"out1" => [{var, 5, "p1"}], "out2" => [{var, 6, "p2"}]}},
+  Lam = {lam, 7, "f", Sign, Body},
+  Binding = #{"p1" => E1, "p2" => E2},
+  App1 = [{app, 8, 1, Lam, Binding}],
+  App2 = [{app, 9, 2, Lam, Binding}],
+  [?assertEqual( E1, cf_sem:eval( App1, ?THETA0 ) ),
+   ?assertEqual( E2, cf_sem:eval( App2, ?THETA0 ) )].
+
+dot_product_should_be_derivable2_test() ->
   Sign = {sign, [{param, {name, "out1", false}, false}, {param, {name, "out2", false}, false}],
                 [{correl, [{name, "p1", false}, {name, "p2", false}]}]},
   E1 = [{str, "A"}, {str, "B"}],
   E2 = [{str, "1"}, {str, "2"}],
+  Body = {natbody, #{"out1" => [{var, 5, "p1"}], "out2" => [{var, 6, "p2"}]}},
+  Lam = {lam, 7, "f", Sign, Body},
+  Binding = #{"p1" => E1, "p2" => E2},
+  App1 = [{app, 8, 1, Lam, Binding}],
+  App2 = [{app, 9, 2, Lam, Binding}],
+  [?assertEqual( E1, cf_sem:eval( App1, ?THETA0 ) ),
+   ?assertEqual( E2, cf_sem:eval( App2, ?THETA0 ) )].
+
+dot_product_should_be_derivable3_test() ->
+  Sign = {sign, [{param, {name, "out1", false}, false}, {param, {name, "out2", false}, false}],
+                [{correl, [{name, "p1", false}, {name, "p2", false}]}]},
+  E1 = [{str, "A"}, {str, "B"}, {str, "C"}],
+  E2 = [{str, "1"}, {str, "2"}, {str, "3"}],
   Body = {natbody, #{"out1" => [{var, 5, "p1"}], "out2" => [{var, 6, "p2"}]}},
   Lam = {lam, 7, "f", Sign, Body},
   Binding = #{"p1" => E1, "p2" => E2},
