@@ -21,7 +21,7 @@
 
 -module( local ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0-snapshot" ).
+-vsn( "2.2.1-snapshot" ).
 
 
 -include( "cuneiform.hrl" ).

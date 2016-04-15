@@ -66,7 +66,7 @@ Rules.
 Erlang code.
 
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0-snapshot" ).
+-vsn( "2.2.1-snapshot" ).
 
 
 -export( [yyrev/2] ).
