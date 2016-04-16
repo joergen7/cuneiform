@@ -19,7 +19,7 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 %% @author Irina Guberman <irina.guberman@gmail.com>
 
--module( condor ).
+-module( htcondor ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -author( "Irina Guberman <irina.guberman@gmail.com>" ).
 -vsn( "2.2.1-snapshot" ).
@@ -36,15 +36,8 @@ init( _ModArg ) ->
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
   {ok, BaseDir}.
 
-handle_submit( Lam, Fa, R, DataDir, LibMap, BaseDir ) ->
-  CreRef = self(),
-  _Pid = spawn_link( fun() -> CreRef ! stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) end ),
-  ok.
-
-  
-
-stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
-       LibMap, BaseDir ) ->
+handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
+  DataDir, R, LibMap, BaseDir ) ->
 
   Dir = local:create_workdir( BaseDir, ?WORK, R ),
   

@@ -57,13 +57,18 @@
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, R, DataDir, LibMap, ModState ) -> ok
+-callback handle_submit( Lam, Fa, DataDir, R, LibMap, ModState ) ->
+  {failed, Reason, S, Data} | {finished, Sum}
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
-     R        :: pos_integer(),
      DataDir  :: string(),
+     R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
-     ModState :: term().
+     ModState :: term(),
+     Reason   :: atom(),
+     S        :: pos_integer(),
+     Data     :: term(),
+     Sum      :: map().
 
 %% =============================================================================
 %% Type Definitions
@@ -132,12 +137,12 @@ when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
 
-handle_call( {submit, App, Cwd},
+handle_call( {submit, App, DataDir},
              {Pid, _Tag},
              {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
 
 when is_tuple( App ),
-     is_list( Cwd ),
+     is_list( DataDir ),
      is_pid( Pid ),
      is_atom( Mod ),
      is_map( SubscrMap ),
@@ -150,17 +155,17 @@ when is_tuple( App ),
   {lam, _LamLine, LamName, {sign, Lo, _Li}, _Body} = Lam,
 
   % construct cache key
-  Ckey = {Lam, Fa, Cwd},
+  Ckey = {Lam, Fa, DataDir},
 
   case maps:is_key( Ckey, Cache ) of
 
     false ->
 
+      % start process
+      _Pid = spawn_link( fun() -> stage( Lam, Fa, DataDir, Mod, R, LibMap, ModState ) end ),
+
       % create new future
       Fut = {fut, LamName, R, Lo},
-
-      % start process
-      apply( Mod, handle_submit, [Lam, Fa, R, Cwd, LibMap, ModState] ),
 
       SubscrMap1 = SubscrMap#{R => sets:from_list( [Pid] )},
       Cache1 = Cache#{Ckey => Fut},
@@ -254,6 +259,17 @@ when is_tuple( App ), is_list( Cwd ) ->
 %% =============================================================================
 %% Internal Functions
 %% =============================================================================
+
+stage( Lam, Fa, DataDir, Mod, R, LibMap, ModState )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_list( DataDir ),
+     is_atom( Mod ),     
+     is_integer( R ), R > 0,
+     is_map( LibMap ) ->
+
+  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, R, LibMap, ModState] ),
+  cre ! Reply.
 
 
 -ifdef( TEST ).

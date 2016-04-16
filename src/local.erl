@@ -55,16 +55,17 @@ init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
   {ok, {BaseDir, QueueRef}}.
 
 
--spec handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} ) -> ok
+-spec handle_submit( Lam, Fa, DataDir, R, LibMap, {BaseDir, QueueRef} ) ->
+  {finished, #{}} | {failed, atom(), pos_integer(), _}
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
-     R        :: pos_integer(),
      DataDir  :: string(),
+     R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      BaseDir  :: iolist(),
      QueueRef :: pid().
 
-handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} )
+handle_submit( Lam, Fa, DataDir, R, LibMap, {BaseDir, QueueRef} )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_integer( R ), R > 0,
@@ -72,8 +73,13 @@ when is_tuple( Lam ),
      is_map( LibMap ),
      is_list( BaseDir ),
      is_pid( QueueRef ) ->
+
   gen_server:cast( QueueRef, {request, self(),
-                   {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap, BaseDir]}} ).
+                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir]}} ),
+
+  receive
+    Reply -> Reply
+  end.
 
 
 -spec create_workdir( BaseDir, Work, R ) -> string()
@@ -95,21 +101,21 @@ when is_list( BaseDir ),
   end.
 
 
--spec stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) -> cre:response()
+-spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
-     R       :: pos_integer(),
      DataDir :: string(),
+     R       :: pos_integer(),
      LibMap  :: #{cf_sem:lang() => [string()]},
      BaseDir :: iolist().
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, R, DataDir, LibMap, BaseDir )
+       Fa, DataDir, R, LibMap, BaseDir )
 when is_list( Lo ),
      is_list( Li ),
      is_map( Fa ),
-     is_integer( R ), R > 0,
      is_list( DataDir ),
+     is_integer( R ), R > 0,
      is_map( LibMap ),
      is_list( BaseDir ) ->
 

@@ -190,7 +190,7 @@ get_optspec_lst() ->
    {cite,     $c,        "cite",     undefined,        "show Bibtex entry for citation"},
    {workdir,  $w,        "workdir",  {string, "."},    "working directory"},
    {nthread,  $t,        "nthread",  {integer, NSlot}, "number of threads in local mode"},
-   {platform, $p,        "platform", {atom, local},    "platform to use: local, condor"},
+   {platform, $p,        "platform", {atom, local},    "platform to use: local, htcondor"},
    {rlib,     undefined, "rlib",     string,           "include R library path"},
    {pylib,    undefined, "pylib",    string,           "include Python library path"}
   ].
