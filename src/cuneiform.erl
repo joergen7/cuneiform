@@ -24,7 +24,7 @@
 -vsn( "2.2.1-snapshot" ).
 
 % API
--export( [main/1, file/2, start/3, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
+-export( [main/1, file/2, start/3, reduce/5, get_vsn/0, format_result/1, format_error/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -76,7 +76,7 @@ file( File, Cwd ) ->
     {error, ErrorInfo}        ->
       {error, ErrorInfo};
     {ok, {Query, Rho, Gamma}} ->
-      try cuneiform:reduce( Query, Rho, Gamma, Cwd ) of
+      try cuneiform:reduce( cre, Query, Rho, Gamma, Cwd ) of
         X -> {ok, X}
       catch
         throw:T -> {error, T}
@@ -104,14 +104,15 @@ get_libmap( OptLst ) ->
 
 %% Reduction %%
 
--spec reduce( X0, Rho, Gamma, Cwd ) -> [cf_sem:str()]
-when X0     :: [cf_sem:expr()],
+-spec reduce( Runtime, X0, Rho, Gamma, Cwd ) -> [cf_sem:str()]
+when Runtime :: atom() | pid(),
+     X0     :: [cf_sem:expr()],
      Rho    :: #{string() => [cf_sem:expr()]},
      Gamma  :: #{string() => cf_sem:lam()},
      Cwd    :: string().
 
-reduce( X0, Rho, Gamma, Cwd ) ->
-  Mu = fun( A ) -> cf_cre:submit( A, Cwd ) end,
+reduce( Runtime, X0, Rho, Gamma, Cwd ) ->
+  Mu = fun( A ) -> cf_cre:submit( Runtime, A, Cwd ) end,
   reduce( X0, {Rho, Mu, Gamma, #{}}, Cwd ).
 
 -spec reduce( X0, Theta, Cwd ) -> [cf_sem:str()]
@@ -130,7 +131,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
         {failed, R2, R, Data} ->
           {AppLine, LamName} = hd( find_select( R, X1 ) ),
           throw( {AppLine, cuneiform, {R2, LamName, R, Data}} );
-          
+
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
