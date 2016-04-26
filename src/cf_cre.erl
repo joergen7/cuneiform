@@ -250,12 +250,12 @@ when is_atom( Mod ), is_map( LibMap ) ->
 
 
 -spec submit( Runtime, App, Cwd ) -> cf_sem:fut()
-when App    :: cf_sem:app(),
-     Cwd    :: string(),
-     Runtime :: atom() | pid().
+when Runtime :: atom() | pid(),
+     App    :: cf_sem:app(),
+     Cwd    :: string().
 
 submit( Runtime, App, Cwd )
-when is_tuple( App ), is_list( Cwd ) ->
+when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Cwd ) ->
   gen_server:call( Runtime, {submit, App, Cwd} ).
 
 %% =============================================================================
@@ -263,7 +263,7 @@ when is_tuple( App ), is_list( Cwd ) ->
 %% =============================================================================
 
 stage( Runtime, Lam, Fa, DataDir, Mod, R, LibMap, ModState )
-when is_pid( Runtime); is_atom( Runtime ),
+when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_tuple( Lam ),
      is_map( Fa ),
      is_list( DataDir ),
