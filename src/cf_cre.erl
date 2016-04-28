@@ -37,7 +37,7 @@
 %% Function Exports
 %% =============================================================================
 
--export( [start_link/3, submit/2] ).
+-export( [start_link/3, submit/3] ).
 
 -export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
           handle_call/3] ).
@@ -162,7 +162,8 @@ when is_tuple( App ),
     false ->
 
       % start process
-      _Pid = spawn_link( fun() -> stage( Lam, Fa, DataDir, Mod, R, LibMap, ModState ) end ),
+      Runtime = self(),
+      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, Mod, R, LibMap, ModState ) end ),
 
       % create new future
       Fut = {fut, LamName, R, Lo},
@@ -248,28 +249,30 @@ when is_atom( Mod ), is_map( LibMap ) ->
   gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg, LibMap}, [] ).
 
 
--spec submit( App, Cwd ) -> cf_sem:fut()
-when App    :: cf_sem:app(),
+-spec submit( Runtime, App, Cwd ) -> cf_sem:fut()
+when Runtime :: atom() | pid(),
+     App    :: cf_sem:app(),
      Cwd    :: string().
 
-submit( App, Cwd )
-when is_tuple( App ), is_list( Cwd ) ->
-  gen_server:call( cre, {submit, App, Cwd} ).
+submit( Runtime, App, Cwd )
+when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Cwd ) ->
+  gen_server:call( Runtime, {submit, App, Cwd} ).
 
 %% =============================================================================
 %% Internal Functions
 %% =============================================================================
 
-stage( Lam, Fa, DataDir, Mod, R, LibMap, ModState )
-when is_tuple( Lam ),
+stage( Runtime, Lam, Fa, DataDir, Mod, R, LibMap, ModState )
+when is_pid( Runtime ) orelse is_atom( Runtime ),
+     is_tuple( Lam ),
      is_map( Fa ),
      is_list( DataDir ),
-     is_atom( Mod ),     
+     is_atom( Mod ),
      is_integer( R ), R > 0,
      is_map( LibMap ) ->
 
   Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, R, LibMap, ModState] ),
-  cre ! Reply.
+  Runtime ! Reply.
 
 
 -ifdef( TEST ).

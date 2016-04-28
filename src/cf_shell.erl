@@ -83,7 +83,7 @@ server_loop( Rho, Gamma, Cwd ) ->
       case Query of
         undef -> server_loop( Rho1, Gamma1, Cwd );
         _     ->
-          try cuneiform:reduce( Query, Rho1, Gamma1, "." ) of
+          try cuneiform:reduce( cre, Query, Rho1, Gamma1, "." ) of
             X -> io:format( "~s~n", [cuneiform:format_result( X )] )
           catch
             throw:T -> io:format( "~s~n", [cuneiform:format_error( T )] )
@@ -162,5 +162,3 @@ get_banner() ->
      "  @N____ 3@B         "++?BLU( "http://www.cuneiform-lang.org" ),
      "  \"W@@@WF3@B"
     ], "\n" ).
-
-
