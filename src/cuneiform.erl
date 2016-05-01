@@ -91,6 +91,16 @@ when is_atom( Mod ), is_map( LibMap ) ->
 
 
 
+-spec pprint( X ) -> iolist()
+when X::cf_sem:expr() | #{string() => [cf_sem:expr()]}.
+
+pprint( {str, S} )          -> [$", S, $"];
+pprint( {var, _Line, S} )   -> S;
+pprint( {cnd, Xc, Xt, Xe} ) ->
+  ["if ", pprint( Xc ), " then ", pprint( Xt ), " else ", pprint( Xe ), " end"];
+pprint( {app, _AppLine, C, {var, _Line, S}, Fa} ) ->
+  [S, $(, pprint( Fa ), $)].
+
 
 %% =============================================================================
 %% Internal Functions
