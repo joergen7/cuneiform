@@ -24,7 +24,8 @@
 -vsn( "2.2.1-snapshot" ).
 
 % API
--export( [main/1, file/2, start/3, reduce/5, get_vsn/0, format_result/1, format_error/1] ).
+-export( [main/1, file/2, start/3, reduce/5, get_vsn/0, format_result/1,
+          format_error/1, pprint/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -92,14 +93,31 @@ when is_atom( Mod ), is_map( LibMap ) ->
 
 
 -spec pprint( X ) -> iolist()
-when X::cf_sem:expr() | #{string() => [cf_sem:expr()]}.
+when X::[cf_sem:expr()] | cf_sem:expr() | #{string() => [cf_sem:expr()]}.
 
-pprint( {str, S} )          -> [$", S, $"];
-pprint( {var, _Line, S} )   -> S;
-pprint( {cnd, Xc, Xt, Xe} ) ->
+pprint( {str, S} )                                -> [$", S, $"];
+pprint( {var, _Line, S} )                         -> S;
+pprint( {cnd, Xc, Xt, Xe} )                       ->
   ["if ", pprint( Xc ), " then ", pprint( Xt ), " else ", pprint( Xe ), " end"];
-pprint( {app, _AppLine, C, {var, _Line, S}, Fa} ) ->
-  [S, $(, pprint( Fa ), $)].
+pprint( {app, _AppLine, _C, {var, _Line, S}, Fa} ) ->
+  [S, "( ", pprint( Fa ), " )"];
+pprint( Fa ) when is_map( Fa )                    ->
+  F = fun( Key, AccIn ) ->
+        #{Key := Value} = Fa,
+        case AccIn of
+          [] -> [Key, ": ", pprint( Value )];
+          _  -> [", ", Key, ": ", pprint( Value )]
+        end
+      end,
+  lists:foldl( F, [], maps:keys( Fa ) );
+pprint( X ) when is_list( X )                     ->
+  F = fun( Y, AccIn ) ->
+        case AccIn of
+          [] -> Y;
+          _  -> [AccIn, " ", Y]
+        end
+      end,
+  lists:foldl( F, [], X ).
 
 
 %% =============================================================================
