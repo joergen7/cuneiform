@@ -273,23 +273,23 @@ enum( Z ) ->
 -spec estep( Z::[argpair()] ) -> [argpair()].                                   % (63)
 
 estep( Z ) ->                                                                   % (64,65)
-  lists:flatmap( fun( {Li, F} ) -> estep( Li, F ) end, Z ).
+  lists:flatmap( fun( {Li, F} ) -> estep_param_lst( Li, F ) end, Z ).
 
--spec estep( Li::[inparam()], F::#{string() => [expr()]} ) -> [argpair()].      % (66)
+-spec estep_param_lst( Li::[inparam()], F::#{string() => [expr()]} ) -> [argpair()].      % (66)
 
-estep( [], F ) -> [{[], F}];                                                    % (67)
-estep( [H={param, _, Pl}|T], F ) when Pl -> aug( estep( T, F ), H );           % (68)
-estep( L=[H={param, {name, N, _}, _Pl}|T], F ) ->
+estep_param_lst( [], F ) -> [{[], F}];                                                    % (67)
+estep_param_lst( [H={param, _, Pl}|T], F ) when Pl -> aug( estep_param_lst( T, F ), H );           % (68)
+estep_param_lst( L=[H={param, {name, N, _}, _Pl}|T], F ) ->
   V = maps:get( N, F ),
   case pen( V ) of
     false -> [{L, F}];                                                          % (69)
     true  ->
       case length( V ) of
-        1 -> aug( estep( T, F ), H );                                           % (70)
+        1 -> aug( estep_param_lst( T, F ), H );                                           % (70)
         _ -> [{L, maps:put( N, [X], F )} || X <- V]                             % (71)
       end
   end;
-estep( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
+estep_param_lst( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
   Pen = pen( [maps:get( N, F ) || {name, N, _} <- Lc] ),
   case Pen of
     false -> [{L, F}];                                                          % (72)
