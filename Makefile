@@ -3,7 +3,7 @@ PWD=$(shell pwd)
 all: compile
 
 install: compile
-	echo rlwrap $(PWD)/_build/default/bin/cuneiform $$@ > /usr/local/bin/cuneiform
+	echo rlwrap $(PWD)/_build/default/bin/cuneiform \$$@ > /usr/local/bin/cuneiform
 	chmod a+x /usr/local/bin/cuneiform
 
 compile:
