@@ -19,3 +19,8 @@ requires. For further information, please refer to the [Cuneiform paper](http://
 - [cuneiform-lang.org](http://www.cuneiform-lang.org/)
 - [saasfee.io](http://www.saasfee.io)
 - [Hi-WAY](https://github.com/marcbux/Hi-WAY)
+
+#### First steps
+
+- You can download the Cuneiform binaries from the official [download page](http://www.cuneiform-lang.org/download.html)
+- The [documentation](http://www.cuneiform-lang.org/doc/) offers a quick start, tutorials, setup guides, and an overview over the Cuneiform syntax.
