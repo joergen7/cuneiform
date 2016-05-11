@@ -1,14 +1,19 @@
-# Cuneiform [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
+# Cuneiform [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform) [cuneiform-lang.org](http://www.cuneiform-lang.org/)
 
-A Functional Workflow Language
+**Distributed functional programming with foreign language interfacing.**
 
-Cuneiform is a workflow specification language which makes it easy to integrate heterogeneous tools and libraries and exploit data parallelism. Users do not have to create heavy-weight wrappers for establised tools or to reimplement them. Instead, they apply their existing software to partitioned data. Using the [Hi-WAY](https://github.com/marcbux/Hi-WAY) application master Cuneiform can be executed on Hadoop YARN which makes it suitable for large scale data analysis.
+Cuneiform is a minimal workflow specification language with immutable state,
+lazy evaluation, lists, and second order functions operating on lists. In
+this, it borrows from Functional Programming languages. Cuneiform
+deliberately constrains users to specify workflows in a parallelizable way.
+Its execution environment is designed for clusters and clouds. In addition,
+functions (tasks) can be defined in any given scripting language, e.g.,
+Bash, R, or Python. This way users can not only supplement features absent
+in native Cuneiform but can reuse any tool or library no matter what API it
+requires. For further information, please refer to the [Cuneiform paper](http://ceur-ws.org/Vol-1330/paper-03.pdf)
 
-Cuneiform comes in the form of a functional programming language with a Foreign Function Interface (FFI) that lets users create functions in any suitable scripting language and apply these functions in a uniform way.
+#### Links
 
-Data paralelism is expressed by applying map, cross-product, dot-product, or combinations of the aforementioned algorithmic skeletons to collections of black-box data.
-
-Tutorials, a publication list, and example workflows including [Variant calling](https://github.com/joergen7/variant-call) and [Methylation](https://github.com/joergen7/methylation) can be found under [saasfee.io](http://www.saasfee.io).
-
-For a detailed description of the Cuneiform workflow language please refer to our publication [Cuneiform: A Functional Language for Large Scale Scientific Data Analysis](http://ceur-ws.org/Vol-1330/paper-03.pdf) and to the [Cuneiform website](http://www.cuneiform-lang.org).
-
+- [cuneiform-lang.org](http://www.cuneiform-lang.org/)
+- [saasfee.io](http://www.saasfee.io)
+- [Hi-WAY](https://github.com/marcbux/Hi-WAY)
