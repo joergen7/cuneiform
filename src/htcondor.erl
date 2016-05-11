@@ -34,6 +34,9 @@
 
 init( _ModArg ) ->
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
+
+  error_logger:info_msg( io_lib:format( "Base directory: ~s.~n", [BaseDir] ) ),
+
   {ok, BaseDir}.
 
 handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,

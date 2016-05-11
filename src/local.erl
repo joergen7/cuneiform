@@ -52,6 +52,9 @@ when is_list( Prefix ),
 init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
   BaseDir = create_basedir( ?BASEDIR, 1 ),
   {ok, QueueRef} = gen_queue:start_link( NSlot ),
+
+  error_logger:info_msg( io_lib:format( "Base directory: ~s.~n", [BaseDir] ) ),
+
   {ok, {BaseDir, QueueRef}}.
 
 

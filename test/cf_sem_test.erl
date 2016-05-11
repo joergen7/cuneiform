@@ -335,8 +335,6 @@ app_select_param_is_enumerated_test() ->
   ?assertMatch( [{app, 5, 1, _, _}, {app, 5, 1, _, _}], X ).
 
 app_str_is_evaluated_while_select_remains_test() ->
-  Sign1 = {sign, [{param, {name, "out", false}, false}], []},
-  Lam1 = {lam, 1, "f", Sign1, {forbody, bash, "shalala"}},
   Sign2 = {sign, [{param, {name, "out", false}, false}],
                  [{param, {name, "inp", false}, false}]},
   Body2 = {forbody, bash, "lalala"},
