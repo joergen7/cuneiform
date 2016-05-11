@@ -1,8 +1,8 @@
 # Cuneiform [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
-### [cuneiform-lang.org](http://www.cuneiform-lang.org/)
+#### [cuneiform-lang.org](http://www.cuneiform-lang.org/)
 
-**Distributed functional programming with foreign language interfacing.**
+Distributed functional programming with foreign language interfacing.
 
 Cuneiform is a minimal workflow specification language with immutable state,
 lazy evaluation, lists, and second order functions operating on lists. In
