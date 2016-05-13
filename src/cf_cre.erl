@@ -190,7 +190,18 @@ when is_tuple( App ),
       end,
 
       {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState}}
-  end.
+  end;
+
+
+handle_call( get_cache, _From,
+             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState} )
+when is_map( Cache ) ->
+  {reply, Cache, State};
+
+handle_call( get_modstate, _From,
+             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState} ) ->
+  {reply, ModState, State}.
+
 
 %% Info Handler %%
 
