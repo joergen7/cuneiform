@@ -200,7 +200,12 @@ when is_map( Cache ) ->
 
 handle_call( get_modstate, _From,
              State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState} ) ->
-  {reply, ModState, State}.
+  {reply, ModState, State};
+
+handle_call( get_replymap, _From,
+             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState} )
+when is_map( ReplyMap ) ->
+  {reply, ReplyMap, State}.
 
 
 %% Info Handler %%
