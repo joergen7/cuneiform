@@ -227,17 +227,21 @@ step( X={app, AppLine, C,
             {forbody, _L, _Z} -> [{select, AppLine, C, apply( Mu, [X] )}];      % (55)
             {natbody, Fb} ->
               {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
-              V0 = maps:get( N, Fb ),
-              V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
-              case pindep( V1 ) of
-                false -> [{app, AppLine, C,                                     % (56)
-                                {lam, LamLine, LamName, S,
-                                      {natbody, Fb#{ N => V1}}},
-                                Fa}];
+              case maps:is_key( N, Fb ) of
+                false -> throw( {LamLine, cf_sem, "undefined output parameter "++N++" in task "++LamName} );
                 true  ->
-                  case Pl orelse length( V1 ) =:= 1 of
-                    true  -> V1;                                                % (57)
-                    false -> error( output_sign_mismatch )
+                  V0 = maps:get( N, Fb ),
+                  V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
+                  case pindep( V1 ) of
+                    false -> [{app, AppLine, C,                                     % (56)
+                                    {lam, LamLine, LamName, S,
+                                          {natbody, Fb#{ N => V1}}},
+                                    Fa}];
+                    true  ->
+                      case Pl orelse length( V1 ) =:= 1 of
+                        true  -> V1;                                                % (57)
+                        false -> error( output_sign_mismatch )
+                      end
                   end
               end
           end
