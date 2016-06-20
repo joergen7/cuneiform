@@ -24,25 +24,27 @@
 
 -export( [create_conf/3] ).
 
--spec create_conf( DefaultMap, ConfFile, ManualMap ) -> #{}
-when DefaultMap :: #{},
+-spec create_conf( DefaultMap, ConfFile, ManualMap ) -> #{ _ => _ }
+when DefaultMap :: #{ _ => _},
      ConfFile   :: string(),
-     ManualMap  :: #{}.
+     ManualMap  :: #{ _ => _ }.
 
 create_conf( DefaultMap, ConfFile, ManualMap )
 when is_map( DefaultMap ),
      is_list( ConfFile ),
      is_map( ManualMap ) ->
 
-  case file:read_file( ConfFile ) of
-    {error, enoent} -> DefaultMap;
-    {error, Reason1} -> error( {Reason1, ConfFile} );
-    {ok, B}         ->
-      S = binary_to_list( B ),
-      {ok, Tokens, _} = erl_scan:string( S ),
-      ConfMap = case erl_parse:parse_term( Tokens ) of
-        {error, Reason2} -> error( Reason2 );
-        {ok, Y}         -> Y
-      end,
-      maps:merge( DefaultMap, maps:merge( ConfMap, ManualMap ) )
-  end.
+  Merge = case file:read_file( ConfFile ) of
+      {error, enoent}  -> DefaultMap;
+      {error, Reason1} -> error( {Reason1, ConfFile} );
+      {ok, B}          ->
+        S = binary_to_list( B ),
+        {ok, Tokens, _} = erl_scan:string( S ),
+        ConfMap = case erl_parse:parse_term( Tokens ) of
+          {error, Reason2} -> error( Reason2 );
+          {ok, Y}         -> Y
+        end,
+        maps:map( fun( K, V ) -> maps:get( K, ConfMap, V ) end, DefaultMap )
+    end,
+
+  maps:map( fun( K, V ) -> maps:get( K, ManualMap, V ) end, Merge ).

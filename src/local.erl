@@ -30,6 +30,10 @@
 -export( [init/1, handle_submit/6, stage/6, create_basedir/2,
           create_workdir/3] ).
 
+-define( DEFAULT_CONF, #{ basedir => "/tmp/cf",
+                          nthread => case erlang:system_info( logical_processors_available ) of unknown -> 1; N -> N end } ).
+-define( CONF_FILE, "/usr/local/etc/cuneiform/local.conf" ).
+
 -spec create_basedir( Prefix::string(), I::pos_integer() ) -> iolist().
 
 create_basedir( Prefix, I )
@@ -49,11 +53,15 @@ when is_list( Prefix ),
 
 -spec init( NSlot::pos_integer() ) -> {ok, {iolist(), pid()}}.
 
-init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
-  BaseDir = create_basedir( ?BASEDIR, 1 ),
+init( ManualMap ) ->
+
+  % create configuration
+  Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
+  #{ nthread := NSlot } = Conf,
+  BaseDir = create_basedir( maps:get( basedir, Conf ), 1 ),
   {ok, QueueRef} = gen_queue:start_link( NSlot ),
 
-  error_logger:info_msg( io_lib:format( "Base directory: ~s.~n", [BaseDir] ) ),
+  error_logger:info_msg( io_lib:format( "Base directory:    ~s~nNumber of threads: ~p~n", [BaseDir, NSlot] ) ),
 
   {ok, {BaseDir, QueueRef}}.
 

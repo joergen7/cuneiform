@@ -50,10 +50,9 @@ main( CmdLine ) ->
                 true  -> print_bibtex();
                 false ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
-                  {nthread, NSlot} = lists:keyfind( nthread, 1, OptLst ),
                   {platform, Platform} = lists:keyfind( platform, 1, OptLst ),
                   LibMap = get_libmap( OptLst ),
-                  {ok, CrePid} = start( Platform, NSlot, LibMap ),
+                  {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
@@ -209,19 +208,16 @@ find_select( _, _ ) ->
 -spec get_optspec_lst() -> [{atom(), char(), string(), undefined, string()}].
 
 get_optspec_lst() ->
-  NSlot = case erlang:system_info( logical_processors_available ) of
-    unknown -> 1;
-    N       -> N
-  end,
   [
-   {version,  $v,        "version",  undefined,        "show Cuneiform version"},
-   {help,     $h,        "help",     undefined,        "show command line options"},
-   {cite,     $c,        "cite",     undefined,        "show Bibtex entry for citation"},
-   {workdir,  $w,        "workdir",  {string, "."},    "working directory"},
-   {nthread,  $t,        "nthread",  {integer, NSlot}, "number of threads in local mode"},
-   {platform, $p,        "platform", {atom, local},    "platform to use: local, htcondor"},
-   {rlib,     undefined, "rlib",     string,           "include R library path"},
-   {pylib,    undefined, "pylib",    string,           "include Python library path"}
+   {version,  $v,        "version",  undefined,           "show Cuneiform version"},
+   {help,     $h,        "help",     undefined,           "show command line options"},
+   {cite,     $c,        "cite",     undefined,           "show Bibtex entry for citation"},
+   {workdir,  $w,        "workdir",  {string, "."},       "working directory"},
+   {nthread,  $t,        "nthread",  integer,             "number of threads in local mode"},
+   {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
+   {rlib,     undefined, "rlib",     string,              "include R library path"},
+   {pylib,    undefined, "pylib",    string,              "include Python library path"},
+   {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"}
   ].
 
 -spec get_vsn() -> string().

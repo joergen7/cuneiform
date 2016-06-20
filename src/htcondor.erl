@@ -31,6 +31,8 @@
 
 -export( [init/1, handle_submit/6] ).
 
+-define( BASEDIR, "/tmp/cf" ).
+
 
 init( _ModArg ) ->
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
