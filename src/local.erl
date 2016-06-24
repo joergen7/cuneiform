@@ -51,9 +51,9 @@ when is_list( Prefix ),
       end
   end.
 
--spec init( NSlot::pos_integer() ) -> {ok, {iolist(), pid()}}.
+-spec init( ManualMap::#{atom() => _} ) -> {ok, {iolist(), pid()}}.
 
-init( ManualMap ) ->
+init( ManualMap ) when is_map( ManualMap ) ->
 
   % create configuration
   Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
