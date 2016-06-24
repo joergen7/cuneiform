@@ -76,7 +76,7 @@ file( File, Cwd ) ->
     {error, ErrorInfo}        ->
       {error, ErrorInfo};
     {ok, {Query, Rho, Gamma}} ->
-      try cuneiform:reduce( cre, Query, Rho, Gamma, Cwd ) of
+      try cuneiform:reduce( cre, Query, Rho, Gamma, #{datadir => Cwd} ) of
         X -> {ok, X}
       catch
         throw:T -> {error, T}
@@ -131,23 +131,22 @@ get_libmap( OptLst ) ->
 
 %% Reduction %%
 
--spec reduce( Runtime, X0, Rho, Gamma, Cwd ) -> [cf_sem:str()]
-when Runtime :: atom() | pid(),
-     X0     :: [cf_sem:expr()],
-     Rho    :: #{string() => [cf_sem:expr()]},
-     Gamma  :: #{string() => cf_sem:lam()},
-     Cwd    :: string().
+-spec reduce( Runtime, X0, Rho, Gamma, UserInfo ) -> [cf_sem:str()]
+when Runtime  :: atom() | pid(),
+     X0       :: [cf_sem:expr()],
+     Rho      :: #{string() => [cf_sem:expr()]},
+     Gamma    :: #{string() => cf_sem:lam()},
+     UserInfo :: _.
 
-reduce( Runtime, X0, Rho, Gamma, Cwd ) ->
-  Mu = fun( A ) -> cf_cre:submit( Runtime, A, Cwd ) end,
-  reduce( X0, {Rho, Mu, Gamma, #{}}, Cwd ).
+reduce( Runtime, X0, Rho, Gamma, UserInfo ) ->
+  Mu = fun( A ) -> cf_cre:submit( Runtime, A, UserInfo ) end,
+  reduce( X0, {Rho, Mu, Gamma, #{}} ).
 
--spec reduce( X0, Theta, Cwd ) -> [cf_sem:str()]
+-spec reduce( X0, Theta ) -> [cf_sem:str()]
 when X0     :: [cf_sem:expr()],
-     Theta  :: cf_sem:ctx(),
-     Cwd    :: string().
+     Theta  :: cf_sem:ctx().
 
-reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
+reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
 
   X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
   case cf_sem:pfinal( X1 ) of
@@ -169,7 +168,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
                     end,
                     #{}, maps:keys( Ret ) ),
 
-          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, Cwd );
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} );
 
         Msg -> error( {bad_msg, Msg} )
 

@@ -87,7 +87,7 @@ when Lam      :: cf_sem:lam(),
                       LibMap::#{cf_sem:lang() => [string()]},
                       ModState::term()}.
 
--type submit()    :: {submit, App::cf_sem:app(), Cwd::string()}.
+-type submit()    :: {submit, App::cf_sem:app(), UserInfo::_}.
 
 %% =============================================================================
 %% Generic Server Functions
@@ -137,7 +137,7 @@ when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
 
-handle_call( {submit, App, DataDir},
+handle_call( {submit, App, #{datadir := DataDir}},
              {Pid, _Tag},
              {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
 
@@ -265,14 +265,14 @@ when is_atom( Mod ), is_map( LibMap ) ->
   gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg, LibMap}, [] ).
 
 
--spec submit( Runtime, App, Cwd ) -> cf_sem:fut()
-when Runtime :: atom() | pid(),
-     App    :: cf_sem:app(),
-     Cwd    :: string().
+-spec submit( Runtime, App, UserInfo ) -> cf_sem:fut()
+when Runtime  :: atom() | pid(),
+     App      :: cf_sem:app(),
+     UserInfo :: _.
 
-submit( Runtime, App, Cwd )
-when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Cwd ) ->
-  gen_server:call( Runtime, {submit, App, Cwd} ).
+submit( Runtime, App, UserInfo )
+when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ) ->
+  gen_server:call( Runtime, {submit, App, UserInfo} ).
 
 %% =============================================================================
 %% Internal Functions
