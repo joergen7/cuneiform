@@ -27,7 +27,7 @@
 -include( "cuneiform.hrl" ).
 
 -behaviour( cf_cre ).
--export( [init/1, handle_submit/6, stage/6, create_basedir/2,
+-export( [init/1, handle_submit/7, stage/6, create_basedir/2,
           create_workdir/3] ).
 
 -define( DEFAULT_CONF, #{ basedir => "/tmp/cf",
@@ -66,17 +66,18 @@ init( ManualMap ) when is_map( ManualMap ) ->
   {ok, {BaseDir, QueueRef}}.
 
 
--spec handle_submit( Lam, Fa, DataDir, R, LibMap, {BaseDir, QueueRef} ) ->
+-spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef} ) ->
   {finished, #{}} | {failed, atom(), pos_integer(), _}
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
      DataDir  :: string(),
+     UserInfo :: _,
      R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      BaseDir  :: iolist(),
      QueueRef :: pid().
 
-handle_submit( Lam, Fa, DataDir, R, LibMap, {BaseDir, QueueRef} )
+handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef} )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_integer( R ), R > 0,

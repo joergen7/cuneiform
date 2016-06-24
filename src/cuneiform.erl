@@ -24,7 +24,7 @@
 -vsn( "2.2.1-snapshot" ).
 
 % API
--export( [main/1, file/2, start/3, reduce/5, get_vsn/0, format_result/1,
+-export( [main/1, file/2, start/3, reduce/6, get_vsn/0, format_result/1,
           format_error/1, pprint/1] ).
 
 
@@ -76,7 +76,7 @@ file( File, Cwd ) ->
     {error, ErrorInfo}        ->
       {error, ErrorInfo};
     {ok, {Query, Rho, Gamma}} ->
-      try cuneiform:reduce( cre, Query, Rho, Gamma, #{datadir => Cwd} ) of
+      try cuneiform:reduce( cre, Query, Rho, Gamma, Cwd, [] ) of
         X -> {ok, X}
       catch
         throw:T -> {error, T}
@@ -131,15 +131,16 @@ get_libmap( OptLst ) ->
 
 %% Reduction %%
 
--spec reduce( Runtime, X0, Rho, Gamma, UserInfo ) -> [cf_sem:str()]
+-spec reduce( Runtime, X0, Rho, Gamma, DataDir, UserInfo ) -> [cf_sem:str()]
 when Runtime  :: atom() | pid(),
      X0       :: [cf_sem:expr()],
      Rho      :: #{string() => [cf_sem:expr()]},
      Gamma    :: #{string() => cf_sem:lam()},
+     DataDir  :: string(),
      UserInfo :: _.
 
-reduce( Runtime, X0, Rho, Gamma, UserInfo ) ->
-  Mu = fun( A ) -> cf_cre:submit( Runtime, A, UserInfo ) end,
+reduce( Runtime, X0, Rho, Gamma, DataDir, UserInfo ) ->
+  Mu = fun( A ) -> cf_cre:submit( Runtime, A, DataDir, UserInfo ) end,
   reduce( X0, {Rho, Mu, Gamma, #{}} ).
 
 -spec reduce( X0, Theta ) -> [cf_sem:str()]

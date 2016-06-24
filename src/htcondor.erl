@@ -29,7 +29,7 @@
 
 -behaviour( cf_cre ).
 
--export( [init/1, handle_submit/6] ).
+-export( [init/1, handle_submit/7] ).
 
 -define( BASEDIR, "/tmp/cf" ).
 
@@ -42,7 +42,7 @@ init( _ModArg ) ->
   {ok, BaseDir}.
 
 handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
-  DataDir, R, LibMap, BaseDir ) ->
+  DataDir, _UserInfo, R, LibMap, BaseDir ) ->
 
   Dir = local:create_workdir( BaseDir, ?WORK, R ),
   

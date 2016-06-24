@@ -37,7 +37,7 @@
 %% Function Exports
 %% =============================================================================
 
--export( [start_link/3, submit/3] ).
+-export( [start_link/3, submit/4] ).
 
 -export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
           handle_call/3] ).
@@ -57,11 +57,12 @@
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, DataDir, R, LibMap, ModState ) ->
+-callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState ) ->
   {failed, Reason, S, Data} | {finished, Sum}
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
      DataDir  :: string(),
+     UserInfo :: _,
      R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      ModState :: term(),
@@ -87,7 +88,7 @@ when Lam      :: cf_sem:lam(),
                       LibMap::#{cf_sem:lang() => [string()]},
                       ModState::term()}.
 
--type submit()    :: {submit, App::cf_sem:app(), UserInfo::_}.
+-type submit()    :: {submit, App::cf_sem:app(), DataDir::string(), UserInfo::_}.
 
 %% =============================================================================
 %% Generic Server Functions
@@ -137,7 +138,7 @@ when Request :: submit(),
      From    :: {pid(), term()},
      State   :: cre_state().
 
-handle_call( {submit, App, #{datadir := DataDir}},
+handle_call( {submit, App, DataDir, UserInfo},
              {Pid, _Tag},
              {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
 
@@ -163,7 +164,7 @@ when is_tuple( App ),
 
       % start process
       Runtime = self(),
-      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, Mod, R, LibMap, ModState ) end ),
+      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState ) end ),
 
       % create new future
       Fut = {fut, LamName, R, Lo},
@@ -265,20 +266,21 @@ when is_atom( Mod ), is_map( LibMap ) ->
   gen_server:start_link( {local, cre}, ?MODULE, {Mod, ModArg, LibMap}, [] ).
 
 
--spec submit( Runtime, App, UserInfo ) -> cf_sem:fut()
+-spec submit( Runtime, App, DataDir, UserInfo ) -> cf_sem:fut()
 when Runtime  :: atom() | pid(),
      App      :: cf_sem:app(),
+     DataDir  :: string(),
      UserInfo :: _.
 
-submit( Runtime, App, UserInfo )
-when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ) ->
-  gen_server:call( Runtime, {submit, App, UserInfo} ).
+submit( Runtime, App, DataDir, UserInfo )
+when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( DataDir ) ->
+  gen_server:call( Runtime, {submit, App, DataDir, UserInfo} ).
 
 %% =============================================================================
 %% Internal Functions
 %% =============================================================================
 
-stage( Runtime, Lam, Fa, DataDir, Mod, R, LibMap, ModState )
+stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState )
 when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_tuple( Lam ),
      is_map( Fa ),
@@ -287,7 +289,7 @@ when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_integer( R ), R > 0,
      is_map( LibMap ) ->
 
-  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, R, LibMap, ModState] ),
+  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState] ),
   Runtime ! Reply.
 
 
