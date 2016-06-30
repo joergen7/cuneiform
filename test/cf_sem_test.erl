@@ -23,8 +23,19 @@
 
 -define( THETA0, {#{}, fun mu/1, #{}, #{}} ).
 
-mu( {app, _AppLine, _C, {lam, _LamLine, LamName, {sign, Lo, _Li}, _B}, _Fa} ) ->
-  {fut, LamName, random:uniform( 1000000000 ), Lo}.
+mu( {app, _AppLine, _C, {lam, _LamLine, LamName, {sign, Lo, Li}, _B}, _Fa} ) ->
+
+  IsParam = fun( {param, _N, _Pl} ) -> true;
+               ( {correl, _Lc} )    -> false
+            end,
+
+  case lists:all( IsParam, Li ) of
+    false -> error( invalid_correl );
+    true  ->  {fut, LamName, rand:uniform( 1000000000 ), Lo}
+  end.
+
+
+
 
 nil_should_eval_itself_test() ->
   ?assertEqual( [], cf_sem:eval( [], ?THETA0 ) ).
@@ -365,3 +376,60 @@ identity_fn_should_resolve_var_test() ->
   Rho = #{"cls" => [App], "mu0" => [{str, "1"}]},
   X = [{var, 6, "cls"}],
   ?assertEqual( [{str, "1"}], cf_sem:eval( X, {Rho, fun sem:mu/1, #{}, #{}} ) ).
+
+
+% deftask bwa-mem( outbam( File ) : fastq( File ) )in bash *{
+%   ...
+% }*
+%
+% deftask compareToCTRL( somaticVCF( File ) : <tumorParts( False )> ctrlBam( File ) ) in bash *{
+%   ...
+% }*
+%
+% deftask getVariants( somaticVCF( File ) : tumor( File ), <ctrlBam( File )> ) {
+% 
+%   tumorBam   = bwa-mem( fastq: tumor );
+%   somaticVCF = compareToCTRL( ctrlBam: ctrlBam, tumorParts: tumorBam );
+% }
+%
+% ctrlFq = "ctrl.fq"
+% tumorFq = "tumor.fq"
+%
+% ctrlBam    = bwa-mem( fastq: ctrlFq );
+% somaticVCF = getVariants( ctrlBam: ctrlBam, tumor: tumorFq );
+%
+% somaticVCF;
+
+christopher_test() ->
+  X = [{app,10,1,
+              {lam,20,"getVariants",{sign,[{param,{name,"somaticVCF",true},false}],
+                         [{param,{name,"tumor",true},false},
+                          {param,{name,"ctrlBam",true},true}]},
+                   {natbody,#{"somaticVCF" => [{app,30,1,
+                                    {var,40,"compareToCTRL"},
+                                    #{"ctrlBam"    => [{var,50,"ctrlBam"}],
+                                      "tumorParts" => [{var,60,"tumorBam"}]}}],
+                              "tumorBam" => [{app,70,1,
+                                    {var,80,"bwa-mem"},
+                                    #{"fastq" => [{var,90,"tumor"}]}}]}}},
+              #{"ctrlBam" => [{select,100,1,{fut,110,1,[{param,{name,"bamout",true},false}]}}],
+                "tumor" => [{str,"data/CH_JK_001/CH_JK_001_R1_001.fastq.gz"}]}}],
+
+  Gamma = #{"compareToCTRL" => {lam, {sign, [{param, "somaticVCF", false}],
+                                            [{param, "tumorParts", true},
+                                             {param, "ctrlBam", false}]},
+                                     {forbody, bash, "blub"}},
+            "bwa-mem" => {lam, {sign, [{param, "bamout", false}],
+                                      [{param, "fastq", false}]},
+                                {forbody, bash, "bla"}}
+                                     },
+  Theta = {#{}, fun sem:mu/1, Gamma, #{}},
+
+  ?assertMatch(
+    [{app,10,1,
+          {lam,120,"compareToCTRL",{sign,[{param,{name,"somaticVCF",true},false}],
+                     [{param,{name,"tumorParts",true},true},{param,{name,"ctrlBam",true},false}]},
+               {forbody,bash,"blub"}},
+          #{"ctrlBam" := [{select,100,1,{fut,110,1,[{param,{name,"bamout",true},false}]}}],
+            "tumorParts" := [{select,1,{fut,_,[{param,"bamout",false}]}}]}}],
+    cf_sem:eval( X, Theta ) ).

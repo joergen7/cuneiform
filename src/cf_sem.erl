@@ -24,7 +24,7 @@
 -vsn( "2.2.1-snapshot" ).
 
 
--export( [eval/2, pfinal/1] ).
+-export( [eval/2, pnormal/1] ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
@@ -81,13 +81,13 @@
 
 %% Finality %% =================================================================
 
--spec pfinal( X ) -> boolean()                                                  % (19)
+-spec pnormal( X ) -> boolean()                                                  % (19)
 when X :: #{string() => [expr()]} | [expr()] | expr().
 
-pfinal( F ) when is_map( F )  -> pfinal( maps:values( F ) );                    % (20)
-pfinal( L ) when is_list( L ) -> lists:all( fun pfinal/1, L );                  % (21,22)
-pfinal( {str, _S} )           -> true;                                          % (23)
-pfinal( _T )                  -> false.
+pnormal( F ) when is_map( F )  -> pnormal( maps:values( F ) );                    % (20)
+pnormal( L ) when is_list( L ) -> lists:all( fun pnormal/1, L );                  % (21,22)
+pnormal( {str, _S} )           -> true;                                          % (23)
+pnormal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
 
@@ -202,7 +202,7 @@ step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        
 % Conditional
 step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (49)
 step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
-  case pfinal( Xc ) of
+  case pnormal( Xc ) of
     false -> [{cnd, Line, step( Xc, Theta ), Xt, Xe}];                          % (50)
     true  -> Xt                                                                 % (51)
   end;
@@ -220,7 +220,7 @@ step( X={app, AppLine, C,
   case psing( X ) of
     false -> enum_app( {app, AppLine, C, Lambda, step_assoc( Fa, Theta )} );    % (53)
     true  ->
-      case pfinal( Fa ) of
+      case pnormal( Fa ) of
         false -> [{app, AppLine, C, Lambda, step_assoc( Fa, Theta )}];          % (54)
         true  ->
           case B of
@@ -357,58 +357,58 @@ corrstep( [{name, H, _}|T], Facc, F0 ) ->
 
 %% Finality %%
 
-str_should_be_final_test() ->
+str_should_be_normal_test() ->
   S = {str, "blub"},
-  ?assert( pfinal( S ) ).
+  ?assert( pnormal( S ) ).
 
-app_should_not_be_final_test() ->
+app_should_not_be_normal_test() ->
   A = {app, 12, 1, {var, "f"}, #{}},
-  ?assertNot( pfinal( A ) ).
+  ?assertNot( pnormal( A ) ).
 
-cnd_should_not_be_final_test() ->
+cnd_should_not_be_normal_test() ->
   C = {cnd, 12, [{str, "a"}], [{str, "b"}], [{str, "c"}]},
-  ?assertNot( pfinal( C ) ).
+  ?assertNot( pnormal( C ) ).
 
-select_should_not_be_final_test() ->
+select_should_not_be_normal_test() ->
   Fut = {fut, "f", 1234, [{param, "out", false}]},
   S = {select, 12, 1, Fut},
-  ?assertNot( pfinal( S ) ).
+  ?assertNot( pnormal( S ) ).
 
-var_should_not_be_final_test() ->
+var_should_not_be_normal_test() ->
   V = {var, 12, "x"},
-  ?assertNot( pfinal( V ) ).
+  ?assertNot( pnormal( V ) ).
 
-all_str_should_be_final_test() ->
+all_str_should_be_normal_test() ->
   X = [{str, "bla"}, {str, "blub"}],
-  ?assert( pfinal( X ) ).
+  ?assert( pnormal( X ) ).
 
-empty_lst_should_be_final_test() ->
-  ?assert( pfinal( [] ) ).
+empty_lst_should_be_normal_test() ->
+  ?assert( pnormal( [] ) ).
 
-one_var_lst_should_not_be_final_test() ->
+one_var_lst_should_not_be_normal_test() ->
   X = [{str, "bla"}, {str, "blub"}, {var, 12, "x"}],
-  ?assertNot( pfinal( X ) ).
+  ?assertNot( pnormal( X ) ).
 
-all_var_lst_should_not_be_final_test() ->
+all_var_lst_should_not_be_normal_test() ->
   X = [{var, 10, "bla"}, {var, 11, "blub"}, {var, 12, "x"}],
-  ?assertNot( pfinal( X ) ).
+  ?assertNot( pnormal( X ) ).
 
-empty_map_should_be_final_test() ->
-  ?assert( pfinal( #{} ) ).
+empty_map_should_be_normal_test() ->
+  ?assert( pnormal( #{} ) ).
 
-only_str_map_should_be_final_test() ->
+only_str_map_should_be_normal_test() ->
   M = #{"x" => [{str, "bla"}, {str, "blub"}], "y" => [{str, "shalala"}]},
-  ?assert( pfinal( M ) ).
+  ?assert( pnormal( M ) ).
 
-one_var_map_should_not_be_final_test() ->
+one_var_map_should_not_be_normal_test() ->
   M = #{"x" => [{str, "bla"}, {str, "blub"}],
         "y" => [{str, "shalala"}, {var, 12, "x"}]},
-  ?assertNot( pfinal( M ) ).
+  ?assertNot( pnormal( M ) ).
 
-all_var_map_should_not_be_final_test() ->
+all_var_map_should_not_be_normal_test() ->
   M = #{"x" => [{var, 10, "bla"}, {var, 11, "blub"}],
         "y" => [{var, 12, "shalala"}, {var, 13, "x"}]},
-  ?assertNot( pfinal( M ) ).
+  ?assertNot( pnormal( M ) ).
 
 %% Singularity %%
 
@@ -517,7 +517,7 @@ enum_app_without_app_does_nothing_test() ->
 
 %% Augmentation %%
 
-can_aug_argpair_with_param_test() ->
+can_aug_with_param_test() ->
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a" => [{str, "1"}], "b" => [{str, "2"}], "c" => [{str, "3"}]},
   Pair = {L0, F},
@@ -525,7 +525,7 @@ can_aug_argpair_with_param_test() ->
   L1 = [I|L0],
   ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
 
-can_aug_argpair_with_correl_test() ->
+can_aug_with_correl_test() ->
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a1" => [{str, "11"}],
         "a2" => [{str, "12"}],
@@ -536,7 +536,7 @@ can_aug_argpair_with_correl_test() ->
   L1 = [{param, {name, "a1", false}, false}, {param, {name, "a2", false}, false}|L0],
   ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
 
-can_augment_empty_argpairlist_with_param_test() ->
+can_augment_empty_inparamlst_with_param_test() ->
   F1 = #{"a" => [{str, "x1"}]},
   F2 = #{"a" => [{str, "y1"}]},
   PairList = [{[], F1}, {[], F2}],
@@ -544,7 +544,7 @@ can_augment_empty_argpairlist_with_param_test() ->
   L1 = [{param, {name, "a", false}, false}],
   ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
 
-can_augment_argpairlist_with_param_test() ->
+can_augment_inparamlst_with_param_test() ->
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a" => [{str, "x1"}], "b" => [{str, "x2"}], "c" => [{str, "x3"}]},
   F2 = #{"a" => [{str, "y1"}], "b" => [{str, "y2"}], "c" => [{str, "y3"}]},
@@ -553,7 +553,7 @@ can_augment_argpairlist_with_param_test() ->
   L1 = [{param, {name, "a", false}, false}|L0],
   ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
 
-can_augment_argpairlist_with_correl_test() ->
+can_augment_inparamlst_with_correl_test() ->
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a1" => [{str, "x11"}],
          "a2" => [{str, "x12"}],
