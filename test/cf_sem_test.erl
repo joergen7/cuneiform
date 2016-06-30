@@ -343,7 +343,7 @@ app_select_param_is_enumerated_test() ->
   A = [A0, A0],
   B = [{app, 5, 1, Lam2, #{"inp" => A}}],
   X = cf_sem:eval( B, ?THETA0 ), 
-  ?assertMatch( [{app, 5, 1, _, _}, {app, 5, 1, _, _}], X ).
+  ?assertMatch( [{select, 4, 1, _}, {select, 4, 1, _}], X ).
 
 app_str_is_evaluated_while_select_remains_test() ->
   Sign2 = {sign, [{param, {name, "out", false}, false}],
@@ -412,24 +412,78 @@ christopher_test() ->
                               "tumorBam" => [{app,70,1,
                                     {var,80,"bwa-mem"},
                                     #{"fastq" => [{var,90,"tumor"}]}}]}}},
-              #{"ctrlBam" => [{select,100,1,{fut,110,1,[{param,{name,"bamout",true},false}]}}],
+              #{"ctrlBam" => [{select,100,1,{fut,"bwa-mem",1,[{param,{name,"bamout",true},false}]}}],
                 "tumor" => [{str,"data/CH_JK_001/CH_JK_001_R1_001.fastq.gz"}]}}],
 
-  Gamma = #{"compareToCTRL" => {lam, {sign, [{param, "somaticVCF", false}],
-                                            [{param, "tumorParts", true},
-                                             {param, "ctrlBam", false}]},
+  Gamma = #{"compareToCTRL" => {lam, 120, "compareToCTRL", {sign, [{param, {name, "somaticVCF", true}, false}],
+                                            [{param, {name, "tumorParts", true}, true},
+                                             {param, {name, "ctrlBam", true}, false}]},
                                      {forbody, bash, "blub"}},
-            "bwa-mem" => {lam, {sign, [{param, "bamout", false}],
-                                      [{param, "fastq", false}]},
+            "bwa-mem" => {lam, 130, "bwa-mem", {sign, [{param, {name, "bamout", true}, false}],
+                                      [{param, {name, "fastq", true}, false}]},
                                 {forbody, bash, "bla"}}
                                      },
-  Theta = {#{}, fun sem:mu/1, Gamma, #{}},
+  Theta = {#{}, fun mu/1, Gamma, #{}},
+
 
   ?assertMatch(
-    [{app,10,1,
+    [{app,30,1,
           {lam,120,"compareToCTRL",{sign,[{param,{name,"somaticVCF",true},false}],
                      [{param,{name,"tumorParts",true},true},{param,{name,"ctrlBam",true},false}]},
                {forbody,bash,"blub"}},
-          #{"ctrlBam" := [{select,100,1,{fut,110,1,[{param,{name,"bamout",true},false}]}}],
-            "tumorParts" := [{select,1,{fut,_,[{param,"bamout",false}]}}]}}],
+          #{"ctrlBam" := [{select,100,1,{fut,"bwa-mem",1,[{param,{name,"bamout",true},false}]}}],
+            "tumorParts" := [{select,70,1,{fut,"bwa-mem",_,[{param,{name,"bamout",true},false}]}}]}}],
     cf_sem:eval( X, Theta ) ).
+
+
+
+% deftask bowtie2-align( sam( File ) : [fastq1( File ) fastq2( File )] )in bash *{
+%   sam=bowtie2.sam
+%   tar xf $idx
+%   bowtie2 -D 5 -R 1 -N 0 -L 22 -i S,0,2.50 \
+%   -p 1 \
+%   --no-unal -x bt2idx -1 $fastq1 -2 $fastq2 -S $sam
+%   rm bt2idx.*
+% }*
+%
+% deftask per-fastq( sam : [fastq1( File ) fastq2( File )] ) {
+%   sam = bowtie2-align(
+%     fastq1: fastq1,
+%     fastq2: fastq2 );
+% }
+%
+% fastq1 = "SRR359188_1.filt.fastq";
+% fastq2 = "SRR359188_2.filt.fastq";
+%
+% sam = per-fastq(
+%   fastq1: fastq1,
+%   fastq2: fastq2 );
+%
+% sam;
+
+marc_test() ->
+
+  X = [{var,10,"sam"}],
+
+  Rho = #{"fastq2"=>[{str,"SRR359188_2.filt.fastq"}],
+          "sam"   =>[{app,20,1,{var,30,"per-fastq"},
+                        #{"fastq2"=>[{var,40,"fastq2"}],
+                          "fastq1"=>[{var,50,"fastq1"}]}}],
+          "fastq1"=>[{str,"SRR359188_1.filt.fastq"}]
+         },
+
+  Gamma = #{"bowtie2-align"=>{lam,60,"bowtie2-align",{sign,[{param,{name,"sam",true},false}],
+                                      [{correl,[{name,"fastq1",true},{name,"fastq2",true}]}]},
+                                {forbody,bash,"blub"}},
+            "per-fastq"    =>{lam,70,"per-fastq",{sign,[{param,{name,"sam",true},false}],
+                                      [{correl,[{name,"fastq1",true},{name,"fastq2",true}]}]},
+                                {natbody,#{"sam"=>[{app,80,1,{var,90,"bowtie2-align"},
+                                                        #{"fastq2"=>[{var,100,"fastq2"}],
+                                                          "fastq1"=>[{var,110,"fastq1"}]}}]}}}
+           },
+
+  Theta = {Rho, fun mu/1, Gamma, #{}},
+
+  ?assertMatch( [{select,80,1,{fut,"bowtie2-align",_,[{param,{name,"sam",true},false}]}}], cf_sem:eval( X, Theta ) ).
+  
+

@@ -150,7 +150,7 @@ when X0     :: [cf_sem:expr()],
 reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
 
   X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
-  case cf_sem:pfinal( X1 ) of
+  case cf_sem:pnormal( X1 ) of
     true  -> X1;
     false ->
       receive

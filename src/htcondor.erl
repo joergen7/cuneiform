@@ -29,7 +29,7 @@
 
 -behaviour( cf_cre ).
 
--export( [init/1, handle_submit/7] ).
+-export( [init/1, handle_submit/7, input_files_to_cs_string/1] ).
 
 -define( BASEDIR, "/tmp/cf" ).
 
@@ -144,7 +144,7 @@ handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
 %%      to the caller to write the content to disk.
 %%
 -spec format_submit( Condorparams0 ) -> binary()
-when Condorparams0::#{atom() => string() | [string()]}.
+when Condorparams0::#{atom() => iolist() | [iolist()]}.
 
 format_submit(CondorParams0) ->
   CondorParams1 = input_files_to_cs_string(CondorParams0),
@@ -162,11 +162,13 @@ format_submit(CondorParams0) ->
 %%      into a list, and once they are validated and possibly merged, they are
 %%      converted back to cs-string here.
 %%
--spec input_files_to_cs_string( CondorParams ) -> #{atom() => string()}
-when CondorParams :: #{atom() => string() | [string()]}.
+-spec input_files_to_cs_string( CondorParams ) -> #{atom() => iolist()}
+when CondorParams :: #{atom() => iolist() | [iolist()]}.
 
-input_files_to_cs_string(#{transfer_input_files := InputFiles} = CondorParams) ->
+input_files_to_cs_string( CondorParams = #{transfer_input_files := InputFiles} ) ->
   InputFilesCS = string:join(InputFiles, ", "),
   maps:put(transfer_input_files, InputFilesCS, CondorParams);
 
 input_files_to_cs_string(CondorParams) -> CondorParams.
+
+

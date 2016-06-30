@@ -39,38 +39,37 @@
 -type expr()    :: str() | var() | select() | cnd() | app().                    % (1)
 -type str()     :: {str, S::string()}.                                          % (2)
 -type var()     :: {var, Line::pos_integer(), N::string()}.                     % (3)
--type select()  :: {select, AppLine::pos_integer(), C::pos_integer(), U::fut()}.% (4)
+-type param()   :: {param, M::name(), Pl::boolean()}.                           % (4)
 -type fut()     :: {fut, LamName::string(), R::pos_integer(), Lo::[param()]}.   % (5)
--type cnd()     :: {cnd, Line::pos_integer(),                                   % (6)
+-type select()  :: {select, AppLine::pos_integer(), C::pos_integer(), U::fut()}.% (6)
+-type cnd()     :: {cnd, Line::pos_integer(),                                   % (7)
                          Xc::[expr()], Xt::[expr()], Xe::[expr()]}.
--type app()     :: {app, AppLine::pos_integer(), C::pos_integer(),              % (7)
+-type app()     :: {app, AppLine::pos_integer(), C::pos_integer(),              % (8)
                          Lambda::lam() | var(), Fa::#{string() => [expr()]}}.
 
-%% Lambda %% ===================================================================
+%% Task Signature %% ===========================================================
 
--type lam()     :: {lam, Line::pos_integer(), Name::string(),                   % (8)
+-type correl()  :: {correl, Lc::[name()]}.                                      % (9)
+-type inparam() :: param() | correl().                                          % (10)
+-type sign()    :: {sign, Lo::[param()], Li::[inparam()]}.                      % (11)
+
+%% Lambda Term %% ==============================================================
+
+-type lam()     :: {lam, LamLine::pos_integer(), LamName::string(),             % (12)
                          S::sign(), B::body()}.
 
-% Task Signature
--type sign()    :: {sign, Lo::[param()], Li::[inparam()]}.                      % (9)
--type param()   :: {param, M::name(), Pl::boolean()}.                           % (10)
--type name()    :: {name, N::string(), Pf::boolean()}.
--type inparam() :: param() | correl().                                          % (11)
--type correl()  :: {correl, Lc::[name()]}.                                      % (12)
 
-% Body
+-type name()    :: {name, N::string(), Pf::boolean()}.
+
+% Task Body
 -type body()    :: natbody() | forbody().                                       % (13)
 -type natbody() :: {natbody, Fb::#{string() => [expr()]}}.                      % (14)
 -type forbody() :: {forbody, L::lang(), S::string()}.                           % (15)
 -type lang()    :: bash | python | r.                                           % (16)
 
-%% Argument Pair %% ============================================================
-
--type argpair() :: {L0::[inparam()], F::#{string() => [expr()]}}.               % (17)
-
 %% Evaluation Context %% =======================================================
 
--type ctx()     :: {Rho   :: #{string() => [expr()]},                           % (18)
+-type ctx()     :: {Rho   :: #{string() => [expr()]},                           % (17)
                     Mu    :: fun( ( app() ) -> fut() ),
                     Gamma :: #{string() => lam()},
                     Omega :: #{{string(), pos_integer()} => [expr()]}}.
@@ -79,75 +78,72 @@
 %% Predicates
 %% =============================================================================
 
-%% Finality %% =================================================================
+%% Normal Form %% ==============================================================
 
--spec pnormal( X ) -> boolean()                                                  % (19)
+-spec pnormal( X ) -> boolean()                                                 % (18)
 when X :: #{string() => [expr()]} | [expr()] | expr().
 
-pnormal( F ) when is_map( F )  -> pnormal( maps:values( F ) );                    % (20)
-pnormal( L ) when is_list( L ) -> lists:all( fun pnormal/1, L );                  % (21,22)
-pnormal( {str, _S} )           -> true;                                          % (23)
+pnormal( F ) when is_map( F )  -> pnormal( maps:values( F ) );                  % (19)
+pnormal( L ) when is_list( L ) -> lists:all( fun pnormal/1, L );                % (20,21)
+pnormal( {str, _S} )           -> true;                                         % (22)
 pnormal( _T )                  -> false.
 
 %% Singularity %% ==============================================================
 
--spec psing( A::app() ) -> boolean().                                           % (24)
+-spec psing( A::app() ) -> boolean().                                           % (61)
 
-psing( {app, Line, _C, {lam, _, LamName, {sign, _Lo, Li}, _B}, Fa} ) ->         % (25)
-  case psing_argpair( {Li, Fa} ) of
-    {ok, P}    -> P;
-    {error, N} ->
-      throw( {Line, cf_sem,
-              "argument "++N++" is unbound in application of "++LamName} )
-  end.
-
--spec psing_argpair( Z::argpair() ) -> {ok, boolean()} | {error, string()}.                               % (26)
-
-psing_argpair( {[], _F} ) -> {ok, true};                                        % (27)
-psing_argpair( {[{param, _, Pl}|T], F} )                                        % (28)
+psing( {app, _, _, {lam, _, _, {sign, _, []}, _}, _} ) -> true;                 % (62)
+psing( {app, AppLine, C,                                                        % (63)
+             {lam, LamLine, LamName, {sign, Lo, [{param, _, Pl}|T]}, B},
+             Fa} )
 when Pl ->
-  psing_argpair( {T, F} );
-psing_argpair( {[{param, {name, N, _}, _Pl}|T], F} ) ->                         % (29)
-  case maps:is_key( N, F ) of
-    false -> {error, N};
+  psing( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, T}, B}, Fa} );
+psing( {app, AppLine, C,                                                        % (64)
+             {lam, LamLine, LamName, {sign, Lo, [{param, {name, N, _}, _}|T]}, B},
+             Fa} ) ->
+  case maps:is_key( N, Fa ) of
+    false -> throw( {AppLine, cf_sem,
+               "argument "++N++" is unbound in application of "++LamName} );
     true  ->
-      case length( maps:get( N, F ) ) of
-        1 -> psing_argpair( {T, F} );
-        _ -> {ok, false}
+      case length( maps:get( N, Fa ) ) of
+        1 -> psing( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, T}, B}, Fa} );
+        _ -> false
       end
   end;
-psing_argpair( _Z ) -> {ok, false}.
+psing( _ ) -> false.
 
 %% Enumerability %% ============================================================
 
--spec pen( X::expr()|[expr()] ) -> boolean().                                   % (30)
+-spec pen( X::expr()|[expr()] ) -> boolean().                                   % (65)
 
-pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (31,32)
-pen( {str, _S} )          -> true;                                              % (33)
-pen( {cnd, _, _Xc, Xt, Xe} ) when length( Xt ) =:= 1, length( Xe ) =:= 1 ->     % (34)
+pen( X )when is_list( X ) -> lists:all( fun pen/1, X );                         % (66,67)
+pen( {str, _S} )          -> true;                                              % (68)
+pen( {cnd, _, _Xc, Xt, Xe} ) when length( Xt ) =:= 1, length( Xe ) =:= 1 ->     % (69)
   pen( Xt ) andalso pen( Xe );
-pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (35)
+pen( X={app, _, C, {lam, _, _, {sign, Lo, _Li}, _B}, _Fb} ) ->                  % (70)
   case psing( X ) of
     false -> false;
     true ->
       {param, _, Pl} = lists:nth( C, Lo ),
       not Pl
   end;
-pen( {select, _, C, {fut, _, _R, Lo}} ) ->                                      % (36)
+pen( {select, _, C, {fut, _, _R, Lo}} ) ->                                      % (71)
   {param, _, Pl} = lists:nth( C, Lo ),
   not Pl;
 pen( _T ) -> false.
 
--spec pindep( X ) -> boolean()                                                  % (37)
+%% Context Independence %% =====================================================
+
+-spec pindep( X ) -> boolean()                                                  % (81)
 when X :: #{string() => [expr()]} | [expr()] | expr().
 
-pindep( Fa ) when is_map( Fa ) -> pindep( maps:values( Fa ) );                  % (38)
-pindep( X ) when is_list( X )  -> lists:all( fun pindep/1, X );                 % (39,40)
-pindep( {str, _} )             -> true;                                         % (41)
-pindep( {select, _, _, _} )       -> true;                                      % (42)
-pindep( {cnd, _, Xc, Xt, Xe} )    ->                                            % (43)
+pindep( Fa ) when is_map( Fa ) -> pindep( maps:values( Fa ) );                  % (82)
+pindep( X ) when is_list( X )  -> lists:all( fun pindep/1, X );                 % (83,84)
+pindep( {str, _} )             -> true;                                         % (85)
+pindep( {select, _, _, _} )    -> true;                                         % (86)
+pindep( {cnd, _, Xc, Xt, Xe} ) ->                                               % (87)
   pindep( Xc ) andalso pindep( Xt ) andalso pindep( Xe );
-pindep( {app, _, _, _, Fa} )      -> pindep( Fa );                              % (44)
+pindep( {app, _, _, _, Fa} )   -> pindep( Fa );                                 % (88)
 pindep( _ )                    -> false.
 
 %% =============================================================================
@@ -156,58 +152,55 @@ pindep( _ )                    -> false.
 
 %% The eval Function %% ========================================================
 
--spec eval( X::[expr()], Theta::ctx() ) -> [expr()].                            % (37)
+-spec eval( X::[expr()], Theta::ctx() ) -> [expr()].
 
 eval( X, Theta ) ->
   X1 = step( X, Theta ),
   case X1 of
-    X -> X;                                                                     % (38)
-    _ -> eval( X1, Theta )                                                      % (39)
+    X -> X;
+    _ -> eval( X1, Theta )
   end.
 
 %% Reduction Rules %% ==========================================================
 
--spec step_assoc( F, Theta ) -> #{string() => [expr()]}                         % (40)
-when F     :: #{string() => [expr()]},
-     Theta :: ctx().
-
-step_assoc( F, Theta ) when is_map( F ) ->                                      % (41)
-  maps:map( fun( _N, X ) -> step( X, Theta ) end, F ).
 
 
--spec step( X, Theta ) -> [expr()]                                              % (42)
+-spec step( X, Theta ) -> #{string() => [expr()]} | [expr()]                                              % (42)
 when X     :: #{string() => [expr()]} | [expr()] | expr(),
      Theta :: ctx().
 
+% Argument map
+step( Fa, Theta ) when is_map( Fa ) ->                                          % (23,24)
+  maps:map( fun( _N, X ) -> step( X, Theta ) end, Fa );
 
 % Expression List
-step( X, Theta ) when is_list( X ) ->                                           % (43,44)
+step( X, Theta ) when is_list( X ) ->                                           % (25,26)
   lists:flatmap( fun( Y ) -> step( Y, Theta ) end, X );
 
 % String Literal
-step( X={str, _S}, _Theta ) -> [X];                                             % (45)
+step( X={str, _S}, _Theta ) -> [X];                                             % (27)
 
 % Variable
-step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (46)
+step( {var, _, N}, {Rho, _Mu, _Gamma, _Omega} ) ->                              % (28)
   case maps:is_key( N, Rho ) of
     true  -> maps:get( N, Rho );
     false -> throw( {1, cf_sem, "unbound variable "++N} )
   end;
 
 % Future Channel Selection
-step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (47,48)
+step( S={select, _, C, {fut, _, R, Lo}}, {_Rho, _Mu, _Gamma, Omega} ) ->        % (29,30)
   {param, {name, N, _}, _} = lists:nth( C, Lo ),
   maps:get( {N, R}, Omega, [S] );
 
 % Conditional
-step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (49)
+step( {cnd, _, [], _Xt, Xe}, _Theta ) -> Xe;                                    % (31)
 step( {cnd, Line, Xc=[_|_], Xt, Xe}, Theta ) ->
   case pnormal( Xc ) of
-    false -> [{cnd, Line, step( Xc, Theta ), Xt, Xe}];                          % (50)
-    true  -> Xt                                                                 % (51)
+    false -> [{cnd, Line, step( Xc, Theta ), Xt, Xe}];                          % (32)
+    true  -> Xt                                                                 % (33)
   end;
 
-% Application
+% Application (early enumeration and tail recursion)
 step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->          % (52)
   case maps:is_key( N, Gamma ) of
     true  -> [{app, Line, C, maps:get( N, Gamma ), Fa}];
@@ -215,31 +208,37 @@ step( {app, Line, C, {var, _, N}, Fa}, {_Rho, _Mu, Gamma, _Omega} ) ->          
   end;
 
 step( X={app, AppLine, C,
-      Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B}, Fa},
+              Lambda={lam, LamLine, LamName, S={sign, Lo, _Li}, B},
+              Fa},
       Theta={_Rho, Mu, Gamma, Omega} ) ->
   case psing( X ) of
-    false -> enum_app( {app, AppLine, C, Lambda, step_assoc( Fa, Theta )} );    % (53)
+    false -> enum( [{app, AppLine, C, Lambda, step( Fa, Theta )}] );            % (89)
     true  ->
-      case pnormal( Fa ) of
-        false -> [{app, AppLine, C, Lambda, step_assoc( Fa, Theta )}];          % (54)
-        true  ->
-          case B of
-            {forbody, _L, _Z} -> [{select, AppLine, C, apply( Mu, [X] )}];      % (55)
-            {natbody, Fb} ->
+      case B of
+        {forbody, _L, _Z} ->
+          case pnormal( Fa ) of
+            false -> [{app, AppLine, C, Lambda, step( Fa, Theta )}];            % (90)
+            true  -> [{select, AppLine, C, apply( Mu, [X] )}]                   % (91)
+          end;
+        {natbody, Fb} ->
+          case pindep( Fa ) of
+            false -> [{app, AppLine, C, Lambda, step( Fa, Theta )}];            % (92)
+            true  ->
               {param, {name, N, _}, Pl} = lists:nth( C, Lo ),
               case maps:is_key( N, Fb ) of
-                false -> throw( {LamLine, cf_sem, "undefined output parameter "++N++" in task "++LamName} );
+                false -> throw( {LamLine, cf_sem,
+                           "undefined output parameter "++N++" in task "++LamName} );
                 true  ->
-                  V0 = maps:get( N, Fb ),
+                  #{N := V0} = Fb,
                   V1 = step( V0, {maps:merge( Fb, Fa ), Mu, Gamma, Omega} ),
                   case pindep( V1 ) of
-                    false -> [{app, AppLine, C,                                     % (56)
+                    false -> [{app, AppLine, C,                                 % (93)
                                     {lam, LamLine, LamName, S,
-                                          {natbody, Fb#{ N => V1}}},
+                                          {natbody, Fb#{ N => V1 }}},
                                     Fa}];
                     true  ->
                       case Pl orelse length( V1 ) =:= 1 of
-                        true  -> V1;                                                % (57)
+                        true  -> V1;                                            % (94)
                         false -> error( output_sign_mismatch )
                       end
                   end
@@ -256,66 +255,83 @@ step( X={app, AppLine, C,
 
 %% The enum Function %%
 
--spec enum_app( A::app() ) -> [app()].                                          % (58)
-
-enum_app( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, B}, Fa} ) ->% (59)
-  [{app, AppLine, C,
-         {lam, LamLine, LamName,
-               {sign, Lo, L1}, B}, F1} || {L1, F1} <- enum( [{Li, Fa}] )].
-
--spec enum( Z::[argpair()] ) -> [argpair()].                                    % (60)
+-spec enum( A::[app()] ) -> [app()].                                            % (40)
 
 enum( Z ) ->
   Z1 = estep( Z ),
   case Z1 of
-    Z -> Z;                                                                     % (61)
-    _ -> enum( Z1 )                                                             % (62)
+    Z -> Z;                                                                     % (41)
+    _ -> enum( Z1 )                                                             % (42)
   end.
 
-%% Enumeration Rules %%
+%% Enumeration Rules (early enumeration) %%
 
--spec estep( Z::[argpair()] ) -> [argpair()].                                   % (63)
+-spec estep( A ) -> [app()]                                                     % (43)
+when A :: app() | [app()].
 
-estep( Z ) ->                                                                   % (64,65)
-  lists:flatmap( fun( {Li, F} ) -> estep_param_lst( Li, F ) end, Z ).
-
--spec estep_param_lst( Li::[inparam()], F::#{string() => [expr()]} ) -> [argpair()].      % (66)
-
-estep_param_lst( [], F ) -> [{[], F}];                                                    % (67)
-estep_param_lst( [H={param, _, Pl}|T], F ) when Pl -> aug( estep_param_lst( T, F ), H );           % (68)
-estep_param_lst( L=[H={param, {name, N, _}, _Pl}|T], F ) ->
-  V = maps:get( N, F ),
+estep( A ) when is_list( A ) ->                                                 % (44,45)
+  lists:flatmap( fun( B ) -> estep( B ) end, A );
+estep( X={app, _, _, {lam, _, _, {sign, _, []}, _}, _} ) -> [X];                % (46)
+  
+estep( {app, AppLine, C,                                                        % (47)
+             {lam, LamLine, LamName, {sign, Lo, [H={param, _, Pl}|T]}, B}, Fa} )
+when Pl ->
+  aug_lst( estep( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, T}, B}, Fa} ), H );
+estep( X={app, AppLine, C,
+               {lam, LamLine, LamName,
+                     {sign, Lo, Li=[H={param, {name, N, _}, _Pl}|T]},
+                     B},
+               Fa} ) ->
+  #{ N := V } = Fa,
   case pen( V ) of
-    false -> [{L, F}];                                                          % (69)
     true  ->
       case length( V ) of
-        1 -> aug( estep_param_lst( T, F ), H );                                           % (70)
-        _ -> [{L, maps:put( N, [X], F )} || X <- V]                             % (71)
-      end
+        1 -> aug_lst( estep( {app, AppLine, C,                                  % (72)
+                                   {lam, LamLine, LamName,
+                                         {sign, Lo, T},
+                                         B},
+                                   Fa} ), H );
+        _ -> [{app, AppLine, C,                                                 % (73)
+                    {lam, LamLine, LamName,
+                          {sign, Lo, Li},
+                          B},
+                    Fa#{ N => [Y] }} || Y <- V]
+      end;
+    false -> [X]                                                                % (74)
   end;
-estep_param_lst( L=[H={correl, Lc}|T], F ) when length( Lc ) > 1 ->
-  Pen = pen( [maps:get( N, F ) || {name, N, _} <- Lc] ),
+estep( X={app, AppLine, C,
+               {lam, LamLine, LamName,
+                     {sign, Lo, [H={correl, Lc}|T]}, B}, Fa} )
+when length( Lc ) > 1 ->
+  Pen = pen( [maps:get( N, Fa ) || {name, N, _} <- Lc] ),
   case Pen of
-    false -> [{L, F}];                                                          % (72)
+    false -> [X];                                                               % (75)
     true  ->
-      Z = corr( Lc, F ),
-      aug( [{T, G} || G <- Z], H )                                              % (73)
+      Z = corr( Lc, Fa ),
+      aug_lst( [{app, AppLine, C,                                               % (76)
+                      {lam, LamLine, LamName,
+                            {sign, Lo, T},
+                            B},
+                      G} || G <- Z], H )
   end.
 
 
 
 %% Augmentation %%
 
--spec aug( Z::[argpair()], A::inparam() ) -> [argpair()].                       % (74)
+-spec aug_lst( Z::[app()], A::inparam() ) -> [app()].                           % (50)
 
-aug( Z, A ) -> [aug_argpair( Y, A ) || Y <- Z].                                 % (75)
+aug_lst( Z, A ) -> [aug( X, A ) || X <- Z].                                     % (51)
 
--spec aug_argpair( Y::argpair(), A::inparam() ) -> argpair().                   % (76)
+-spec aug( X::app(), A::inparam() ) -> app().                                   % (52)
 
-aug_argpair( {L0, F}, A={param, _, _Pl} ) -> {[A|L0], F};                       % (77)
-aug_argpair( {L0, F}, {correl, Lc} ) ->                                         % (78)
-  L1 = [{param, M, false} || M <- Lc],
-  {L1++L0, F}.
+aug( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, B}, Fa},         % (53)
+     A={param, _, _Pl} ) ->
+  {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, [A|Li]}, B}, Fa};
+aug( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, B}, Fa},         % (54)
+     {correl, Lc} ) ->
+  L1 = [{param, N, false} || N <- Lc],
+  {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, L1++Li}, B}, Fa}.
 
 %% Correlation %%
 
@@ -323,23 +339,24 @@ aug_argpair( {L0, F}, {correl, Lc} ) ->                                         
 when Lc :: [name()],
      F  :: #{string() => [expr()]}.
 
-corr( Lc, F ) ->
-  case corrstep( Lc, F, F ) of
-    []    -> [];
-    [H,T] -> [H|corr( Lc, T )]
+corr( Lc=[{name, N, _}|_], F ) ->
+  case maps:get( N, F ) of
+    [] -> [];
+    _  ->
+      {Fstar, Fminus} = corrstep( Lc, F, F ),
+      [Fstar|corr( Lc, Fminus )]
   end.
 
--spec corrstep( Lc, Facc, F0 ) -> [#{string() => [expr()]}]                     % (79)
-when Lc   :: [name()],
-     Facc :: #{string() => [expr()]},
-     F0   :: #{string() => [expr()]}.
+-spec corrstep( Lc, Fstar, Fminus ) ->                                          % (58)
+  {#{string() => [expr()]}, #{string() => [expr()]}}
+when Lc     :: [name()],
+     Fstar  :: #{string() => [expr()]},
+     Fminus :: #{string() => [expr()]}.
 
-corrstep( [], Facc, F0 ) -> [Facc, F0];                                         % (80)
-corrstep( [{name, H, _}|T], Facc, F0 ) ->
-  case maps:get( H, F0 ) of
-    []    -> [];                                                                % (81)
-    [A|B] -> corrstep( T, Facc#{H => [A]}, F0#{H => B})                         % (82)
-  end.
+corrstep( [], Fstar, Fminus ) -> {Fstar, Fminus};                               % (59)
+corrstep( [{name, N, _}|T], Fstar, Fminus ) ->                                  % (60)
+  #{ N := [A|B] } = Fminus,
+  corrstep( T, Fstar#{ N => [A] }, Fminus#{ N => B } ).
 
 
 
@@ -506,54 +523,70 @@ lst_select_should_not_be_enumerable_test() ->
 
 %% The enum Function %%
 
-enum_app_without_app_does_nothing_test() ->
+enum_without_app_does_nothing_test() ->
   S = {sign, [{param, {param, "out", false}, false}], []},
   B = {forbody, bash, "shalala"},
   Lam = {lam, 1, "f", S, B},
   App = {app, 2, 1, Lam, #{}},
-  ?assertEqual( [App], enum_app( App ) ).
+  ?assertEqual( [App], enum( App ) ).
 
 %% Enumeration Rules %%
 
 %% Augmentation %%
 
 can_aug_with_param_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  B = {forbody, bash, "blub"},
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a" => [{str, "1"}], "b" => [{str, "2"}], "c" => [{str, "3"}]},
-  Pair = {L0, F},
+  App = {app, 10, 1, {lam, 20, "f", {sign, Lo, L0}, B}, F},
   I = {param, {name, "a", false}, false},
   L1 = [I|L0],
-  ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
+  ?assertEqual( {app, 10, 1, {lam, 20, "f", {sign, Lo, L1}, B}, F}, aug( App, I ) ).
 
 can_aug_with_correl_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  B = {forbody, bash, "blub"},
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F = #{"a1" => [{str, "11"}],
         "a2" => [{str, "12"}],
         "b" => [{str, "2"}],
         "c" => [{str, "3"}]},
-  Pair = {L0, F},
+  App = {app, 10, 1, {lam, 20, "f", {sign, Lo, L0}, B}, F},
   I = {correl, [{name, "a1", false}, {name, "a2", false}]},
   L1 = [{param, {name, "a1", false}, false}, {param, {name, "a2", false}, false}|L0],
-  ?assertEqual( {L1, F}, aug_argpair( Pair, I ) ).
+  ?assertEqual( {app, 10, 1, {lam, 20, "f", {sign, Lo, L1}, B}, F}, aug( App, I ) ).
 
 can_augment_empty_inparamlst_with_param_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  B = {forbody, bash, "blub"},
   F1 = #{"a" => [{str, "x1"}]},
   F2 = #{"a" => [{str, "y1"}]},
-  PairList = [{[], F1}, {[], F2}],
+  AppList = [{app, 10, 1, {lam, 20, "f", {sign, Lo, []}, B}, F1},
+             {app, 30, 1, {lam, 40, "g", {sign, Lo, []}, B}, F2}],
   I = {param, {name, "a", false}, false},
   L1 = [{param, {name, "a", false}, false}],
-  ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
+  ?assertEqual( [{app, 10, 1, {lam, 20, "f", {sign, Lo, L1}, B}, F1},
+                 {app, 30, 1, {lam, 40, "g", {sign, Lo, L1}, B}, F2}],
+                aug_lst( AppList, I ) ).
 
 can_augment_inparamlst_with_param_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  B = {forbody, bash, "blub"},
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a" => [{str, "x1"}], "b" => [{str, "x2"}], "c" => [{str, "x3"}]},
   F2 = #{"a" => [{str, "y1"}], "b" => [{str, "y2"}], "c" => [{str, "y3"}]},
-  PairList = [{L0, F1}, {L0, F2}],
+  AppList = [{app, 10, 1, {lam, 20, "f", {sign, Lo, L0}, B}, F1},
+             {app, 30, 1, {lam, 40, "g", {sign, Lo, L0}, B}, F2}],
   I = {param, {name, "a", false}, false},
   L1 = [{param, {name, "a", false}, false}|L0],
-  ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
+  X = [{app, 10, 1, {lam, 20, "f", {sign, Lo, L1}, B}, F1},
+       {app, 30, 1, {lam, 40, "g", {sign, Lo, L1}, B}, F2}],
+  ?assertEqual( X, aug_lst( AppList, I ) ).
 
 can_augment_inparamlst_with_correl_test() ->
+  Lo = [{param, {name, "out", false}, false}],
+  B = {forbody, bash, "blub"},
   L0 = [{param, {name, "b", false}, false}, {param, {name, "c", false}, false}],
   F1 = #{"a1" => [{str, "x11"}],
          "a2" => [{str, "x12"}],
@@ -563,24 +596,27 @@ can_augment_inparamlst_with_correl_test() ->
          "a2" => [{str, "y12"}],
          "b" => [{str, "y2"}],
          "c" => [{str, "y3"}]},
-  PairList = [{L0, F1}, {L0, F2}],
+  AppList = [{app, 10, 1, {lam, 20, "f", {sign, Lo, L0}, B}, F1},
+             {app, 30, 1, {lam, 40, "g", {sign, Lo, L0}, B}, F2}],
   I = {correl, [{name, "a1", false}, {name, "a2", false}]},
   L1 = [{param, {name, "a1", false}, false}, {param, {name, "a2", false}, false}|L0],
-  ?assertEqual( [{L1, F1}, {L1, F2}], aug( PairList, I ) ).
+  X = [{app, 10, 1, {lam, 20, "f", {sign, Lo, L1}, B}, F1},
+       {app, 30, 1, {lam, 40, "g", {sign, Lo, L1}, B}, F2}],
+  ?assertEqual( X, aug_lst( AppList, I ) ).
 
 %% Correlation %%
 
 corrstep_should_separate_first_value_single_test() ->
   Lc = [{name, "a", false}],
   F0 = #{"a" => [{str, "1"}, {str, "2"}, {str, "3"}]},
-  Y = [#{"a" => [{str, "1"}]}, #{"a" => [{str, "2"}, {str, "3"}]}],
+  Y = {#{"a" => [{str, "1"}]}, #{"a" => [{str, "2"}, {str, "3"}]}},
   X = corrstep( Lc, F0, F0 ),
   ?assertEqual( Y, X ).
 
 corrstep_should_separate_first_value_two_test() ->
   Lc = [{name, "a", false}, {name, "b", false}],
   F0 = #{"a" => [{str, "1"}, {str, "2"}, {str, "3"}], "b" => [{str, "A"}, {str, "B"}, {str, "C"}]},
-  Y = [#{"a" => [{str, "1"}], "b" => [{str, "A"}]}, #{"a" => [{str, "2"}, {str, "3"}], "b" => [{str, "B"}, {str, "C"}]}],
+  Y = {#{"a" => [{str, "1"}], "b" => [{str, "A"}]}, #{"a" => [{str, "2"}, {str, "3"}], "b" => [{str, "B"}, {str, "C"}]}},
   X = corrstep( Lc, F0, F0 ),
   ?assertEqual( Y, X ).
 
