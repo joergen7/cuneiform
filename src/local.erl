@@ -40,7 +40,7 @@ create_basedir( Prefix, I )
 when is_list( Prefix ),
      is_integer( I ), I > 0 ->
 
-  BaseDir = [Prefix, "-", integer_to_list( I )],
+  BaseDir = lists:flatten( [Prefix, "-", integer_to_list( I )] ),
 
   case filelib:is_file( BaseDir ) of
     true  -> create_basedir( Prefix, I+1 );
