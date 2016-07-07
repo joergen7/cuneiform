@@ -52,8 +52,17 @@ main( CmdLine ) ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
                   {platform, Platform} = lists:keyfind( platform, 1, OptLst ),
                   LibMap = get_libmap( OptLst ),
+
                   {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
+                  
+                  ok = case lists:keymember( logdb, 1, OptLst ) of
+                    false -> ok;
+                    true  ->
+                      {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
+                      logmgr:add_ip( Ip )
+                  end,
+
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
                     [File] ->
@@ -215,9 +224,10 @@ get_optspec_lst() ->
    {workdir,  $w,        "workdir",  {string, "."},       "working directory"},
    {nthread,  $t,        "nthread",  integer,             "number of threads in local mode"},
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
+   {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
+   {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},
-   {pylib,    undefined, "pylib",    string,              "include Python library path"},
-   {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"}
+   {pylib,    undefined, "pylib",    string,              "include Python library path"}
   ].
 
 -spec get_vsn() -> string().

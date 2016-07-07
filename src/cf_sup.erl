@@ -47,12 +47,20 @@ start_link() ->
 init( [] ) ->
 
   RestartStrategy = one_for_one,
-  MaxRestarts = 5,
+  MaxRestarts = 3,
   MaxSecondsBetweenRestarts = 10,
   SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
 
+  Logmgr = #{
+    id       => logmgr,
+    start    => {logmgr, start_link, []},
+    restart  => permanent,
+    shutdown => 5000,
+    type     => worker,
+    modules  => [logmgr]
+  },
 
-  {ok, {SupFlags, []}}.
+  {ok, {SupFlags, [Logmgr]}}.
 
 -spec start_cre( Mod, ModArg, LibMap ) -> {ok, pid()}
 when Mod    :: atom(),
@@ -63,7 +71,7 @@ start_cre( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
 
   Restart = temporary,
-  Shutdown = 2000,
+  Shutdown = 5000,
   Type = worker,
 
   Cre = {cre, {cf_cre, start_link, [Mod, ModArg, LibMap]}, Restart, Shutdown, Type, [cf_cre]},

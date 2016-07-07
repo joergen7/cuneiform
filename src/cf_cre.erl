@@ -231,6 +231,10 @@ when is_atom( Reason ),
 
   ReplyMap1 = ReplyMap#{S => Info},
 
+  logmgr:notify( #{ return => failed,
+                    reason => Reason,
+                    id => S } ),
+
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
 
 handle_info( Info={finished, Sum},
