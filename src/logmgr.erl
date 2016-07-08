@@ -86,30 +86,43 @@ to_json( {failed, Reason, S, MissingLst}, Session )when is_list( MissingLst ) ->
 
 	jsone:enconde( #{ vsn      => ?VSN,
 		                session  => Session,
-		                msg_type => invoc_failed,
-		                data     => #{ reason     => Reason,
-		                               id         => S,
-		                               info       => #{ missing => MissingLst } } } );
+		                msg_type => invoc,
+		                data     => #{ id         => S,
+		                               status     => error,
+		                               lam_name   => undef,
+		                               info       => #{ reason  => Reason,
+		                                                missing => MissingLst } } } );
 
 to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
 	jsone:enconde( #{ vsn      => ?VSN,
 		                session  => Session,
-		                msg_type => invoc_failed,
-		                data     => #{ reason     => Reason,
-		                               id         => S,
-		                               info       => #{ act_script => ActScript,
+		                msg_type => invoc,
+		                data     => #{ id         => S,
+		                               status     => error,
+		                               lam_name   => undef,
+		                               info       => #{ reason     => Reason,
+		                                                act_script => ActScript,
 		                                                out        => Out } } } );
 
 
 to_json( {finished, Sum}, Session ) ->
 
-  Sum1 = maps:remove( ret,
-           maps:remove( lam,
-             maps:remove( arg,
-               maps:remove( state, Sum ) ) ) ),
+  #{ id     := Id,
+     state  := ok,
+     lam    := Lam,
+     tstart := Tstart,
+     tdur   := Tdur, 
+     out    := Out } = Sum,
+
+  {lam, _, LamName, _, _} = Lam,
+
+  Info = #{ tstart => Tstart, tdur => Tdur, out => Out },
 
   jsone:encode( #{ vsn      => ?VSN,
                    session  => Session,
-                   msg_type => invoc_finished,
-                   data     => Sum1 } ).
+                   msg_type => invoc,
+                   lam_name => list_to_binary( LamName ),
+                   data     => #{ id     => Id,
+                                  status => ok,
+                                  info   => Info } } ).
