@@ -60,7 +60,8 @@ main( CmdLine ) ->
                     false -> ok;
                     true  ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
-                      logmgr:add_ip( Ip )
+                      logmgr:add_ip( Ip ),
+                      io:format( "added IP ~s to logmgr.~n", [Ip] )
                   end,
 
                   case NonOptLst of
@@ -95,6 +96,7 @@ file( File, Cwd ) ->
 
 start( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
+  application:start( inets ),
   application:start( cuneiform ),
   cf_sup:start_cre( Mod, ModArg, LibMap ).
 

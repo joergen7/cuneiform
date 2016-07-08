@@ -27,6 +27,9 @@
           handle_info/2] ).
 
 -define( PORT, 8080 ).
+-define( VSN, <<"cf2.0">> ).
+
+-record( mod_state, {ip_lst = [], session} ).
 
 start_link() ->
   {ok, Pid} = gen_event:start_link( {local, ?MODULE} ),
@@ -41,25 +44,72 @@ notify( LogEntry ) ->
 
 code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 
-handle_call( {add_ip, Ip}, IpLst ) -> {ok, ok, [Ip|IpLst]}.
+handle_call( {add_ip, Ip}, State = #mod_state{ ip_lst = IpLst } ) ->
+  {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }}.
 
-init( _InitArgs ) -> {ok, []}.
+init( _InitArgs ) ->
+
+  SessionId = integer_to_binary( rand:uniform( 1000000000000 ) ),
+  Tstart    = trunc( os:system_time()/1000000 ),
+
+	Session = #{ id     => SessionId,
+	             tstart => Tstart },
+
+  {ok, #mod_state{ session = Session }}.
 
 terminate( _Arg, _State ) -> ok.
 
 handle_info( _Info, State ) -> {ok, State}.
 
-handle_event( LogEntry, IpLst ) ->
+handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } ) ->
+
+  io:format( "logmgr received an event.~n" ),
 
   F = fun( Ip ) ->
 
-	  Url = io_lib:format( "http://~s:~p", [Ip, ?PORT] ),
-	  Request = {Url, [], "application/json", jsone:encode( LogEntry )},
 
-	  httpc:request( post, Request, [], [] )
+	  Url = lists:flatten( io_lib:format( "http://~s:~p", [Ip, ?PORT] ) ),
+	  Request = {Url, [], "application/json", to_json( LogEntry, Session )},
+
+    io:format( "Sending ~p to ~s~n", [LogEntry, Url] ),
+	  X = httpc:request( post, Request, [], [] ),
+
+	  io:format( "~p", [X] )
 
 	 end,
 
   lists:foreach( F, IpLst ),
 
-  {ok, IpLst}.
+  {ok, State}.
+
+to_json( {failed, Reason, S, MissingLst}, Session )when is_list( MissingLst ) ->
+
+	jsone:enconde( #{ vsn      => ?VSN,
+		                session  => Session,
+		                msg_type => invoc_failed,
+		                data     => #{ reason     => Reason,
+		                               id         => S,
+		                               info       => #{ missing => MissingLst } } } );
+
+to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
+
+	jsone:enconde( #{ vsn      => ?VSN,
+		                session  => Session,
+		                msg_type => invoc_failed,
+		                data     => #{ reason     => Reason,
+		                               id         => S,
+		                               info       => #{ act_script => ActScript,
+		                                                out        => Out } } } );
+
+
+to_json( {finished, Sum}, Session ) ->
+
+  Sum1 = maps:remove( ret,
+           maps:remove( lam,
+             maps:remove( arg,
+               maps:remove( state, Sum ) ) ) ),
+
+  jsone:encode( #{ vsn      => ?VSN,
+                   session  => Session,
+                   msg_type => invoc_finished,
+                   data     => Sum1 } ).

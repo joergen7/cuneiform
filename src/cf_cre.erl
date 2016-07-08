@@ -231,9 +231,9 @@ when is_atom( Reason ),
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  logmgr:notify( #{ return => failed,
-                    reason => Reason,
-                    id => S } ),
+
+  io:format( "Notifying logmgr ...~n" ),
+  logmgr:notify( Info ),
 
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
 
@@ -253,6 +253,9 @@ handle_info( Info={finished, Sum},
 
   ReplyMap1 = ReplyMap#{S => Info},
 
+  io:format( "Notifying logmgr ...~n" ),
+  logmgr:notify( Info ),
+  
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
 
 %% =============================================================================
