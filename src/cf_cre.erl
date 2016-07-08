@@ -173,6 +173,9 @@ when is_tuple( App ),
       Cache1 = Cache#{Ckey => Fut},
       R1 = R+1,
 
+      io:format( "Notifying logmgr ...~n" ),
+      gen_event:notify( logmgr, {started, R, LamName} ),
+
       {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState}};
 
     true ->
@@ -255,7 +258,7 @@ handle_info( Info={finished, Sum},
 
   io:format( "Notifying logmgr ...~n" ),
   logmgr:notify( Info ),
-  
+
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
 
 %% =============================================================================

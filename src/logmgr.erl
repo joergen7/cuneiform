@@ -82,27 +82,34 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
 
   {ok, State}.
 
+to_json( {started, R, LamName}, Session ) ->
+
+  jsone:encode( #{ vsn      => ?VSN,
+  	                session  => Session,
+  	                msg_type => invoc,
+  	                data     => #{ id => R, lam_name => list_to_binary( LamName ), status => started } } );
+
 to_json( {failed, Reason, S, MissingLst}, Session )when is_list( MissingLst ) ->
 
-	jsone:enconde( #{ vsn      => ?VSN,
+	jsone:encode( #{ vsn      => ?VSN,
 		                session  => Session,
 		                msg_type => invoc,
 		                data     => #{ id         => S,
 		                               status     => error,
 		                               lam_name   => undef,
 		                               info       => #{ reason  => Reason,
-		                                                missing => MissingLst } } } );
+		                                                missing => [list_to_binary( M ) || M <- MissingLst] } } } );
 
 to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
-	jsone:enconde( #{ vsn      => ?VSN,
+	jsone:encode( #{ vsn      => ?VSN,
 		                session  => Session,
 		                msg_type => invoc,
 		                data     => #{ id         => S,
 		                               status     => error,
 		                               lam_name   => undef,
 		                               info       => #{ reason     => Reason,
-		                                                act_script => ActScript,
+		                                                act_script => list_to_binary( ActScript ),
 		                                                out        => Out } } } );
 
 
