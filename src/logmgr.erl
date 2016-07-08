@@ -122,7 +122,7 @@ to_json( {finished, Sum}, Session ) ->
   jsone:encode( #{ vsn      => ?VSN,
                    session  => Session,
                    msg_type => invoc,
-                   lam_name => list_to_binary( LamName ),
-                   data     => #{ id     => Id,
-                                  status => ok,
-                                  info   => Info } } ).
+                   data     => #{ id       => Id,
+                                  status   => ok,
+                                  lam_name => list_to_binary( LamName ),
+                                  info     => Info } } ).
