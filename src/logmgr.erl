@@ -84,21 +84,21 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
 
 to_json( {started, R, LamName}, Session ) ->
 
-  Host = list_to_binary( inet:gethostname() ),
+  {ok, Host} = inet:gethostname(),
 
   jsone:encode( #{ vsn      => ?VSN,
   	                session  => Session,
   	                msg_type => invoc,
-  	                data     => #{ host_name => Host, id => R, lam_name => list_to_binary( LamName ), status => started } } );
+  	                data     => #{ host_name => list_to_binary( Host ), id => R, lam_name => list_to_binary( LamName ), status => started } } );
 
 to_json( {failed, Reason, S, MissingLst}, Session )when is_list( MissingLst ) ->
 
-  Host = list_to_binary( inet:gethostname() ),
+  {ok, Host} = inet:gethostname(),
 
 	jsone:encode( #{ vsn      => ?VSN,
 		               session  => Session,
 		               msg_type => invoc,
-		               data     => #{ host_name  => Host, 
+		               data     => #{ host_name  => list_to_binary( Host ), 
 		                              id         => S,
 		                              status     => error,
 		                              lam_name   => undef,
@@ -107,12 +107,12 @@ to_json( {failed, Reason, S, MissingLst}, Session )when is_list( MissingLst ) ->
 
 to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
-  Host = list_to_binary( inet:gethostname() ),
+  {ok, Host} = inet:gethostname(),
 
 	jsone:encode( #{ vsn      => ?VSN,
 		               session  => Session,
 		               msg_type => invoc,
-		               data     => #{ host_name  => Host, 
+		               data     => #{ host_name  => list_to_binary( Host ), 
 		                              id         => S,
 		                              status     => error,
 		                              lam_name   => undef,
@@ -123,7 +123,7 @@ to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
 to_json( {finished, Sum}, Session ) ->
 
-  Host = list_to_binary( inet:gethostname() ),
+  {ok, Host} = inet:gethostname(),
 
   #{ id     := Id,
      state  := ok,
@@ -139,7 +139,7 @@ to_json( {finished, Sum}, Session ) ->
   jsone:encode( #{ vsn      => ?VSN,
                    session  => Session,
                    msg_type => invoc,
-                   data     => #{ host_name => Host, 
+                   data     => #{ host_name => list_to_binary( Host ), 
                                   id        => Id,
                                   status    => ok,
                                   lam_name  => list_to_binary( LamName ),
