@@ -71,7 +71,7 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
 	  Url = lists:flatten( io_lib:format( "http://~s:~p", [Ip, ?PORT] ) ),
 	  Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
-    io:format( "Sending ~p to ~s~n", [LogEntry, Url] ),
+    io:format( "Sending ~p to ~s~n", [Request, Url] ),
 	  X = httpc:request( post, Request, [], [] ),
 
 	  io:format( "~p", [X] )
@@ -130,11 +130,17 @@ to_json( {finished, Sum}, Session ) ->
      lam    := Lam,
      tstart := Tstart,
      tdur   := Tdur, 
-     out    := Out } = Sum,
+     out    := Out,
+     out_size_map := OutSizeMap,
+     in_size_map := InSizeMap } = Sum,
 
   {lam, _, LamName, _, _} = Lam,
 
-  Info = #{ tstart => Tstart, tdur => Tdur, out => Out },
+  Info = #{ tstart       => Tstart,
+            tdur         => Tdur,
+            out          => Out,
+            out_size_map => OutSizeMap,
+            in_size_map  => InSizeMap },
 
   jsone:encode( #{ vsn      => ?VSN,
                    session  => Session,
