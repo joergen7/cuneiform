@@ -190,12 +190,17 @@ when is_tuple( App ),
 
       case maps:is_key( S, ReplyMap ) of
         false -> ok;
-        true  -> Pid ! maps:get( S, ReplyMap )
+        true  ->
+          Reply = maps:get( S, ReplyMap ),
+          Pid ! Reply,
+          case erlang:function_exported(Mod, handle_cached, 2) of
+            false -> ok;
+            true -> apply(Mod, handle_cached, [ModState, Reply])
+          end
       end,
 
       {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState}}
   end;
-
 
 handle_call( get_cache, _From,
              State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState} )
