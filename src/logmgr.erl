@@ -63,8 +63,6 @@ handle_info( _Info, State ) -> {ok, State}.
 
 handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } ) ->
 
-  io:format( "logmgr received an event.~n" ),
-
   F = fun( Ip ) ->
 
 
