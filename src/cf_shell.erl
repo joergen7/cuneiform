@@ -21,12 +21,6 @@
 
 -module( cf_shell ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
-<<<<<<< HEAD
--vsn( "2.2.0-release" ).
-=======
--vsn( "2.2.1-snapshot" ).
->>>>>>> dev
-
 
 %% =============================================================================
 %% Function Exports
