@@ -155,7 +155,7 @@ get_banner() ->
   string:join(
     ["            ___",
      "           @@WB      Cuneiform",
-     "          @@E_____   "++cuneiform:get_vsn()++" "++?BUILD,
+     "          @@E_____   "++?VSN++" "++?BUILD,
      "     _g@@@@@WWWWWWL",
      "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
      "  @@P    3@B",
