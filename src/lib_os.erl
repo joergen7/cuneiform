@@ -19,7 +19,6 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 -module( lib_os ).
--vsn( "2.2.0-release" ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [cmd/2] ).

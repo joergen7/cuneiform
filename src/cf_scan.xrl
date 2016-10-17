@@ -119,8 +119,6 @@ Rules.
 Erlang code.
 
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0-release" ).
-
 
 -export( [yyrev/2] ).
 

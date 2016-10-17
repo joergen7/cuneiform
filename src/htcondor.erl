@@ -19,32 +19,29 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 %% @author Irina Guberman <irina.guberman@gmail.com>
 
--module( condor ).
+-module( htcondor ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -author( "Irina Guberman <irina.guberman@gmail.com>" ).
--vsn( "2.2.0-release" ).
 
 
 -include( "cuneiform.hrl" ).
 
 -behaviour( cf_cre ).
 
--export( [init/1, handle_submit/6] ).
+-export( [init/1, handle_submit/7, input_files_to_cs_string/1] ).
+
+-define( BASEDIR, "/tmp/cf" ).
 
 
 init( _ModArg ) ->
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
+
+  error_logger:info_msg( io_lib:format( "Base directory: ~s.~n", [BaseDir] ) ),
+
   {ok, BaseDir}.
 
-handle_submit( Lam, Fa, R, DataDir, LibMap, BaseDir ) ->
-  CreRef = self(),
-  _Pid = spawn_link( fun() -> CreRef ! stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) end ),
-  ok.
-
-  
-
-stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
-       LibMap, BaseDir ) ->
+handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
+  DataDir, _UserInfo, R, LibMap, BaseDir ) ->
 
   Dir = local:create_workdir( BaseDir, ?WORK, R ),
   
@@ -146,7 +143,7 @@ stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa, R, DataDir,
 %%      to the caller to write the content to disk.
 %%
 -spec format_submit( Condorparams0 ) -> binary()
-when Condorparams0::#{atom() => string() | [string()]}.
+when Condorparams0::#{atom() => iolist() | [iolist()]}.
 
 format_submit(CondorParams0) ->
   CondorParams1 = input_files_to_cs_string(CondorParams0),
@@ -164,11 +161,13 @@ format_submit(CondorParams0) ->
 %%      into a list, and once they are validated and possibly merged, they are
 %%      converted back to cs-string here.
 %%
--spec input_files_to_cs_string( CondorParams ) -> #{atom() => string()}
-when CondorParams :: #{atom() => string() | [string()]}.
+-spec input_files_to_cs_string( CondorParams ) -> #{atom() => iolist()}
+when CondorParams :: #{atom() => iolist() | [iolist()]}.
 
-input_files_to_cs_string(#{transfer_input_files := InputFiles} = CondorParams) ->
+input_files_to_cs_string( CondorParams = #{transfer_input_files := InputFiles} ) ->
   InputFilesCS = string:join(InputFiles, ", "),
   maps:put(transfer_input_files, InputFilesCS, CondorParams);
 
 input_files_to_cs_string(CondorParams) -> CondorParams.
+
+

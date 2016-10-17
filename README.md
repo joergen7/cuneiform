@@ -23,4 +23,8 @@ requires. For further information, please refer to the [Cuneiform paper](http://
 #### First steps
 
 - You can download the Cuneiform binaries from the official [download page](http://www.cuneiform-lang.org/download/)
+<<<<<<< HEAD
 - The [documentation](http://www.cuneiform-lang.org/doc/) offers a quick start, tutorials, setup guides, and an overview over the Cuneiform syntax.
+=======
+- The [documentation](http://www.cuneiform-lang.org/doc/) offers a quick start, tutorials, setup guides, and an overview over the Cuneiform syntax.
+>>>>>>> dev

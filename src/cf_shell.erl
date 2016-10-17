@@ -21,7 +21,11 @@
 
 -module( cf_shell ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+<<<<<<< HEAD
 -vsn( "2.2.0-release" ).
+=======
+-vsn( "2.2.1-snapshot" ).
+>>>>>>> dev
 
 
 %% =============================================================================
@@ -83,7 +87,7 @@ server_loop( Rho, Gamma, Cwd ) ->
       case Query of
         undef -> server_loop( Rho1, Gamma1, Cwd );
         _     ->
-          try cuneiform:reduce( Query, Rho1, Gamma1, "." ) of
+          try cuneiform:reduce( cre, Query, Rho1, Gamma1, Cwd, [] ) of
             X -> io:format( "~s~n", [cuneiform:format_result( X )] )
           catch
             throw:T -> io:format( "~s~n", [cuneiform:format_error( T )] )
@@ -155,12 +159,10 @@ get_banner() ->
   string:join(
     ["            ___",
      "           @@WB      Cuneiform",
-     "          @@E_____   "++cuneiform:get_vsn()++" "++?BUILD,
+     "          @@E_____   "++?VSN++" "++?BUILD,
      "     _g@@@@@WWWWWWL",
      "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
      "  @@P    3@B",
      "  @N____ 3@B         "++?BLU( "http://www.cuneiform-lang.org" ),
      "  \"W@@@WF3@B"
     ], "\n" ).
-
-

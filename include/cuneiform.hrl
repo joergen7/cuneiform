@@ -1,4 +1,5 @@
--define( BUILD, "2016-04-11" ).
+-define( BUILD, "2016-10-17" ).
+-define( VSN, "2.2.1-release" ).
 
 -define( RED( Str ), "\e[31m" ++ Str ++ "\e[0m" ).
 -define( BRED( Str ), "\e[1;31m" ++ Str ++ "\e[0m" ).
@@ -7,7 +8,8 @@
 -define( BYLW( Str ), "\e[1;33m" ++ Str ++ "\e[0m" ).
 -define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
--define( BASEDIR, "/tmp/cf" ).
 -define( WORK, "work" ).
 -define( REPO, "repo" ).
+
+-define( CONF_DIR, "/usr/local/etc/cuneiform" ).
 

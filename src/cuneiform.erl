@@ -21,10 +21,10 @@
 
 -module( cuneiform ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0-release" ).
 
 % API
--export( [main/1, file/2, start/3, reduce/4, get_vsn/0, format_result/1, format_error/1] ).
+-export( [main/1, file/2, start/3, reduce/6, format_result/1,
+          format_error/1, pprint/1] ).
 
 
 -include( "cuneiform.hrl" ).
@@ -49,11 +49,20 @@ main( CmdLine ) ->
                 true  -> print_bibtex();
                 false ->
                   {workdir, Cwd} = lists:keyfind( workdir, 1, OptLst ),
-                  {nthread, NSlot} = lists:keyfind( nthread, 1, OptLst ),
                   {platform, Platform} = lists:keyfind( platform, 1, OptLst ),
                   LibMap = get_libmap( OptLst ),
-                  {ok, CrePid} = start( Platform, NSlot, LibMap ),
+
+                  {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
+                  
+                  ok = case lists:keymember( logdb, 1, OptLst ) of
+                    false -> ok;
+                    true  ->
+                      {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
+                      logmgr:add_ip( Ip ),
+                      io:format( "added IP ~s to logmgr.~n", [Ip] )
+                  end,
+
                   case NonOptLst of
                     []     -> cf_shell:server( Cwd );
                     [File] ->
@@ -76,7 +85,7 @@ file( File, Cwd ) ->
     {error, ErrorInfo}        ->
       {error, ErrorInfo};
     {ok, {Query, Rho, Gamma}} ->
-      try cuneiform:reduce( Query, Rho, Gamma, Cwd ) of
+      try cuneiform:reduce( cre, Query, Rho, Gamma, Cwd, [] ) of
         X -> {ok, X}
       catch
         throw:T -> {error, T}
@@ -86,10 +95,38 @@ file( File, Cwd ) ->
 
 start( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
+  application:start( inets ),
   application:start( cuneiform ),
   cf_sup:start_cre( Mod, ModArg, LibMap ).
 
 
+
+-spec pprint( X ) -> iolist()
+when X::[cf_sem:expr()] | cf_sem:expr() | #{string() => [cf_sem:expr()]}.
+
+pprint( {str, S} )                                -> [$", S, $"];
+pprint( {var, _Line, S} )                         -> S;
+pprint( {cnd, Xc, Xt, Xe} )                       ->
+  ["if ", pprint( Xc ), " then ", pprint( Xt ), " else ", pprint( Xe ), " end"];
+pprint( {app, _AppLine, _C, {var, _Line, S}, Fa} ) ->
+  [S, "( ", pprint( Fa ), " )"];
+pprint( Fa ) when is_map( Fa )                    ->
+  F = fun( Key, AccIn ) ->
+        #{Key := Value} = Fa,
+        case AccIn of
+          [] -> [Key, ": ", pprint( Value )];
+          _  -> [", ", Key, ": ", pprint( Value )]
+        end
+      end,
+  lists:foldl( F, [], maps:keys( Fa ) );
+pprint( X ) when is_list( X )                     ->
+  F = fun( Y, AccIn ) ->
+        case AccIn of
+          [] -> Y;
+          _  -> [AccIn, " ", Y]
+        end
+      end,
+  lists:foldl( F, [], X ).
 
 
 %% =============================================================================
@@ -104,25 +141,26 @@ get_libmap( OptLst ) ->
 
 %% Reduction %%
 
--spec reduce( X0, Rho, Gamma, Cwd ) -> [cf_sem:str()]
+-spec reduce( Runtime, X0, Rho, Gamma, DataDir, UserInfo ) -> [cf_sem:str()]
+when Runtime  :: atom() | pid(),
+     X0       :: [cf_sem:expr()],
+     Rho      :: #{string() => [cf_sem:expr()]},
+     Gamma    :: #{string() => cf_sem:lam()},
+     DataDir  :: string(),
+     UserInfo :: _.
+
+reduce( Runtime, X0, Rho, Gamma, DataDir, UserInfo ) ->
+  Mu = fun( A ) -> cf_cre:submit( Runtime, A, DataDir, UserInfo ) end,
+  reduce( X0, {Rho, Mu, Gamma, #{}} ).
+
+-spec reduce( X0, Theta ) -> [cf_sem:str()]
 when X0     :: [cf_sem:expr()],
-     Rho    :: #{string() => [cf_sem:expr()]},
-     Gamma  :: #{string() => cf_sem:lam()},
-     Cwd    :: string().
+     Theta  :: cf_sem:ctx().
 
-reduce( X0, Rho, Gamma, Cwd ) ->
-  Mu = fun( A ) -> cf_cre:submit( A, Cwd ) end,
-  reduce( X0, {Rho, Mu, Gamma, #{}}, Cwd ).
-
--spec reduce( X0, Theta, Cwd ) -> [cf_sem:str()]
-when X0     :: [cf_sem:expr()],
-     Theta  :: cf_sem:ctx(),
-     Cwd    :: string().
-
-reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
+reduce( X0, {Rho, Mu, Gamma, Omega} ) ->
 
   X1 = cf_sem:eval( X0, {Rho, Mu, Gamma, Omega} ),
-  case cf_sem:pfinal( X1 ) of
+  case cf_sem:pnormal( X1 ) of
     true  -> X1;
     false ->
       receive
@@ -130,7 +168,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
         {failed, R2, R, Data} ->
           {AppLine, LamName} = hd( find_select( R, X1 ) ),
           throw( {AppLine, cuneiform, {R2, LamName, R, Data}} );
-          
+
 
         {finished, Summary} ->
           Ret = maps:get( ret, Summary ),
@@ -141,7 +179,7 @@ reduce( X0, {Rho, Mu, Gamma, Omega}, Cwd ) ->
                     end,
                     #{}, maps:keys( Ret ) ),
 
-          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )}, Cwd );
+          reduce( X1, {Rho, Mu, Gamma, maps:merge( Omega, Delta )} );
 
         Msg -> error( {bad_msg, Msg} )
 
@@ -180,27 +218,18 @@ find_select( _, _ ) ->
 -spec get_optspec_lst() -> [{atom(), char(), string(), undefined, string()}].
 
 get_optspec_lst() ->
-  NSlot = case erlang:system_info( logical_processors_available ) of
-    unknown -> 1;
-    N       -> N
-  end,
   [
-   {version,  $v,        "version",  undefined,        "show Cuneiform version"},
-   {help,     $h,        "help",     undefined,        "show command line options"},
-   {cite,     $c,        "cite",     undefined,        "show Bibtex entry for citation"},
-   {workdir,  $w,        "workdir",  {string, "."},    "working directory"},
-   {nthread,  $t,        "nthread",  {integer, NSlot}, "number of threads in local mode"},
-   {platform, $p,        "platform", {atom, local},    "platform to use: local, condor"},
-   {rlib,     undefined, "rlib",     string,           "include R library path"},
-   {pylib,    undefined, "pylib",    string,           "include Python library path"}
+   {version,  $v,        "version",  undefined,           "show Cuneiform version"},
+   {help,     $h,        "help",     undefined,           "show command line options"},
+   {cite,     $c,        "cite",     undefined,           "show Bibtex entry for citation"},
+   {workdir,  $w,        "workdir",  {string, "."},       "working directory"},
+   {nthread,  $t,        "nthread",  integer,             "number of threads in local mode"},
+   {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
+   {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
+   {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {rlib,     undefined, "rlib",     string,              "include R library path"},
+   {pylib,    undefined, "pylib",    string,              "include Python library path"}
   ].
-
--spec get_vsn() -> string().
-
-get_vsn() ->
-  {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
-  Vsn.
-
 
 %% print_bibtex/0
 %
@@ -239,7 +268,7 @@ print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "[<scriptfile>]" 
 %
 -spec print_vsn() -> ok.
 
-print_vsn() -> io:format( "~s~n", [get_vsn()] ).
+print_vsn() -> io:format( "~s~n", [?VSN] ).
 
 -spec format_result( StrLst::[cf_sem:str()] ) -> iolist().
 

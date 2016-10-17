@@ -21,14 +21,16 @@
 
 -module( local ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.0-release" ).
-
 
 -include( "cuneiform.hrl" ).
 
 -behaviour( cf_cre ).
--export( [init/1, handle_submit/6, stage/6, create_basedir/2,
+-export( [init/1, handle_submit/7, stage/6, create_basedir/2,
           create_workdir/3] ).
+
+-define( DEFAULT_CONF, #{ basedir => "/tmp/cf",
+                          nthread => case erlang:system_info( logical_processors_available ) of unknown -> 1; N -> N end } ).
+-define( CONF_FILE, "/usr/local/etc/cuneiform/local.conf" ).
 
 -spec create_basedir( Prefix::string(), I::pos_integer() ) -> iolist().
 
@@ -36,7 +38,7 @@ create_basedir( Prefix, I )
 when is_list( Prefix ),
      is_integer( I ), I > 0 ->
 
-  BaseDir = [Prefix, "-", integer_to_list( I )],
+  BaseDir = lists:flatten( [Prefix, "-", integer_to_list( I )] ),
 
   case filelib:is_file( BaseDir ) of
     true  -> create_basedir( Prefix, I+1 );
@@ -47,24 +49,33 @@ when is_list( Prefix ),
       end
   end.
 
--spec init( NSlot::pos_integer() ) -> {ok, {iolist(), pid()}}.
+-spec init( ManualMap::#{atom() => _} ) -> {ok, {iolist(), pid()}}.
 
-init( NSlot ) when is_integer( NSlot ), NSlot > 0 ->
-  BaseDir = create_basedir( ?BASEDIR, 1 ),
+init( ManualMap ) when is_map( ManualMap ) ->
+
+  % create configuration
+  Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
+  #{ nthread := NSlot } = Conf,
+  BaseDir = create_basedir( maps:get( basedir, Conf ), 1 ),
   {ok, QueueRef} = gen_queue:start_link( NSlot ),
+
+  error_logger:info_msg( io_lib:format( "Base directory:    ~s~nNumber of threads: ~p~n", [BaseDir, NSlot] ) ),
+
   {ok, {BaseDir, QueueRef}}.
 
 
--spec handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} ) -> ok
+-spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef} ) ->
+  {finished, #{}} | {failed, atom(), pos_integer(), _}
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
-     R        :: pos_integer(),
      DataDir  :: string(),
+     UserInfo :: _,
+     R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      BaseDir  :: iolist(),
      QueueRef :: pid().
 
-handle_submit( Lam, Fa, R, DataDir, LibMap, {BaseDir, QueueRef} )
+handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef} )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_integer( R ), R > 0,
@@ -72,8 +83,13 @@ when is_tuple( Lam ),
      is_map( LibMap ),
      is_list( BaseDir ),
      is_pid( QueueRef ) ->
+
   gen_server:cast( QueueRef, {request, self(),
-                   {?MODULE, stage, [Lam, Fa, R, DataDir, LibMap, BaseDir]}} ).
+                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir]}} ),
+
+  receive
+    Reply -> Reply
+  end.
 
 
 -spec create_workdir( BaseDir, Work, R ) -> string()
@@ -95,21 +111,21 @@ when is_list( BaseDir ),
   end.
 
 
--spec stage( Lam, Fa, R, DataDir, LibMap, BaseDir ) -> cre:response()
+-spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
-     R       :: pos_integer(),
      DataDir :: string(),
+     R       :: pos_integer(),
      LibMap  :: #{cf_sem:lang() => [string()]},
      BaseDir :: iolist().
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, R, DataDir, LibMap, BaseDir )
+       Fa, DataDir, R, LibMap, BaseDir )
 when is_list( Lo ),
      is_list( Li ),
      is_map( Fa ),
-     is_integer( R ), R > 0,
      is_list( DataDir ),
+     is_integer( R ), R > 0,
      is_map( LibMap ),
      is_list( BaseDir ) ->
 
