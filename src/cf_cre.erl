@@ -18,6 +18,8 @@
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 %% @doc The Cuneiform Runtime Environment (CRE).
+%% Each platform must implement the CRE callbacks, e.g., {@link local} and {@link htcondor}.
+%% 
 %% ```+-------+   +-------+
 %%    | Query |   | Query |
 %%    +-------+   +-------+
@@ -57,7 +59,7 @@
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState ) ->
+-callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, Prof ) ->
   {failed, Reason, S, Data} | {finished, Sum}
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
@@ -66,6 +68,7 @@ when Lam      :: cf_sem:lam(),
      R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      ModState :: term(),
+     Prof     :: effi_profiling:profilingsettings(),
      Reason   :: atom(),
      S        :: pos_integer(),
      Data     :: term(),
@@ -118,7 +121,7 @@ when is_atom( Mod ), is_map( LibMap ) ->
 
   {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState}}.
 
-%% @doc On receiving a call containing a subission, a future is generated and
+%% @doc On receiving a call containing a submission, a future is generated and
 %%      returned.
 %%
 %%      When a submission request is received by the CRE, it returns a future by
@@ -164,7 +167,8 @@ when is_tuple( App ),
 
       % start process
       Runtime = self(),
-      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState ) end ),
+      Prof = effi_profiling:get_profiling_settings( false, "<requestfile>_profile.xml" ),
+      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, Prof ) end ),
 
       % create new future
       Fut = {fut, LamName, R, Lo},
@@ -292,7 +296,7 @@ when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Data
 %% Internal Functions
 %% =============================================================================
 
-stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState )
+stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, Prof )
 when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_tuple( Lam ),
      is_map( Fa ),
@@ -301,7 +305,7 @@ when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_integer( R ), R > 0,
      is_map( LibMap ) ->
 
-  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState] ),
+  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, Prof] ),
   Runtime ! Reply.
 
 

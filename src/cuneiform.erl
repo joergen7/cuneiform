@@ -93,7 +93,7 @@ file( File, Cwd ) ->
       end
   end.
 
-
+%% @doc starts the platform (e.g., local, htcondor) and the cuneiform application  
 start( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
   application:start( inets ),
@@ -228,6 +228,7 @@ get_optspec_lst() ->
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
    {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
    {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {profiling,$r,        "profiling",{boolean, false},    "collect detailed usage statistics, requires the pegasus-kickstart binary"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},
    {pylib,    undefined, "pylib",    string,              "include Python library path"}
   ].
