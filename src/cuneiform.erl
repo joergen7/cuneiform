@@ -21,10 +21,9 @@
 
 -module( cuneiform ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.1-snapshot" ).
 
 % API
--export( [main/1, file/2, start/3, reduce/6, get_vsn/0, format_result/1,
+-export( [main/1, file/2, start/3, reduce/6, format_result/1,
           format_error/1, pprint/1] ).
 
 
@@ -233,13 +232,6 @@ get_optspec_lst() ->
    {pylib,    undefined, "pylib",    string,              "include Python library path"}
   ].
 
--spec get_vsn() -> string().
-
-get_vsn() ->
-  {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
-  Vsn.
-
-
 %% print_bibtex/0
 %
 -spec print_bibtex() -> ok.
@@ -277,7 +269,7 @@ print_usage() -> getopt:usage( get_optspec_lst(), "cuneiform", "[<scriptfile>]" 
 %
 -spec print_vsn() -> ok.
 
-print_vsn() -> io:format( "~s~n", [get_vsn()] ).
+print_vsn() -> io:format( "~s~n", [?VSN] ).
 
 -spec format_result( StrLst::[cf_sem:str()] ) -> iolist().
 

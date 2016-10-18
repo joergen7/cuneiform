@@ -2,7 +2,7 @@
 {application, cuneiform,
  [
   {description, "Cuneiform: A Functional Language for Large Scale Scientific Data Analysis"},
-  {vsn, "2.2.1-snapshot"},
+  {vsn, "2.2.1-release"},
   {registered, []},
   {applications, [
                   kernel,

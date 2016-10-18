@@ -21,7 +21,6 @@
 
 -module( gen_queue ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.1-snapshot" ).
 
 -behaviour( gen_server ).
 

@@ -21,7 +21,6 @@
 
 -module( cuneiform_app ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.1-snapshot" ).
 
 
 -behaviour( application ).
