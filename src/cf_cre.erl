@@ -176,7 +176,7 @@ when is_tuple( App ),
       Cache1 = Cache#{Ckey => Fut},
       R1 = R+1,
 
-      gen_event:notify( logmgr, {started, R, LamName} ),
+      logmgr:notify( {started, R, LamName} ),
 
       {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState}};
 
@@ -241,7 +241,7 @@ when is_atom( Reason ),
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  gen_event:notify( logmgr, Info ),
+  logmgr:notify( Info ),
 
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
 
@@ -261,7 +261,7 @@ handle_info( Info={finished, Sum},
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  gen_event:notify( logmgr, Info ),
+  logmgr:notify( Info ),
 
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
 

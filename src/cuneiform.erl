@@ -55,12 +55,12 @@ main( CmdLine ) ->
                   {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
                   
+                  % if remote logging is on, register the given IP address at the log manager 
                   ok = case lists:keymember( logdb, 1, OptLst ) of
                     false -> ok;
                     true  ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
-                      logmgr:add_ip( Ip ),
-                      io:format( "added IP ~s to logmgr.~n", [Ip] )
+                      logmgr:add_ip( Ip )
                   end,
 
                   case NonOptLst of

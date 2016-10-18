@@ -22,7 +22,6 @@
 
 -module( logmgr ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "2.2.1-snapshot" ).
 
 -behaviour( gen_event ).
 
@@ -42,6 +41,7 @@
 %% =============================================================================
 
 -define( PORT, 8080 ).
+-define( PATH, "submit" ).
 -define( VSN, <<"cf2.0">> ).
 
 %% =============================================================================
@@ -67,9 +67,9 @@ add_ip( Ip ) when is_list( Ip ) ->
   gen_event:call( ?MODULE, ?MODULE, {add_ip, Ip} ).
 
 %% notify/1
-%
+%% @doc use this function to submit log entries
 notify( LogEntry ) ->
-  gen_event:notify( ?MODULE, LogEntry ).
+  gen_event:sync_notify( ?MODULE, LogEntry ).
 
 %% code_change/3
 %
@@ -107,13 +107,14 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
   F = fun( Ip ) ->
 
 
-	  Url = lists:flatten( io_lib:format( "http://~s:~p", [Ip, ?PORT] ) ),
+	  Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
 	  Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
-    io:format( "Sending ~p to ~s~n", [Request, Url] ),
-	  X = httpc:request( post, Request, [], [] ),
+    io:format( "Sending ~w to ~s~n~p", [element( 1, LogEntry ), Url, to_json( LogEntry, Session )] ),
 
-	  io:format( "~p", [X] )
+	  X = httpc:request( post, Request, [], [{sync, true}] ),
+
+	  io:format( "~nResult ~p~n", [X] )
 
 	 end,
 
@@ -125,7 +126,7 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
 %
 to_json( {started, R, LamName}, Session ) ->
   
-  io:format("to json {started, ~w, ~w}", [R, LamName]),
+  io:format("to json {started, ~p, ~p}~n", [R, LamName]),
 
   {ok, Host} = inet:gethostname(),
 
@@ -166,7 +167,7 @@ to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
 to_json( {finished, Sum}, Session ) ->
 
-  io:format("to json {finished, ~w}", [Sum]),
+  io:format("to json {finished, ~p}~n", [maps:get(id, Sum)]),
 
   {ok, Host} = inet:gethostname(),
 
