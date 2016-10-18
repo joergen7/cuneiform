@@ -242,8 +242,7 @@ when is_atom( Reason ),
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-
-  logmgr:notify( Info ),
+  gen_event:notify( logmgr, Info ),
 
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
 
@@ -263,7 +262,7 @@ handle_info( Info={finished, Sum},
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-  logmgr:notify( Info ),
+  gen_event:notify( logmgr, Info ),
 
   {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
 

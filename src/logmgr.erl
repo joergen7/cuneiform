@@ -16,37 +16,72 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc Handles log messages and 
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 -module( logmgr ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-vsn( "2.2.1-snapshot" ).
 
 -behaviour( gen_event ).
 
+%% =============================================================================
+%% Function Exports
+%% =============================================================================
+
+%% API
 -export( [start_link/0, add_ip/1, notify/1] ).
+
+%% gen_event behaviour callbacks
 -export( [code_change/3, handle_call/2, init/1, terminate/2, handle_event/2,
           handle_info/2] ).
+
+%% =============================================================================
+%% Includes and Definitions
+%% =============================================================================
 
 -define( PORT, 8080 ).
 -define( VSN, <<"cf2.0">> ).
 
+%% =============================================================================
+%% Type Definitions
+%% =============================================================================
+
 -record( mod_state, {ip_lst = [], session} ).
 
+%% =============================================================================
+%% Functions
+%% =============================================================================
+
+%% start_link/0
+%
 start_link() ->
   {ok, Pid} = gen_event:start_link( {local, ?MODULE} ),
   gen_event:add_handler( ?MODULE, ?MODULE, [] ),
   {ok, Pid}.
 
+%% add_ip/1
+%
 add_ip( Ip ) when is_list( Ip ) ->
   gen_event:call( ?MODULE, ?MODULE, {add_ip, Ip} ).
 
+%% notify/1
+%
 notify( LogEntry ) ->
   gen_event:notify( ?MODULE, LogEntry ).
 
+%% code_change/3
+%
 code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 
+%% handle_call/2
+%
 handle_call( {add_ip, Ip}, State = #mod_state{ ip_lst = IpLst } ) ->
   {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }}.
 
+%% init/1
+%
 init( _InitArgs ) ->
 
   SessionId = integer_to_binary( rand:uniform( 1000000000000 ) ),
@@ -57,10 +92,16 @@ init( _InitArgs ) ->
 
   {ok, #mod_state{ session = Session }}.
 
+%% terminate/2
+%
 terminate( _Arg, _State ) -> ok.
 
+%% handle_info/2
+%
 handle_info( _Info, State ) -> {ok, State}.
 
+%% handle_event/2
+%
 handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } ) ->
 
   F = fun( Ip ) ->
@@ -80,7 +121,11 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
 
   {ok, State}.
 
+%% to_json/2
+%
 to_json( {started, R, LamName}, Session ) ->
+  
+  io:format("to json {started, ~w, ~w}", [R, LamName]),
 
   {ok, Host} = inet:gethostname(),
 
@@ -121,6 +166,8 @@ to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
 to_json( {finished, Sum}, Session ) ->
 
+  io:format("to json {finished, ~w}", [Sum]),
+
   {ok, Host} = inet:gethostname(),
 
   #{ id     := Id,
@@ -130,7 +177,8 @@ to_json( {finished, Sum}, Session ) ->
      tdur   := Tdur, 
      out    := Out,
      out_size_map := OutSizeMap,
-     in_size_map := InSizeMap } = Sum,
+     in_size_map := InSizeMap,
+     profiling_results := ProfilingResults } = Sum,
 
   {lam, _, LamName, _, _} = Lam,
 
@@ -138,7 +186,8 @@ to_json( {finished, Sum}, Session ) ->
             tdur         => Tdur,
             out          => Out,
             out_size_map => OutSizeMap,
-            in_size_map  => InSizeMap },
+            in_size_map  => InSizeMap,
+            profiling_results => ProfilingResults },
 
   jsone:encode( #{ vsn      => ?VSN,
                    session  => Session,
