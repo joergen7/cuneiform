@@ -33,4 +33,6 @@
 %% =============================================================================
 
 start( normal, [] ) -> cf_sup:start_link().
-stop( _State ) -> ok.
+stop( _State ) -> 
+	io:format("Shutting down cuneiform application."),
+	ok.

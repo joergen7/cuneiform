@@ -51,54 +51,21 @@
 -record( mod_state, {ip_lst = [], session} ).
 
 %% =============================================================================
-%% Functions
+%% Generic Event Functions
 %% =============================================================================
 
-%% start_link/0
-%
-start_link() ->
-  {ok, Pid} = gen_event:start_link( {local, ?MODULE} ),
-  gen_event:add_handler( ?MODULE, ?MODULE, [] ),
-  {ok, Pid}.
-
-%% add_ip/1
-%
-add_ip( Ip ) when is_list( Ip ) ->
-  gen_event:call( ?MODULE, ?MODULE, {add_ip, Ip} ).
-
-%% notify/1
-%% @doc use this function to submit log entries
-notify( LogEntry ) ->
-  gen_event:sync_notify( ?MODULE, LogEntry ).
-
-%% code_change/3
-%
-code_change( _OldVsn, State, _Extra ) -> {ok, State}.
-
-%% handle_call/2
-%
-handle_call( {add_ip, Ip}, State = #mod_state{ ip_lst = IpLst } ) ->
-  {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }}.
-
 %% init/1
-%
+%% @doc generates the initial state of the event manager,
+%% consisting of the session data (id and start timestamp)
 init( _InitArgs ) ->
 
   SessionId = integer_to_binary( rand:uniform( 1000000000000 ) ),
   Tstart    = trunc( os:system_time()/1000000 ),
 
-	Session = #{ id     => SessionId,
-	             tstart => Tstart },
+  Session = #{ id     => SessionId,
+               tstart => Tstart },
 
   {ok, #mod_state{ session = Session }}.
-
-%% terminate/2
-%
-terminate( _Arg, _State ) -> ok.
-
-%% handle_info/2
-%
-handle_info( _Info, State ) -> {ok, State}.
 
 %% handle_event/2
 %
@@ -107,20 +74,62 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
   F = fun( Ip ) ->
 
 
-	  Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
-	  Request = {Url, [], "application/json", to_json( LogEntry, Session )},
+    Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
+    Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
     io:format( "Sending ~w to ~s~n~p", [element( 1, LogEntry ), Url, to_json( LogEntry, Session )] ),
 
-	  X = httpc:request( post, Request, [], [{sync, true}] ),
+    X = httpc:request( post, Request, [], [{sync, true}] ),
 
-	  io:format( "~nResult ~p~n", [X] )
+    io:format( "~nResult ~p~n", [X] )
 
-	 end,
+   end,
 
   lists:foreach( F, IpLst ),
 
   {ok, State}.
+
+%% handle_call/2
+%
+handle_call( {add_ip, Ip}, State = #mod_state{ ip_lst = IpLst } ) ->
+  {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }}.
+
+%% handle_info/2
+%
+handle_info( _Info, State ) -> {ok, State}.
+
+%% code_change/3
+%
+code_change( _OldVsn, State, _Extra ) -> {ok, State}.
+
+%% terminate/2
+%
+terminate( _Arg, _State ) -> ok.
+
+%% =============================================================================
+%% API Functions
+%% =============================================================================
+
+%% add_ip/1
+%
+add_ip( Ip ) when is_list( Ip ) ->
+  gen_event:call( ?MODULE, ?MODULE, {add_ip, Ip} ).
+
+%% start_link/0
+%
+start_link() ->
+  {ok, Pid} = gen_event:start_link( {local, ?MODULE} ),
+  gen_event:add_handler( ?MODULE, ?MODULE, [] ),
+  {ok, Pid}.
+
+%% notify/1
+%% @doc use this function to submit log entries
+notify( LogEntry ) ->
+  gen_event:sync_notify( ?MODULE, LogEntry ).
+
+%% =============================================================================
+%% Non-exported Functions
+%% =============================================================================
 
 %% to_json/2
 %
