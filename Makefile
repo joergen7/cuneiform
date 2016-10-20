@@ -16,6 +16,5 @@ dev:
 clean:
 	rm -rf .rebar
 	rm -rf _build
-	find doc -not -name 'overview.edoc' -print0 | xargs -0 rm --
-	#rm -rf doc
+	find doc -type f -not -name 'overview.edoc' -print0 | xargs -0 rm --
 	rm -f rebar.lock
