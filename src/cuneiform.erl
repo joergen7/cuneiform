@@ -75,7 +75,9 @@ main( CmdLine ) ->
                         {ok, Ret}  -> io:format( "~s~n", [format_result( Ret )] );
                         {error, T} -> io:format( "~s~n", [format_error( T )] )
                       end
-                  end,
+                  end,                  
+                  % wait until all log messages are sent
+                  % error_logger:info_msg( io_lib:format( "Log Manager received terminate. Queue status: ~p~n", [erlang:process_info(self(), message_queue_len)] ) ),
                   timer:sleep(2000)
               end
           end

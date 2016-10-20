@@ -80,11 +80,7 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
     Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
     Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
-    io:format( "Sending ~p to ~s~n~p", [element( 1, LogEntry ), Url, to_json( LogEntry, Session )] ),
-
-    X = httpc:request( post, Request, [], [{sync, true}] ),
-
-    io:format( "~nResult ~p~n", [X] )
+    X = httpc:request( post, Request, [], [{sync, true}] )
 
    end,
 
@@ -141,7 +137,7 @@ start_link() ->
 %% notify/1
 %% @doc use this function to submit log entries
 notify( LogEntry ) ->
-  gen_event:sync_notify( ?MODULE, LogEntry ).
+  gen_event:notify( ?MODULE, LogEntry ).
 
 %% =============================================================================
 %% Non-exported Functions
