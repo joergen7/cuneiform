@@ -17,10 +17,13 @@
 %% limitations under the License.
 
 
-%% @doc The cuneiform supervisor starts (and restarts if necessary) the
-%% child process that implements a specific platform. 
-%% It also starts (and restarts if necessary) the log manager.
+%% @doc The cuneiform supervisor (sup) starts (and restarts if necessary) the
+%% child process that implements a specific platform - the Cuneiform Runtime
+%% Environment (CRE). 
+%% It also starts (and restarts if necessary) the log manager (logmgr).
 %% It is called from {@link cuneiform:start/1}.
+%% When started (by starting the {@link cuneiform_app}), only the log manager
+%% is started, a specific CRE implementation is started through {@link start_cre/3}.
 %% 
 %% ```
 %%            +-----+
@@ -28,7 +31,7 @@
 %%            +-----+
 %%           /       \
 %%    +--------+      +-------+
-%%    | LogMgr |      |  CRE  |
+%%    | logmgr |      |  CRE  |
 %%    +--------+      +-------+'''
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
@@ -56,7 +59,11 @@ start_link() ->
   supervisor:start_link( {local, ?MODULE}, ?MODULE, [] ).
 
 %% start_cre/3
-%
+%% @doc adds the runtime environment process as a child to the supervision tree.
+%% This makes the runtime environment a sibling of the log manager, also supervised
+%% by the cuneiform supervisor (and started in the {@link init/1} callback implementation)
+%% The actual runtime startup process is implemented by start_link, (e.g. in {@link local} or {@link htcondor}).
+%% Since the runtimes implement cf_cre, they indirectly implement the gen_server behavior.
 -spec start_cre( Mod, ModArg, LibMap ) -> {ok, pid()}
 when Mod    :: atom(),
      ModArg :: term(),
@@ -64,14 +71,15 @@ when Mod    :: atom(),
 
 start_cre( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
+  
+  RuntimeEnvChildSpec = #{
+    id => cre, 
+    start => {cf_cre, start_link, [Mod, ModArg, LibMap]},
+    restart => temporary,   % never restart
+    modules => [cf_cre]
+  },
 
-  Restart = temporary,
-  Shutdown = 5000,
-  Type = worker,
-
-  Cre = {cre, {cf_cre, start_link, [Mod, ModArg, LibMap]}, Restart, Shutdown, Type, [cf_cre]},
-
-  supervisor:start_child( cf_sup, Cre ).
+  supervisor:start_child( ?MODULE, RuntimeEnvChildSpec ).
 
 %% =============================================================================
 %% Supervisor callbacks

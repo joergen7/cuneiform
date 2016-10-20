@@ -23,6 +23,11 @@
 
 -export( [create_conf/3] ).
 
+%% create_conf/3
+%% @doc Creates a configuration based on a partial configuration (ManualMap)
+%% that extends upon a configuration file (ConfFile) that extends upon a
+%% default map. If there are conflicts, the order is 
+%% ManualMap > ConfFile > DefaultMap where the ManualMap has highest priority.
 -spec create_conf( DefaultMap, ConfFile, ManualMap ) -> #{ _ => _ }
 when DefaultMap :: #{ _ => _},
      ConfFile   :: string(),
@@ -33,7 +38,9 @@ when is_map( DefaultMap ),
      is_list( ConfFile ),
      is_map( ManualMap ) ->
 
-  Merge = case file:read_file( ConfFile ) of
+  % try to read the configuration file
+  Default = case file:read_file( ConfFile ) of
+      % if it can't be loaded, use the default map as merger
       {error, enoent}  -> DefaultMap;
       {error, Reason1} -> error( {Reason1, ConfFile} );
       {ok, B}          ->
@@ -43,7 +50,11 @@ when is_map( DefaultMap ),
           {error, Reason2} -> error( Reason2 );
           {ok, Y}         -> Y
         end,
-        maps:map( fun( K, V ) -> maps:get( K, ConfMap, V ) end, DefaultMap )
+        % override (and extend) the default map with what is 
+        % specified in the configuration file
+        maps:merge( DefaultMap, ConfMap )
     end,
 
-  maps:map( fun( K, V ) -> maps:get( K, ManualMap, V ) end, Merge ).
+  % override (and extend) the merged default map and configuration file
+  % with what is specified in the manual map.
+  maps:merge( Default, ManualMap ).

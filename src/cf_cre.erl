@@ -17,16 +17,18 @@
 % limitations under the License.
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
-%% @doc The Cuneiform Runtime Environment (CRE).
-%% Each platform must implement the CRE callbacks, e.g., {@link local} and {@link htcondor}.
+%% @doc The Cuneiform Runtime Environment (CRE) specifies the callbacks
+%% for concrete cuneiform implementations, e.g., {@link local} and {@link htcondor}.
+%% By implementing the gen_server behavior, each CRE becomes a server to cuneiform queries.
 %% 
-%% ```+-------+   +-------+
-%%    | Query |   | Query |
-%%    +-------+   +-------+
-%%            \   /
-%%           +-----+
-%%           | CRE |
-%%           +-----+'''
+%% ```+--------+  
+%%    | Client |  
+%%    +--------+  
+%%    Query|   ^ Response
+%%         v   | 
+%%         +-----+
+%%         | CRE |
+%%         +-----+'''
 
 
 -module( cf_cre ).
@@ -38,10 +40,13 @@
 %% Function Exports
 %% =============================================================================
 
+% API functions
 -export( [start_link/3, submit/4] ).
 
--export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
-          handle_call/3] ).
+% server behavior callback implementations
+-export( [init/1, terminate/2,
+          handle_cast/2, handle_info/2, handle_call/3,
+          code_change/3] ).
 
 %% =============================================================================
 %% Includes
@@ -54,7 +59,6 @@
 %% =============================================================================
 %% Callback Function Declarations
 %% =============================================================================
-
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
@@ -88,7 +92,8 @@ when Lam      :: cf_sem:lam(),
                       Cache::#{ckey() => cf_sem:fut()},
                       R::pos_integer(),
                       LibMap::#{cf_sem:lang() => [string()]},
-                      ModState::term()}.
+                      ModState::term(),
+                      Prof::effi_profiling:profiling_settings()}.
 
 -type submit()    :: {submit, App::cf_sem:app(), DataDir::string(), UserInfo::_}.
 
@@ -115,10 +120,21 @@ when is_atom( Mod ), is_map( LibMap ) ->
   Cache     = #{},        % cache mapping a cache key to a future
   R         = 1,          % next id
 
-  % initialize CRE
+  % initialize CRE implementation
   {ok, ModState} = apply( Mod, init, [ModArg] ),
 
-  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState}}.
+  % return generic CRE state
+  error_logger:info_msg( io_lib:format( "ModArg: ~p~n", [ModArg] ) ),
+
+  DoProf = maps:get( profiling, ModArg, false ),
+  
+  error_logger:info_msg( io_lib:format( "DoProf: ~p~n", [DoProf] ) ),
+
+  Prof = {profiling, DoProf, ""},
+
+  error_logger:info_msg( io_lib:format( "Prof: ~p~n", [Prof] ) ),
+
+  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof}}.
 
 %% @doc On receiving a call containing a submission, a future is generated and
 %%      returned.
@@ -142,7 +158,7 @@ when Request :: submit(),
 
 handle_call( {submit, App, DataDir, UserInfo},
              {Pid, _Tag},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} )
 
 when is_tuple( App ),
      is_list( DataDir ),
@@ -166,7 +182,6 @@ when is_tuple( App ),
 
       % start process
       Runtime = self(),
-      Prof = effi_profiling:get_profiling_settings( false, "<requestfile>_profile.xml" ),
       _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, Prof ) end ),
 
       % create new future
@@ -178,7 +193,7 @@ when is_tuple( App ),
 
       logmgr:notify( {started, R, LamName} ),
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState}};
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState, Prof}};
 
     true ->
 
@@ -201,20 +216,20 @@ when is_tuple( App ),
           end
       end,
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState}}
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState, Prof}}
   end;
 
 handle_call( get_cache, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState} )
+             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState, _Prof} )
 when is_map( Cache ) ->
   {reply, Cache, State};
 
 handle_call( get_modstate, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState} ) ->
+             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState, _Prof} ) ->
   {reply, ModState, State};
 
 handle_call( get_replymap, _From,
-             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState} )
+             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState, _Prof} )
 when is_map( ReplyMap ) ->
   {reply, ReplyMap, State}.
 
@@ -226,7 +241,7 @@ when Info  :: response(),
      State :: cre_state().
 
 handle_info( Info={failed, Reason, S, Data},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} )
 when is_atom( Reason ),
      is_integer( S ), S > 0 ->
 
@@ -243,10 +258,10 @@ when is_atom( Reason ),
 
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, Prof}};
 
 handle_info( Info={finished, Sum},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} ) ->
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} ) ->
 
   % retrieve subscriber set
   #{id := S} = Sum,
@@ -263,7 +278,7 @@ handle_info( Info={finished, Sum},
 
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, Prof}}.
 
 %% =============================================================================
 %% API Functions

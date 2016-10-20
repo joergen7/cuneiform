@@ -63,7 +63,10 @@ init( _InitArgs ) ->
   Tstart    = trunc( os:system_time()/1000000 ),
 
   Session = #{ id     => SessionId,
-               tstart => Tstart },
+               tstart => Tstart%,
+               %sessionDescription => SessionDescription,
+               %userDescription => UserDescription
+            },
 
   {ok, #mod_state{ session = Session }}.
 
@@ -104,7 +107,9 @@ code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 
 %% terminate/2
 %
-terminate( _Arg, _State ) -> ok.
+terminate( _Arg, _State ) -> 
+  error_logger:info_msg( io_lib:format( "Log Manager received terminate. Queue status: ~p~n", [erlang:process_info(self(), message_queue_len)] ) ),
+  ok.
 
 %% =============================================================================
 %% API Functions
@@ -135,8 +140,6 @@ notify( LogEntry ) ->
 %
 to_json( {started, R, LamName}, Session ) ->
   
-  io:format("to json {started, ~p, ~p}~n", [R, LamName]),
-
   {ok, Host} = inet:gethostname(),
 
   jsone:encode( #{ vsn      => ?VSN,
@@ -176,8 +179,6 @@ to_json( {failed, Reason, S, {ActScript, Out}}, Session ) ->
 
 to_json( {finished, Sum}, Session ) ->
 
-  io:format("to json {finished, ~p}~n", [maps:get(id, Sum)]),
-
   {ok, Host} = inet:gethostname(),
 
   #{ id     := Id,
@@ -207,3 +208,28 @@ to_json( {finished, Sum}, Session ) ->
                                   status    => ok,
                                   lam_name  => list_to_binary( LamName ),
                                   info      => Info } } ).
+
+%% user/0
+%% @doc Calls system commands whoami or id -un to return the name of the user under which this erlang VM operates.
+%% If none of the commands is available, returns "defaultUser"
+-spec user() -> string().
+user() ->
+  % candidate commands, pick any that is installed
+  Cmds = [#{cmd=>"whoami"}, #{cmd=>"id", args=>" -un"}],
+  % look up the absolute paths with find_executable, gives false if not found
+  PCmds = lists:map(fun(X) -> Cmd = maps:get(cmd, X), X#{path => os:find_executable(Cmd)} end, Cmds),
+  % remove those that cannot be found
+  Candidates = lists:filter(fun(X)-> maps:get(path, X) /= false end, PCmds),
+  % generate calls by concatenating path and arguments
+  Calls = lists:map( fun(X)->string:concat(maps:get(path,X),maps:get(args,X,"")) end, Candidates),
+  if 
+    length(Calls) == 0 -> "defaultUser";
+    true ->
+      % take the first command...
+      [Cmd | _] = Calls,
+      % ...execute it ...
+      CmdOut = os:cmd( Cmd ),
+      % ... and return the output until the first new line
+      [User| _] = string:tokens( CmdOut, "\n"),
+      User
+  end.

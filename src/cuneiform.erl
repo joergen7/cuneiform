@@ -54,7 +54,7 @@ main( CmdLine ) ->
 
                   {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
-                  
+
                   % if remote logging is on, register the given IP address at the log manager 
                   ok = case lists:keymember( logdb, 1, OptLst ) of
                     false -> ok;
@@ -76,6 +76,20 @@ main( CmdLine ) ->
       end
   end.
 
+%% @doc starts the platform (e.g., local, htcondor) and the cuneiform application  
+start( Mod, ModArg, LibMap )
+when is_atom( Mod ), is_map( LibMap ) ->
+  application:start( inets ),
+  
+  % start the cuneiform supervisor (the application is just a wrapper around it)
+  % the supervisor starts a log manager child process on startup
+  application:start( cuneiform ),
+  
+  % add the platform process to the cuneiform supervisor
+  cf_sup:start_cre( Mod, ModArg, LibMap ).
+
+%% file/2
+%
 -spec file( File, Cwd ) -> {ok, [cf_sem:str()]} | {error, term()}
 when File   :: string(),
      Cwd    :: string().
@@ -91,15 +105,6 @@ file( File, Cwd ) ->
         throw:T -> {error, T}
       end
   end.
-
-%% @doc starts the platform (e.g., local, htcondor) and the cuneiform application  
-start( Mod, ModArg, LibMap )
-when is_atom( Mod ), is_map( LibMap ) ->
-  application:start( inets ),
-  application:start( cuneiform ),
-  cf_sup:start_cre( Mod, ModArg, LibMap ).
-
-
 
 -spec pprint( X ) -> iolist()
 when X::[cf_sem:expr()] | cf_sem:expr() | #{string() => [cf_sem:expr()]}.
@@ -226,6 +231,8 @@ get_optspec_lst() ->
    {nthread,  $t,        "nthread",  integer,             "number of threads in local mode"},
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
    {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
+   {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {sessionDescription, $d, "session-description", {string, "default"}, "a one-word description of the session to appear in the remote logging database"},
    {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
    {profiling,$r,        "profiling",{boolean, false},    "collect detailed usage statistics, requires the pegasus-kickstart binary"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},

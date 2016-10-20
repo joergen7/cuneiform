@@ -48,27 +48,36 @@
 -define( CONF_FILE, "/usr/local/etc/cuneiform/local.conf" ).
 
 %% =============================================================================
-%% Platform Functions
+%% Cuneiform Runtime Environment Functions
 %% =============================================================================
 
 %% init/1
-%
+%% The state of the CRE comprises a reference to the processes queue (multi-threading)
+%% and the working directory.
 -spec init( ManualMap::#{atom() => _} ) -> {ok, {iolist(), pid()}}.
 
 init( ManualMap ) when is_map( ManualMap ) ->
-
+  
   % create configuration
   Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
+
+  %error_logger:info_msg( io_lib:format( "Conf~p~n", [Conf] ) ),  
+
+  % create queue and get reference (multi-threading)
   #{ nthread := NSlot } = Conf,
   BaseDir = create_basedir( maps:get( basedir, Conf ), 1 ),
   {ok, QueueRef} = gen_queue:start_link( NSlot ),
-  #{ profiling := Profiling } = Conf, 
-  error_logger:info_msg( io_lib:format( "Base directory:    ~s~nNumber of threads: ~p~nProfiling enabled: ~p~n", [BaseDir, NSlot, Profiling] ) ),
+  
+  % show a summary of the configuration
+  Logging = maps:get( logdb, Conf, false ),
+  Profiling = maps:get( profiling, Conf ), 
+  error_logger:info_msg( io_lib:format( "Base directory      ~s~nNumber of threads   ~p~nRemote Logging      ~s~nProfiling           ~p~n", [BaseDir, NSlot, Logging, Profiling] ) ),
 
   {ok, {BaseDir, QueueRef}}.
 
 %% handle_submit/8
-%
+%% This is the implementation of the CRE callback that is used to compute the result of an expression (=task?), 
+%% as implemented by {@link stage/7}. The cache of results is maintained at the {@link cf_cre} level.
 -spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef}, Prof ) ->
   {finished, #{}} | {failed, atom(), pos_integer(), _}
 when Lam      :: cre:lam(),
@@ -97,6 +106,10 @@ when is_tuple( Lam ),
   receive
     Reply -> Reply
   end.
+
+%% =============================================================================
+%% API Functions
+%% =============================================================================
 
 %% create_basedir/2
 %
