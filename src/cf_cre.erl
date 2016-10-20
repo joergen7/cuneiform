@@ -105,7 +105,9 @@ when Lam      :: cf_sem:lam(),
 
 code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 handle_cast( Request, _State ) -> error( {bad_request, Request} ).
-terminate( _Reason, _State ) -> ok.
+terminate( _Reason, _State ) -> 
+  error_logger:info_msg("Terminating the generic cuneiform runtime environment"),
+  ok.
 
 %% init/1
 %% @doc Generates the initial state of the CRE.

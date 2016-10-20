@@ -75,13 +75,15 @@ main( CmdLine ) ->
                         {ok, Ret}  -> io:format( "~s~n", [format_result( Ret )] );
                         {error, T} -> io:format( "~s~n", [format_error( T )] )
                       end
-                  end
+                  end,
+                  timer:sleep(2000)
               end
           end
       end
   end.
 
-%% @doc starts the platform (e.g., local, htcondor) and the cuneiform application  
+%% start/3
+%% @doc starts the cuneiform application and instantiates the platform (e.g., local, htcondor)
 start( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
   application:start( inets ),
