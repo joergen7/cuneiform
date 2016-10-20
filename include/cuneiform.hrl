@@ -1,5 +1,5 @@
 -define( BUILD, "2016-10-17" ).
--define( VSN, "2.2.1-release" ).
+-define( VSN, "2.2.2-snapshot" ).
 
 -define( RED( Str ), "\e[31m" ++ Str ++ "\e[0m" ).
 -define( BRED( Str ), "\e[1;31m" ++ Str ++ "\e[0m" ).
