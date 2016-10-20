@@ -30,7 +30,7 @@
 %% =============================================================================
 
 %% API
--export( [start_link/0, add_ip/1, notify/1] ).
+-export( [start_link/0, add_ip/1, set_session_description/1, notify/1] ).
 
 %% gen_event behaviour callbacks
 -export( [code_change/3, handle_call/2, init/1, terminate/2, handle_event/2,
@@ -63,9 +63,9 @@ init( _InitArgs ) ->
   Tstart    = trunc( os:system_time()/1000000 ),
 
   Session = #{ id     => SessionId,
-               tstart => Tstart%,
-               %sessionDescription => SessionDescription,
-               %userDescription => UserDescription
+               tstart => Tstart,
+               user   => list_to_binary( user() ),
+               description => <<>>  % empty string in binary
             },
 
   {ok, #mod_state{ session = Session }}.
@@ -80,7 +80,7 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
     Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
     Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
-    io:format( "Sending ~w to ~s~n~p", [element( 1, LogEntry ), Url, to_json( LogEntry, Session )] ),
+    io:format( "Sending ~p to ~s~n~p", [element( 1, LogEntry ), Url, to_json( LogEntry, Session )] ),
 
     X = httpc:request( post, Request, [], [{sync, true}] ),
 
@@ -93,9 +93,14 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
   {ok, State}.
 
 %% handle_call/2
-%
+% add_ip
 handle_call( {add_ip, Ip}, State = #mod_state{ ip_lst = IpLst } ) ->
-  {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }}.
+  {ok, ok, State#mod_state{ ip_lst = [Ip|IpLst] }};
+% set_session_description
+handle_call( {set_session_description, SessionDescription}, State ) ->
+  OldSession = State#mod_state.session,
+  NewSession = OldSession#{ description => list_to_binary(SessionDescription) },
+  {ok, ok, State#mod_state{ session = NewSession } }.
 
 %% handle_info/2
 %
@@ -120,10 +125,16 @@ terminate( _Arg, _State ) ->
 add_ip( Ip ) when is_list( Ip ) ->
   gen_event:call( ?MODULE, ?MODULE, {add_ip, Ip} ).
 
+%% set_session_description/1
+%
+set_session_description( SessionDescription ) when is_list( SessionDescription ) ->
+  gen_event:call( ?MODULE, ?MODULE, {set_session_description, SessionDescription} ).
+
 %% start_link/0
 %
 start_link() ->
   {ok, Pid} = gen_event:start_link( {local, ?MODULE} ),
+  % this will call init/1 of this module (adding the logmgr functions like handle_event to the process registered as logmgr)
   gen_event:add_handler( ?MODULE, ?MODULE, [] ),
   {ok, Pid}.
 

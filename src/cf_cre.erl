@@ -62,7 +62,9 @@
 
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, Prof ) ->
+%% handle_submit
+%% @doc Accepts tasks submitted through {@link stage/10}, which is invoked through {@link handle_call/3}.
+-callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, DoProf ) ->
   {failed, Reason, S, Data} | {finished, Sum}
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
@@ -71,7 +73,7 @@ when Lam      :: cf_sem:lam(),
      R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      ModState :: term(),
-     Prof     :: effi_profiling:profilingsettings(),
+     DoProf   :: boolean(),
      Reason   :: atom(),
      S        :: pos_integer(),
      Data     :: term(),
@@ -93,7 +95,7 @@ when Lam      :: cf_sem:lam(),
                       R::pos_integer(),
                       LibMap::#{cf_sem:lang() => [string()]},
                       ModState::term(),
-                      Prof::effi_profiling:profiling_settings()}.
+                      DoProf::boolean()}.
 
 -type submit()    :: {submit, App::cf_sem:app(), DataDir::string(), UserInfo::_}.
 
@@ -105,8 +107,8 @@ code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 handle_cast( Request, _State ) -> error( {bad_request, Request} ).
 terminate( _Reason, _State ) -> ok.
 
+%% init/1
 %% @doc Generates the initial state of the CRE.
-
 -spec init( {Mod, ModArg, LibMap} ) -> {ok, cre_state()}
 when Mod    :: atom(),
      ModArg :: term(),
@@ -122,20 +124,13 @@ when is_atom( Mod ), is_map( LibMap ) ->
 
   % initialize CRE implementation
   {ok, ModState} = apply( Mod, init, [ModArg] ),
-
-  % return generic CRE state
-  error_logger:info_msg( io_lib:format( "ModArg: ~p~n", [ModArg] ) ),
-
-  DoProf = maps:get( profiling, ModArg, false ),
   
-  error_logger:info_msg( io_lib:format( "DoProf: ~p~n", [DoProf] ) ),
+  DoProf = maps:get( profiling, ModArg, false ), 
+  
+  % return generic CRE state
+  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf}}.
 
-  Prof = {profiling, DoProf, ""},
-
-  error_logger:info_msg( io_lib:format( "Prof: ~p~n", [Prof] ) ),
-
-  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof}}.
-
+%% handle_call/3
 %% @doc On receiving a call containing a submission, a future is generated and
 %%      returned.
 %%
@@ -158,7 +153,7 @@ when Request :: submit(),
 
 handle_call( {submit, App, DataDir, UserInfo},
              {Pid, _Tag},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} )
 
 when is_tuple( App ),
      is_list( DataDir ),
@@ -182,7 +177,7 @@ when is_tuple( App ),
 
       % start process
       Runtime = self(),
-      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, Prof ) end ),
+      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, DoProf ) end ),
 
       % create new future
       Fut = {fut, LamName, R, Lo},
@@ -193,7 +188,7 @@ when is_tuple( App ),
 
       logmgr:notify( {started, R, LamName} ),
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState, Prof}};
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState, DoProf}};
 
     true ->
 
@@ -216,20 +211,20 @@ when is_tuple( App ),
           end
       end,
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState, Prof}}
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState, DoProf}}
   end;
 
 handle_call( get_cache, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState, _Prof} )
+             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState, _DoProf} )
 when is_map( Cache ) ->
   {reply, Cache, State};
 
 handle_call( get_modstate, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState, _Prof} ) ->
+             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState, _DoProf} ) ->
   {reply, ModState, State};
 
 handle_call( get_replymap, _From,
-             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState, _Prof} )
+             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState, _DoProf} )
 when is_map( ReplyMap ) ->
   {reply, ReplyMap, State}.
 
@@ -241,7 +236,7 @@ when Info  :: response(),
      State :: cre_state().
 
 handle_info( Info={failed, Reason, S, Data},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} )
 when is_atom( Reason ),
      is_integer( S ), S > 0 ->
 
@@ -258,10 +253,10 @@ when is_atom( Reason ),
 
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, Prof}};
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, DoProf}};
 
 handle_info( Info={finished, Sum},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, Prof} ) ->
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} ) ->
 
   % retrieve subscriber set
   #{id := S} = Sum,
@@ -278,7 +273,7 @@ handle_info( Info={finished, Sum},
 
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, Prof}}.
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, DoProf}}.
 
 %% =============================================================================
 %% API Functions
@@ -309,7 +304,10 @@ when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Data
 %% Internal Functions
 %% =============================================================================
 
-stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, Prof )
+%% stage/10
+%% Passes the task to the handle_submit callback implementation of the active runtime,
+%% e.g. {@link local} or {@link htcondor}
+stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, DoProf )
 when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_tuple( Lam ),
      is_map( Fa ),
@@ -318,11 +316,5 @@ when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_integer( R ), R > 0,
      is_map( LibMap ) ->
 
-  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, Prof] ),
+  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, DoProf] ),
   Runtime ! Reply.
-
-
--ifdef( TEST ).
-
-
--endif.

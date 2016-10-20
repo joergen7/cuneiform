@@ -78,7 +78,7 @@ init( ManualMap ) when is_map( ManualMap ) ->
 %% handle_submit/8
 %% This is the implementation of the CRE callback that is used to compute the result of an expression (=task?), 
 %% as implemented by {@link stage/7}. The cache of results is maintained at the {@link cf_cre} level.
--spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef}, Prof ) ->
+-spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef}, DoProf ) ->
   {finished, #{}} | {failed, atom(), pos_integer(), _}
 when Lam      :: cre:lam(),
      Fa       :: #{string() => [cre:str()]},
@@ -88,9 +88,9 @@ when Lam      :: cre:lam(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      BaseDir  :: iolist(),
      QueueRef :: pid(),
-     Prof     :: effi_profiling:profilingsettings().
+     DoProf   :: boolean().
 
-handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef}, Prof )
+handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef}, DoProf )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_integer( R ), R > 0,
@@ -98,10 +98,11 @@ when is_tuple( Lam ),
      is_map( LibMap ),
      is_list( BaseDir ),
      is_pid( QueueRef ),
-     is_tuple( Prof ) ->
+     is_atom( DoProf ) ->
 
+  % spawn the stage function execution as a process in the multi-threading queue
   gen_server:cast( QueueRef, {request, self(),
-                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir, Prof]}} ),
+                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir, DoProf]}} ),
 
   receive
     Reply -> Reply
@@ -151,18 +152,19 @@ when is_list( BaseDir ),
   end.
 
 %% stage/7
-%
--spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir, Prof ) -> cre:response()
+%% Processes a given task using the Effi module. This function is invoked
+%% through {@link handle_submit/8} which is required by the cf_cre behavior.
+-spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir, DoProf ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
      DataDir :: string(),
      R       :: pos_integer(),
      LibMap  :: #{cf_sem:lang() => [string()]},
      BaseDir :: iolist(),
-     Prof    :: effi_profiling:profilingsettings().
+     DoProf  :: boolean().
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, DataDir, R, LibMap, BaseDir, Prof )
+       Fa, DataDir, R, LibMap, BaseDir, DoProf )
 when is_list( Lo ),
      is_list( Li ),
      is_map( Fa ),
@@ -170,7 +172,7 @@ when is_list( Lo ),
      is_integer( R ), R > 0,
      is_map( LibMap ),
      is_list( BaseDir ),
-     is_tuple( Prof ) ->
+     is_atom( DoProf ) ->
 
 
   Dir = create_workdir( BaseDir, ?WORK, R ),
@@ -187,6 +189,8 @@ when is_list( Lo ),
 
       % link in input files
       lib_refactor:apply_refactoring( RefactorLst1 ),
+
+      Prof = effi_profiling:get_profiling_settings( DoProf, filename:join( Dir, "profile.xml" ) ),
 
       % start effi
       case effi:check_run( Lam, Fa1, R, Dir, LibMap, Prof ) of
