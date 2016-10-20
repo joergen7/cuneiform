@@ -33,6 +33,9 @@
 %% API functions
 %% =============================================================================
 
+%% main/1
+%% @doc Application entry point for command line use. Parses arguments and starts the 
+%% {@link cuneiform_app} application using {@link start/3}.
 -spec main( CmdLine::list() ) -> ok.
 
 main( CmdLine ) ->

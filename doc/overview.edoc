@@ -1,0 +1,6 @@
+ ** this is the overview.doc file for the application 'frob' **
+
+@title Cuneiform documentation
+@doc This is the Erlang implementation of the Cuneiform workflow language.
+It supports execution on multiple platforms, see {@link local} for a single node execution mode and {@link htcondor} for a distributed environment. Other platforms can be added by implementing the callback functions of {@link cf_cre}, the cuneiform runtime environment.
+The {@link cuneiform_app} uses the supervisor {@link cf_sup} as main process, which starts the chosen runtime environment (based on the command line arguments, see {@link cuneiform}). It also starts a log manager {@link logmgr}, which supports remote logging for a monitoring the progress and state of the workflow.  
