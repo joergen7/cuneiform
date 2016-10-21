@@ -64,7 +64,7 @@ main( CmdLine ) ->
                     true  ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
                       logmgr:add_ip( Ip ),
-                      {sessionDescription, SessionDescription } = lists:keyfind( sessionDescription, 1, OptLst ),
+                      {sessiondescription, SessionDescription } = lists:keyfind( sessiondescription, 1, OptLst ),
                       logmgr:set_session_description( SessionDescription )
                   end,
 
@@ -241,8 +241,7 @@ get_optspec_lst() ->
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
    {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
    {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
-   {sessionDescription, $d, "session-description", {string, ""}, "a one-word description of the session to appear in the remote logging database"},
-   {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {sessiondescription, $d, "session-description", {string, ""}, "a one-word description of the session to appear in the remote logging database"},
    {profiling,$r,        "profiling",{boolean, false},    "collect detailed usage statistics, requires the pegasus-kickstart binary"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},
    {pylib,    undefined, "pylib",    string,              "include Python library path"}
