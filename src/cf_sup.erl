@@ -16,6 +16,24 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+
+%% @doc The cuneiform supervisor (sup) starts (and restarts if necessary) the
+%% child process that implements a specific platform - the Cuneiform Runtime
+%% Environment (CRE). 
+%% It also starts (and restarts if necessary) the log manager (logmgr).
+%% It is called from {@link cuneiform:start/1}.
+%% When started (by starting the {@link cuneiform_app}), only the log manager
+%% is started, a specific CRE implementation is started through {@link start_cre/3}.
+%% 
+%% ```
+%%            +-----+
+%%            | sup |
+%%            +-----+
+%%           /       \
+%%    +--------+      +-------+
+%%    | logmgr |      |  CRE  |
+%%    +--------+      +-------+'''
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
@@ -35,31 +53,17 @@
 %% API functions
 %% =============================================================================
 
+%% start_link/0
+%% starts a supervisor process using the behavior implemented in this module 
 start_link() ->
   supervisor:start_link( {local, ?MODULE}, ?MODULE, [] ).
 
-%% =============================================================================
-%% Supervisor callbacks
-%% =============================================================================
-
-init( [] ) ->
-
-  RestartStrategy = one_for_one,
-  MaxRestarts = 3,
-  MaxSecondsBetweenRestarts = 10,
-  SupFlags = {RestartStrategy, MaxRestarts, MaxSecondsBetweenRestarts},
-
-  Logmgr = #{
-    id       => logmgr,
-    start    => {logmgr, start_link, []},
-    restart  => permanent,
-    shutdown => 5000,
-    type     => worker,
-    modules  => [logmgr]
-  },
-
-  {ok, {SupFlags, [Logmgr]}}.
-
+%% start_cre/3
+%% @doc adds the runtime environment process as a child to the supervision tree.
+%% This makes the runtime environment a sibling of the log manager, also supervised
+%% by the cuneiform supervisor (and started in the {@link init/1} callback implementation)
+%% The actual runtime startup process is implemented by start_link, (e.g. in {@link local} or {@link htcondor}).
+%% Since the runtimes implement cf_cre, they indirectly implement the gen_server behavior.
 -spec start_cre( Mod, ModArg, LibMap ) -> {ok, pid()}
 when Mod    :: atom(),
      ModArg :: term(),
@@ -67,11 +71,38 @@ when Mod    :: atom(),
 
 start_cre( Mod, ModArg, LibMap )
 when is_atom( Mod ), is_map( LibMap ) ->
+  
+  RuntimeEnvChildSpec = #{
+    id => cre, 
+    start => {cf_cre, start_link, [Mod, ModArg, LibMap]},
+    restart => temporary,   % never restart
+    modules => [cf_cre]
+  },
 
-  Restart = temporary,
-  Shutdown = 5000,
-  Type = worker,
+  supervisor:start_child( ?MODULE, RuntimeEnvChildSpec ).
 
-  Cre = {cre, {cf_cre, start_link, [Mod, ModArg, LibMap]}, Restart, Shutdown, Type, [cf_cre]},
+%% =============================================================================
+%% Supervisor callbacks
+%% =============================================================================
 
-  supervisor:start_child( cf_sup, Cre ).
+%% init/1
+%% @doc returns the supervisor configuration (flags) and the definition and 
+%% configuration of the child processes, i.e., the log manager.
+init( [] ) ->
+
+  SupFlags = #{
+    strategy => one_for_one, 
+    intensity => 3, % if more than <intensity> restarts occur...
+    period => 10    % ...within <period> seconds, terminate child processes and self
+  },
+
+  Logmgr = #{
+    id       => logmgr,
+    start    => {logmgr, start_link, []}, %start    => {gen_event, start_link, [{local, logmgr}]},
+    restart  => permanent,
+    shutdown => 10000,   % timeout [ms] to wait for an exit signal with reason shutdown from the child process.
+    type     => worker,
+    modules  => dynamic  % If the child process is an event manager (gen_event) with a dynamic set of callback modules, value dynamic must be used. [erlang docs]
+  },
+
+  {ok, {SupFlags, [Logmgr]}}.

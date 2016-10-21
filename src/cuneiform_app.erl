@@ -16,12 +16,14 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc A wrapper for the cuneiform supervisor ({@link cf_sup}), which 
+%% controls the log manager and runtime environment processes.
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( cuneiform_app ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
-
 
 -behaviour( application ).
 
@@ -33,4 +35,6 @@
 %% =============================================================================
 
 start( normal, [] ) -> cf_sup:start_link().
-stop( _State ) -> ok.
+stop( _State ) -> 
+	error_logger:info_msg( "Shutting down cuneiform application." ),
+	ok.

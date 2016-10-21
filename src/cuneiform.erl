@@ -33,6 +33,9 @@
 %% API functions
 %% =============================================================================
 
+%% main/1
+%% @doc Application entry point for command line use. Parses arguments and starts the 
+%% {@link cuneiform_app} application using {@link start/3}.
 -spec main( CmdLine::list() ) -> ok.
 
 main( CmdLine ) ->
@@ -54,13 +57,15 @@ main( CmdLine ) ->
 
                   {ok, CrePid} = start( Platform, maps:from_list( OptLst ), LibMap ),
                   link( CrePid ),
-                  
+
+                  % if remote logging is on, register the given IP address at the log manager 
                   ok = case lists:keymember( logdb, 1, OptLst ) of
                     false -> ok;
                     true  ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
                       logmgr:add_ip( Ip ),
-                      io:format( "added IP ~s to logmgr.~n", [Ip] )
+                      {sessiondescription, SessionDescription } = lists:keyfind( sessiondescription, 1, OptLst ),
+                      logmgr:set_session_description( SessionDescription )
                   end,
 
                   case NonOptLst of
@@ -70,12 +75,30 @@ main( CmdLine ) ->
                         {ok, Ret}  -> io:format( "~s~n", [format_result( Ret )] );
                         {error, T} -> io:format( "~s~n", [format_error( T )] )
                       end
-                  end
+                  end,                  
+                  % wait until all log messages are sent
+                  % error_logger:info_msg( io_lib:format( "Log Manager received terminate. Queue status: ~p~n", [erlang:process_info(self(), message_queue_len)] ) ),
+                  timer:sleep(2000)
               end
           end
       end
   end.
 
+%% start/3
+%% @doc starts the cuneiform application and instantiates the platform (e.g., local, htcondor)
+start( Mod, ModArg, LibMap )
+when is_atom( Mod ), is_map( LibMap ) ->
+  application:start( inets ),
+  
+  % start the cuneiform supervisor (the application is just a wrapper around it)
+  % the supervisor starts a log manager child process on startup
+  application:start( cuneiform ),
+  
+  % add the platform process to the cuneiform supervisor
+  cf_sup:start_cre( Mod, ModArg, LibMap ).
+
+%% file/2
+%
 -spec file( File, Cwd ) -> {ok, [cf_sem:str()]} | {error, term()}
 when File   :: string(),
      Cwd    :: string().
@@ -91,15 +114,6 @@ file( File, Cwd ) ->
         throw:T -> {error, T}
       end
   end.
-
-
-start( Mod, ModArg, LibMap )
-when is_atom( Mod ), is_map( LibMap ) ->
-  application:start( inets ),
-  application:start( cuneiform ),
-  cf_sup:start_cre( Mod, ModArg, LibMap ).
-
-
 
 -spec pprint( X ) -> iolist()
 when X::[cf_sem:expr()] | cf_sem:expr() | #{string() => [cf_sem:expr()]}.
@@ -227,6 +241,8 @@ get_optspec_lst() ->
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
    {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
    {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {sessiondescription, $d, "session-description", {string, ""}, "a one-word description of the session to appear in the remote logging database"},
+   {profiling,$r,        "profiling",{boolean, false},    "collect detailed usage statistics, requires the pegasus-kickstart binary"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},
    {pylib,    undefined, "pylib",    string,              "include Python library path"}
   ].
