@@ -17,14 +17,18 @@
 % limitations under the License.
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
-%% @doc The Cuneiform Runtime Environment (CRE).
-%% ```+-------+   +-------+
-%%    | Query |   | Query |
-%%    +-------+   +-------+
-%%            \   /
-%%           +-----+
-%%           | CRE |
-%%           +-----+'''
+%% @doc The Cuneiform Runtime Environment (CRE) specifies the callbacks
+%% for concrete cuneiform implementations, e.g., {@link local} and {@link htcondor}.
+%% By implementing the gen_server behavior, each CRE becomes a server to cuneiform queries.
+%% 
+%% ```+--------+  
+%%    | Client |  
+%%    +--------+  
+%%    Query|   ^ Response
+%%         v   | 
+%%         +-----+
+%%         | CRE |
+%%         +-----+'''
 
 
 -module( cf_cre ).
@@ -36,10 +40,13 @@
 %% Function Exports
 %% =============================================================================
 
+% API functions
 -export( [start_link/3, submit/4] ).
 
--export( [code_change/3, handle_cast/2, handle_info/2, init/1, terminate/2,
-          handle_call/3] ).
+% server behavior callback implementations
+-export( [init/1, terminate/2,
+          handle_cast/2, handle_info/2, handle_call/3,
+          code_change/3] ).
 
 %% =============================================================================
 %% Includes
@@ -53,10 +60,11 @@
 %% Callback Function Declarations
 %% =============================================================================
 
-
 -callback init( Arg::term() ) -> {ok, State::term()}.
 
--callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState ) ->
+%% handle_submit
+%% @doc Accepts tasks submitted through {@link stage/10}, which is invoked through {@link handle_call/3}.
+-callback handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, DoProf ) ->
   {failed, Reason, S, Data} | {finished, Sum}
 when Lam      :: cf_sem:lam(),
      Fa       :: #{string() => [cf_sem:str()]},
@@ -65,6 +73,7 @@ when Lam      :: cf_sem:lam(),
      R        :: pos_integer(),
      LibMap   :: #{cf_sem:lang() => [string()]},
      ModState :: term(),
+     DoProf   :: boolean(),
      Reason   :: atom(),
      S        :: pos_integer(),
      Data     :: term(),
@@ -85,7 +94,8 @@ when Lam      :: cf_sem:lam(),
                       Cache::#{ckey() => cf_sem:fut()},
                       R::pos_integer(),
                       LibMap::#{cf_sem:lang() => [string()]},
-                      ModState::term()}.
+                      ModState::term(),
+                      DoProf::boolean()}.
 
 -type submit()    :: {submit, App::cf_sem:app(), DataDir::string(), UserInfo::_}.
 
@@ -95,10 +105,12 @@ when Lam      :: cf_sem:lam(),
 
 code_change( _OldVsn, State, _Extra ) -> {ok, State}.
 handle_cast( Request, _State ) -> error( {bad_request, Request} ).
-terminate( _Reason, _State ) -> ok.
+terminate( _Reason, _State ) -> 
+  error_logger:info_msg("Terminating the generic cuneiform runtime environment"),
+  ok.
 
+%% init/1
 %% @doc Generates the initial state of the CRE.
-
 -spec init( {Mod, ModArg, LibMap} ) -> {ok, cre_state()}
 when Mod    :: atom(),
      ModArg :: term(),
@@ -112,12 +124,16 @@ when is_atom( Mod ), is_map( LibMap ) ->
   Cache     = #{},        % cache mapping a cache key to a future
   R         = 1,          % next id
 
-  % initialize CRE
+  % initialize CRE implementation
   {ok, ModState} = apply( Mod, init, [ModArg] ),
+  
+  DoProf = maps:get( profiling, ModArg, false ), 
+  
+  % return generic CRE state
+  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf}}.
 
-  {ok, {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState}}.
-
-%% @doc On receiving a call containing a subission, a future is generated and
+%% handle_call/3
+%% @doc On receiving a call containing a submission, a future is generated and
 %%      returned.
 %%
 %%      When a submission request is received by the CRE, it returns a future by
@@ -139,7 +155,7 @@ when Request :: submit(),
 
 handle_call( {submit, App, DataDir, UserInfo},
              {Pid, _Tag},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} )
 
 when is_tuple( App ),
      is_list( DataDir ),
@@ -163,7 +179,7 @@ when is_tuple( App ),
 
       % start process
       Runtime = self(),
-      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState ) end ),
+      _Pid = spawn_link( fun() -> stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, DoProf ) end ),
 
       % create new future
       Fut = {fut, LamName, R, Lo},
@@ -172,9 +188,9 @@ when is_tuple( App ),
       Cache1 = Cache#{Ckey => Fut},
       R1 = R+1,
 
-      gen_event:notify( logmgr, {started, R, LamName} ),
+      logmgr:notify( {started, R, LamName} ),
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState}};
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache1, R1, LibMap, ModState, DoProf}};
 
     true ->
 
@@ -197,20 +213,20 @@ when is_tuple( App ),
           end
       end,
 
-      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState}}
+      {reply, Fut, {Mod, SubscrMap1, ReplyMap, Cache, R, LibMap, ModState, DoProf}}
   end;
 
 handle_call( get_cache, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState} )
+             State={_Mod, _SubscrMap, _ReplyMap, Cache, _R, _LibMap, _ModState, _DoProf} )
 when is_map( Cache ) ->
   {reply, Cache, State};
 
 handle_call( get_modstate, _From,
-             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState} ) ->
+             State={_Mod, _SubscrMap, _ReplyMap, _Cache, _R, _LibMap, ModState, _DoProf} ) ->
   {reply, ModState, State};
 
 handle_call( get_replymap, _From,
-             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState} )
+             State={_Mod, _SubscrMap, ReplyMap, _Cache, _R, _LibMap, _ModState, _DoProf} )
 when is_map( ReplyMap ) ->
   {reply, ReplyMap, State}.
 
@@ -222,7 +238,7 @@ when Info  :: response(),
      State :: cre_state().
 
 handle_info( Info={failed, Reason, S, Data},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} )
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} )
 when is_atom( Reason ),
      is_integer( S ), S > 0 ->
 
@@ -237,13 +253,12 @@ when is_atom( Reason ),
 
   ReplyMap1 = ReplyMap#{S => Info},
 
-
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}};
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, DoProf}};
 
 handle_info( Info={finished, Sum},
-             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState} ) ->
+             {Mod, SubscrMap, ReplyMap, Cache, R, LibMap, ModState, DoProf} ) ->
 
   % retrieve subscriber set
   #{id := S} = Sum,
@@ -260,7 +275,7 @@ handle_info( Info={finished, Sum},
 
   logmgr:notify( Info ),
 
-  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState}}.
+  {noreply, {Mod, SubscrMap, ReplyMap1, Cache, R, LibMap, ModState, DoProf}}.
 
 %% =============================================================================
 %% API Functions
@@ -291,7 +306,10 @@ when is_pid( Runtime ) orelse is_atom( Runtime ), is_tuple( App ), is_list( Data
 %% Internal Functions
 %% =============================================================================
 
-stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState )
+%% stage/10
+%% Passes the task to the handle_submit callback implementation of the active runtime,
+%% e.g. {@link local} or {@link htcondor}
+stage( Runtime, Lam, Fa, DataDir, UserInfo, Mod, R, LibMap, ModState, DoProf )
 when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_tuple( Lam ),
      is_map( Fa ),
@@ -300,11 +318,5 @@ when is_pid( Runtime ) orelse is_atom( Runtime ),
      is_integer( R ), R > 0,
      is_map( LibMap ) ->
 
-  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState] ),
+  Reply = apply( Mod, handle_submit, [Lam, Fa, DataDir, UserInfo, R, LibMap, ModState, DoProf] ),
   Runtime ! Reply.
-
-
--ifdef( TEST ).
-
-
--endif.

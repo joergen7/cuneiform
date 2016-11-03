@@ -16,22 +16,105 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc local execution platform.
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( local ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
+-behaviour( cf_cre ).
+
+%% =============================================================================
+%% Function Exports
+%% =============================================================================
+
+%% cf_cre behaviour callbacks
+-export([init/1, handle_submit/8]).
+
+%% API
+-export( [stage/7, create_basedir/2, create_workdir/3] ).
+
+%% =============================================================================
+%% Includes and Definitions
+%% =============================================================================
+
 -include( "cuneiform.hrl" ).
 
--behaviour( cf_cre ).
--export( [init/1, handle_submit/7, stage/6, create_basedir/2,
-          create_workdir/3] ).
-
 -define( DEFAULT_CONF, #{ basedir => "/tmp/cf",
-                          nthread => case erlang:system_info( logical_processors_available ) of unknown -> 1; N -> N end } ).
+                          nthread => case erlang:system_info( logical_processors_available ) of unknown -> 1; N -> N end,
+                          profiling => false,
+                          logdb => false } ).
 -define( CONF_FILE, "/usr/local/etc/cuneiform/local.conf" ).
 
+%% =============================================================================
+%% Cuneiform Runtime Environment Functions
+%% =============================================================================
+
+%% init/1
+%% The state of the CRE comprises a reference to the processes queue (multi-threading)
+%% and the working directory.
+-spec init( ManualMap::#{atom() => _} ) -> {ok, {iolist(), pid()}}.
+
+init( ManualMap ) when is_map( ManualMap ) ->
+  
+  % create configuration
+  Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
+
+  %error_logger:info_msg( io_lib:format( "Conf~p~n", [Conf] ) ),  
+
+  % create queue and get reference (multi-threading)
+  #{ nthread := NSlot } = Conf,
+  BaseDir = create_basedir( maps:get( basedir, Conf ), 1 ),
+  {ok, QueueRef} = gen_queue:start_link( NSlot ),
+  
+  % show a summary of the configuration
+  Logging = maps:get( logdb, Conf ),
+  Profiling = maps:get( profiling, Conf ), 
+  error_logger:info_msg( io_lib:format( "Base directory      ~s~nNumber of threads   ~p~nRemote Logging      ~s~nProfiling           ~p~n", [BaseDir, NSlot, Logging, Profiling] ) ),
+
+  {ok, {BaseDir, QueueRef}}.
+
+%% handle_submit/8
+%% This is the implementation of the CRE callback that is used to compute the result of an expression (=task?), 
+%% as implemented by {@link stage/7}. The cache of results is maintained at the {@link cf_cre} level.
+-spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef}, DoProf ) ->
+  {finished, #{}} | {failed, atom(), pos_integer(), _}
+when Lam      :: cre:lam(),
+     Fa       :: #{string() => [cre:str()]},
+     DataDir  :: string(),
+     UserInfo :: _,
+     R        :: pos_integer(),
+     LibMap   :: #{cf_sem:lang() => [string()]},
+     BaseDir  :: iolist(),
+     QueueRef :: pid(),
+     DoProf   :: boolean().
+
+handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef}, DoProf )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_integer( R ), R > 0,
+     is_list( DataDir ),
+     is_map( LibMap ),
+     is_list( BaseDir ),
+     is_pid( QueueRef ),
+     is_atom( DoProf ) ->
+
+  % spawn the stage function execution as a process in the multi-threading queue
+  gen_server:cast( QueueRef, {request, self(),
+                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir, DoProf]}} ),
+
+  receive
+    Reply -> Reply
+  end.
+
+%% =============================================================================
+%% API Functions
+%% =============================================================================
+
+%% create_basedir/2
+%
 -spec create_basedir( Prefix::string(), I::pos_integer() ) -> iolist().
 
 create_basedir( Prefix, I )
@@ -49,49 +132,8 @@ when is_list( Prefix ),
       end
   end.
 
--spec init( ManualMap::#{atom() => _} ) -> {ok, {iolist(), pid()}}.
-
-init( ManualMap ) when is_map( ManualMap ) ->
-
-  % create configuration
-  Conf = lib_conf:create_conf( ?DEFAULT_CONF, ?CONF_FILE, ManualMap ),
-  #{ nthread := NSlot } = Conf,
-  BaseDir = create_basedir( maps:get( basedir, Conf ), 1 ),
-  {ok, QueueRef} = gen_queue:start_link( NSlot ),
-
-  error_logger:info_msg( io_lib:format( "Base directory:    ~s~nNumber of threads: ~p~n", [BaseDir, NSlot] ) ),
-
-  {ok, {BaseDir, QueueRef}}.
-
-
--spec handle_submit( Lam, Fa, DataDir, UserInfo, R, LibMap, {BaseDir, QueueRef} ) ->
-  {finished, #{}} | {failed, atom(), pos_integer(), _}
-when Lam      :: cre:lam(),
-     Fa       :: #{string() => [cre:str()]},
-     DataDir  :: string(),
-     UserInfo :: _,
-     R        :: pos_integer(),
-     LibMap   :: #{cf_sem:lang() => [string()]},
-     BaseDir  :: iolist(),
-     QueueRef :: pid().
-
-handle_submit( Lam, Fa, DataDir, _UserInfo, R, LibMap, {BaseDir, QueueRef} )
-when is_tuple( Lam ),
-     is_map( Fa ),
-     is_integer( R ), R > 0,
-     is_list( DataDir ),
-     is_map( LibMap ),
-     is_list( BaseDir ),
-     is_pid( QueueRef ) ->
-
-  gen_server:cast( QueueRef, {request, self(),
-                   {?MODULE, stage, [Lam, Fa, DataDir, R, LibMap, BaseDir]}} ),
-
-  receive
-    Reply -> Reply
-  end.
-
-
+%% create_workdir/3
+%
 -spec create_workdir( BaseDir, Work, R ) -> string()
 when BaseDir :: string(),
      Work    :: string(),
@@ -110,24 +152,28 @@ when is_list( BaseDir ),
     ok          -> Dir
   end.
 
-
--spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir ) -> cre:response()
+%% stage/7
+%% Processes a given task using the Effi module. This function is invoked
+%% through {@link handle_submit/8} which is required by the cf_cre behavior.
+-spec stage( Lam, Fa, DataDir, R, LibMap, BaseDir, DoProf ) -> cre:response()
 when Lam     :: cre:lam(),
      Fa      :: #{string() => [cre:str()]},
      DataDir :: string(),
      R       :: pos_integer(),
      LibMap  :: #{cf_sem:lang() => [string()]},
-     BaseDir :: iolist().
+     BaseDir :: iolist(),
+     DoProf  :: boolean().
 
 stage( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body},
-       Fa, DataDir, R, LibMap, BaseDir )
+       Fa, DataDir, R, LibMap, BaseDir, DoProf )
 when is_list( Lo ),
      is_list( Li ),
      is_map( Fa ),
      is_list( DataDir ),
      is_integer( R ), R > 0,
      is_map( LibMap ),
-     is_list( BaseDir ) ->
+     is_list( BaseDir ),
+     is_atom( DoProf ) ->
 
 
   Dir = create_workdir( BaseDir, ?WORK, R ),
@@ -145,8 +191,10 @@ when is_list( Lo ),
       % link in input files
       lib_refactor:apply_refactoring( RefactorLst1 ),
 
+      Prof = effi_profiling:get_profiling_settings( DoProf, filename:join( Dir, "profile.xml" ) ),
+
       % start effi
-      case effi:check_run( Lam, Fa1, R, Dir, LibMap ) of
+      case effi:check_run( Lam, Fa1, R, Dir, LibMap, Prof ) of
 
         {failed, R2, R, Data} -> {failed, R2, R, Data};
 

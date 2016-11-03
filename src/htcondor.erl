@@ -16,6 +16,8 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc htcondor execution platform.
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 %% @author Irina Guberman <irina.guberman@gmail.com>
 
@@ -23,16 +25,32 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -author( "Irina Guberman <irina.guberman@gmail.com>" ).
 
+-behaviour( cf_cre ).
+
+%% =============================================================================
+%% Function Exports
+%% =============================================================================
+
+%% cf_cre behaviour callbacks
+-export([init/1, handle_submit/8]).
+
+%% API
+-export( [input_files_to_cs_string/1] ).
+
+%% =============================================================================
+%% Includes and Definitions
+%% =============================================================================
 
 -include( "cuneiform.hrl" ).
 
--behaviour( cf_cre ).
-
--export( [init/1, handle_submit/7, input_files_to_cs_string/1] ).
-
 -define( BASEDIR, "/tmp/cf" ).
 
+%% =============================================================================
+%% HTCondor Functions
+%% =============================================================================
 
+%% init/1
+%
 init( _ModArg ) ->
   BaseDir = local:create_basedir( ?BASEDIR, 1 ),
 
@@ -40,8 +58,13 @@ init( _ModArg ) ->
 
   {ok, BaseDir}.
 
+%% handle_submit/1
+%% @doc the profiling_settings data structure is only used for determining whether profiling
+%% is on or off. The profile file name is generated automatically. However, due to being a
+%% callback implementation, this is useful (since for instance the local runtime environment
+%% does use all of the profiling_settings attributes).
 handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
-  DataDir, _UserInfo, R, LibMap, BaseDir ) ->
+  DataDir, _UserInfo, R, LibMap, BaseDir, DoProf ) ->
 
   Dir = local:create_workdir( BaseDir, ?WORK, R ),
   
@@ -59,16 +82,28 @@ handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
       lib_refactor:apply_refactoring( RefactorLst1 ),
 
 
-      LogFile = string:join( [Dir, "_log.txt"], "/" ),
-      OutputFile = string:join( [Dir, "_output.txt"], "/" ),
-      SubmitFile = string:join( [Dir, "_job.sub"], "/" ),
-      EffiSumFile = string:join( [Dir, "_summary.effi"], "/" ),
-      EffiRequestFile = string:join( [Dir, "_request.effi"], "/" ),
+      LogFile = filename:join( [Dir, "_log.txt"] ),
+      OutputFile = filename:join( [Dir, "_output.txt"] ),
+      SubmitFile = filename:join( [Dir, "_job.sub"] ),
+      EffiSumFile = filename:join( [Dir, "_summary.effi"] ),
+      EffiRequestFile = filename:join( [Dir, "_request.effi"] ),
+
+      EffiArguments = case effi_profiling:is_on( DoProf ) of
+        false -> 
+          % If profiling is off, the parameters consist only of the mandatory requestfile and summary file
+          string:join( [EffiRequestFile, EffiSumFile], " " );
+        true -> 
+          % Generate profile results file name, like the other file names above
+          EffiProfileFile = filename:join( [Dir, "_profile.xml" ] ), 
+          Prof = effi_profiling:get_profiling_settings( true, EffiProfileFile ),
+          EffiProfArgs = effi_profiling:effi_arguments_for( Prof ),
+          % Assemble the Effi parameters, including profiling options
+          string:join( [EffiRequestFile, EffiSumFile, EffiProfArgs], " " )
+      end,
 
       SubmitMap = #{universe                => "VANILLA",
                     executable              => "/usr/local/bin/effi",
-                    arguments               => string:join( [EffiRequestFile,
-                                                             EffiSumFile], " " ),
+                    arguments               => EffiArguments,
                     should_transfer_files   => "IF_NEEDED",
                     when_to_transfer_output => "ON_EXIT",
                     log                     => LogFile,
@@ -134,7 +169,8 @@ handle_submit( Lam={lam, _LamLine, _LamName, {sign, Lo, Li}, _Body}, Fa,
   end.
 
 
-
+%% format_submit/1 
+%%
 %% @doc Takes a Condor submit map and formats it as a binary.
 %%
 %%      Takes the Condor submit map and produces a string having 'key = value'
@@ -151,6 +187,8 @@ format_submit(CondorParams0) ->
   SubmitFileStr = maps:fold(fun(K, V, Acc) -> [Acc, io_lib:format("~p = ~s", [K,V]), LineSep] end, "", CondorParams1),
   iolist_to_binary([LineSep, lists:flatten(SubmitFileStr), LineSep, "Queue", LineSep]).
 
+%% input_files_to_cs_string/1 
+%%
 %% @doc Converts the transfer_input_files field from a Condor submit map to a
 %%      comma-separated string.
 %%
