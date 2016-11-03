@@ -59,9 +59,9 @@ main( CmdLine ) ->
                   link( CrePid ),
 
                   % if remote logging is on, register the given IP address at the log manager 
-                  ok = case lists:keymember( logdb, 1, OptLst ) of
-                    false -> ok;
-                    true  ->
+                  {logdb, LogDB } = lists:keyfind( logdb, 1, OptLst ),
+                  if 
+                    LogDB /= false ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
                       logmgr:add_ip( Ip ),
                       {sessiondescription, SessionDescription } = lists:keyfind( sessiondescription, 1, OptLst ),
@@ -240,7 +240,7 @@ get_optspec_lst() ->
    {nthread,  $t,        "nthread",  integer,             "number of threads in local mode"},
    {platform, $p,        "platform", {atom, local},       "platform to use: local, htcondor"},
    {basedir,  $b,        "basedir",  string,              "set base directory where intermediate and output files are stored"},
-   {logdb,    $l,        "logdb",    string,              "set the IP address for the log database"},
+   {logdb,    $l,        "logdb",    {string, false},     "set the IP address for the log database"},
    {sessiondescription, $d, "session-description", {string, ""}, "a one-word description of the session to appear in the remote logging database"},
    {profiling,$r,        "profiling",{boolean, false},    "collect detailed usage statistics, requires the pegasus-kickstart binary"},
    {rlib,     undefined, "rlib",     string,              "include R library path"},

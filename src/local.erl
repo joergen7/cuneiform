@@ -44,7 +44,8 @@
 
 -define( DEFAULT_CONF, #{ basedir => "/tmp/cf",
                           nthread => case erlang:system_info( logical_processors_available ) of unknown -> 1; N -> N end,
-                          profiling => false } ).
+                          profiling => false,
+                          logdb => false } ).
 -define( CONF_FILE, "/usr/local/etc/cuneiform/local.conf" ).
 
 %% =============================================================================
@@ -69,7 +70,7 @@ init( ManualMap ) when is_map( ManualMap ) ->
   {ok, QueueRef} = gen_queue:start_link( NSlot ),
   
   % show a summary of the configuration
-  Logging = maps:get( logdb, Conf, false ),
+  Logging = maps:get( logdb, Conf ),
   Profiling = maps:get( profiling, Conf ), 
   error_logger:info_msg( io_lib:format( "Base directory      ~s~nNumber of threads   ~p~nRemote Logging      ~s~nProfiling           ~p~n", [BaseDir, NSlot, Logging, Profiling] ) ),
 
