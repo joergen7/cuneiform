@@ -80,7 +80,9 @@ handle_event( LogEntry, State = #mod_state{ ip_lst = IpLst, session = Session } 
     Url = lists:flatten( io_lib:format( "http://~s:~p/~s", [Ip, ?PORT, ?PATH] ) ),
     Request = {Url, [], "application/json", to_json( LogEntry, Session )},
 
-    httpc:request( post, Request, [], [{sync, true}] )
+    % we do not really care whether the request succeeded, we just send out the
+    % message
+    _ = httpc:request( post, Request, [], [{sync, true}] )
 
    end,
 
