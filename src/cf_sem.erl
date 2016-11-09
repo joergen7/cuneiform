@@ -327,6 +327,7 @@ aug_lst( Z, A ) -> [aug( X, A ) || X <- Z].                                     
 aug( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, B}, Fa},         % (53)
      A={param, _, _Pl} ) ->
   {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, [A|Li]}, B}, Fa};
+
 aug( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, B}, Fa},         % (54)
      {correl, Lc} ) ->
   L1 = [{param, N, false} || N <- Lc],
@@ -619,6 +620,26 @@ corrstep_should_separate_first_value_two_test() ->
   X = corrstep( Lc, F0, F0 ),
   ?assertEqual( Y, X ).
 
+enum_empty_input_param_creates_single_instance_test() ->
+  Li = [],
+  Lo = [{param, {name, "out", false}, false}],
+  Fa = #{},
+  Sign = {sign, Lo, Li},
+  Body = {forbody, bash, "blub"},
+  Lam = {lam, 20, "f", Sign, Body},
+  App = {app, 10, 1, Lam, Fa},
 
+  ?assertEqual( [App], enum( [App] ) ).
+
+enum_single_input_param_single_value_creates_single_instance_test() ->
+  Li = [{param, {name, "a", false}, false}],
+  Lo = [{param, {name, "out", false}, false}],
+  Fa = #{"a" => [{str, "A"}]},
+  Sign = {sign, Lo, Li},
+  Body = {forbody, bash, "blub"},
+  Lam = {lam, 20, "f", Sign, Body},
+  App = {app, 10, 1, Lam, Fa},
+
+  ?assertEqual( [App], enum( [App] ) ).
 
 -endif.
