@@ -49,9 +49,6 @@ enum( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, Body}, Fa} ) ->
   [F( Fa1 )|| Fa1 <- Fa1Lst].
 
 
-enum_fixpnt( 0, [], #{}, #{} ) ->
-  [#{}];
-
 enum_fixpnt( -1, _, _, Acc ) ->
   Acc;
 
