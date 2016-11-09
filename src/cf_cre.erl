@@ -30,9 +30,10 @@
 %%         | CRE |
 %%         +-----+'''
 
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 -module( cf_cre ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( gen_server ).
 

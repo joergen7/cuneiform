@@ -20,7 +20,7 @@
 
 
 -module( cuneiform ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 % API
 -export( [main/1, file/2, start/3, reduce/6, format_result/1,

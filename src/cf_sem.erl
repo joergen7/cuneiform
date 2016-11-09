@@ -20,7 +20,7 @@
 
 
 -module( cf_sem ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 
 -export( [eval/2, pnormal/1] ).
@@ -211,7 +211,7 @@ step( X={app, AppLine, C,
               Fa},
       Theta={_Rho, Mu, Gamma, Omega} ) ->
   case psing( X ) of
-    false -> enum( [{app, AppLine, C, Lambda, step( Fa, Theta )}] );            % (89)
+    false -> cf_enum:enum( [{app, AppLine, C, Lambda, step( Fa, Theta )}] );            % (89)
     true  ->
       case B of
         {forbody, _L, _Z} ->

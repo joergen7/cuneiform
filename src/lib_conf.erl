@@ -19,7 +19,7 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 -module( lib_conf ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).

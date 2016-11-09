@@ -22,7 +22,7 @@
 
 
 -module( local ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( cf_cre ).
 

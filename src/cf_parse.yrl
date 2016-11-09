@@ -114,7 +114,7 @@ namelist     -> name namelist : ['$1'|'$2'].
 
 Erlang code.
 
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [string/1, file/1] ).
 

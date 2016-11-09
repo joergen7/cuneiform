@@ -22,7 +22,7 @@
 %% @author Irina Guberman <irina.guberman@gmail.com>
 
 -module( htcondor ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 -author( "Irina Guberman <irina.guberman@gmail.com>" ).
 
 -behaviour( cf_cre ).

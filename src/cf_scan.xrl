@@ -118,7 +118,7 @@ Rules.
 
 Erlang code.
 
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [yyrev/2] ).
 

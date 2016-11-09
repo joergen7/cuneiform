@@ -23,7 +23,7 @@
 
 
 -module( cuneiform_app ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( application ).
 

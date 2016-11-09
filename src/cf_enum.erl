@@ -1,4 +1,25 @@
+%% -*- erlang -*-
+%
+% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%
+% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%
+% Licensed under the Apache License, Version 2.0 (the "License");
+% you may not use this file except in compliance with the License.
+% You may obtain a copy of the License at
+%
+%    http://www.apache.org/licenses/LICENSE-2.0
+%
+% Unless required by applicable law or agreed to in writing, software
+% distributed under the License is distributed on an "AS IS" BASIS,
+% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+% See the License for the specific language governing permissions and
+% limitations under the License.
+
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
 -module( cf_enum ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [enum/1] ).
 
@@ -13,22 +34,25 @@ enum( AppLst ) when is_list( AppLst ) ->
 
 enum( {app, AppLine, C, {lam, LamLine, LamName, {sign, Lo, Li}, Body}, Fa} ) ->
 
+  Li1 = remove_correl( Li ),
+
   F = fun( Fa1 ) ->
-        Sign = {sign, Lo, Li},
+        Sign = {sign, Lo, Li1},
         Lam = {lam, LamLine, LamName, Sign, Body},
         {app, AppLine, C, Lam, Fa1}
       end,
 
   N = enum_len( Li, Fa ),
-  Fa1Lst = enum_fixpnt( N, Li, Fa, [] ),
+  Fa1Lst = enum_fixpnt( N-1, lists:reverse( Li ), Fa, [] ),
+
 
   [F( Fa1 )|| Fa1 <- Fa1Lst].
 
 
-enum_fixpnt( 1, [], #{}, #{} ) ->
+enum_fixpnt( 0, [], #{}, #{} ) ->
   [#{}];
 
-enum_fixpnt( 0, _, _, Acc ) ->
+enum_fixpnt( -1, _, _, Acc ) ->
   Acc;
 
 enum_fixpnt( I, Li, Fa, Acc ) ->
@@ -37,9 +61,6 @@ enum_fixpnt( I, Li, Fa, Acc ) ->
 
 
 
-
-%% @doc Returns a list with the lengths of each input parameter in a given
-%%      signature.
 
 -spec enum_len( Li, Fa ) -> pos_integer()
 when Li ::  [cf_sem:inparam()],
@@ -83,12 +104,20 @@ get_instance( I, [{correl, Lc=[{name, N, _}|_]}|T], Fa, Acc ) ->
   F = fun( {name, N1, _}, Acc1 ) ->
         #{ N1 := OrigValue } = Fa,
         NewValue = [lists:nth( J, OrigValue )],
-        Acc1#{ N => NewValue }
+        Acc1#{ N1 => NewValue }
       end,
 
   NewAcc = lists:foldl( F, Acc, Lc ),
 
   get_instance( I div OrigLen, T, Fa, NewAcc ).
+
+remove_correl( Li ) ->
+
+  F = fun( P={param, _, _}, Acc ) -> Acc++[P];
+         ( {correl, Lc}, Acc ) -> Acc++[{param, N, false} || N <- Lc]
+      end,
+
+  lists:foldl( F, [], Li ).
 
 
 
@@ -115,9 +144,5 @@ enum_single_input_param_single_value_creates_single_instance_test() ->
   App = {app, 10, 1, Lam, Fa},
 
   ?assertEqual( [App], enum( [App] ) ).
-
-% Li = [{param, {name, "a", false}, false}],
-
-
 
 -endif.

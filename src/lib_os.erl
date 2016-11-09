@@ -19,7 +19,7 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 -module( lib_os ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -export( [cmd/2] ).
 

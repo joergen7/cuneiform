@@ -20,7 +20,7 @@
 
 
 -module( gen_queue ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( gen_server ).
 

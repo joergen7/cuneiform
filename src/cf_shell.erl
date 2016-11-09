@@ -20,7 +20,7 @@
 
 
 -module( cf_shell ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 %% =============================================================================
 %% Function Exports
