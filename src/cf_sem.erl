@@ -211,7 +211,7 @@ step( X={app, AppLine, C,
               Fa},
       Theta={_Rho, Mu, Gamma, Omega} ) ->
   case psing( X ) of
-    false -> cf_enum:enum( [{app, AppLine, C, Lambda, step( Fa, Theta )}] );            % (89)
+    false -> enum( [{app, AppLine, C, Lambda, step( Fa, Theta )}] );            % (89)
     true  ->
       case B of
         {forbody, _L, _Z} ->
