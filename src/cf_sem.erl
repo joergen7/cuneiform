@@ -23,7 +23,7 @@
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 
--export( [eval/2, pnormal/1] ).
+-export( [eval/2, pnormal/1, enum/1] ).
 
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
