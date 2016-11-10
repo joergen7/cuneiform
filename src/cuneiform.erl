@@ -60,12 +60,14 @@ main( CmdLine ) ->
 
                   % if remote logging is on, register the given IP address at the log manager 
                   {logdb, LogDB } = lists:keyfind( logdb, 1, OptLst ),
-                  if 
-                    LogDB /= false ->
+                  case LogDB of
+                    false -> ok;
+                    _     ->
                       {logdb, Ip} = lists:keyfind( logdb, 1, OptLst ),
                       logmgr:add_ip( Ip ),
                       {sessiondescription, SessionDescription } = lists:keyfind( sessiondescription, 1, OptLst ),
                       logmgr:set_session_description( SessionDescription )
+
                   end,
 
                   case NonOptLst of
