@@ -15,3 +15,4 @@ src/cf_prescan.erl
 doc
 _build
 rebar.lock
+rebar3.crashdump
