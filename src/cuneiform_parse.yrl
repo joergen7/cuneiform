@@ -1,3 +1,23 @@
+%% -*- erlang -*-
+%%
+%% Cuneiform: A Functional Language for Large-Scale Scientific Data Analysis
+%%
+%% Copyright 2013-2017 Jörgen Brandt
+%%
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%%    http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
+
+%% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
+
 %%====================================================================
 %% Symbol Declaration
 %%====================================================================
@@ -121,7 +141,7 @@ Erlang code.
 
 -include_lib( "cf_client/include/cuneiform.hrl" ).
 
--export( [string/1, file/1] ).
+-export( [string/1, file/1, join_stat/2, create_closure/2] ).
 
 
 -spec string( S :: string() ) -> {ok, e()} | {error, _}.
