@@ -1,14 +1,18 @@
-
 {application, cuneiform,
  [
-  {description, "Cuneiform: A Functional Language for Large Scale Scientific Data Analysis"},
-  {vsn, "2.2.2-snapshot"},
+  {description, "Cuneiform: A Functional Language for Large-Scale Scientific Data Analysis"},
+  {vsn, "3.0.0"},
   {registered, []},
   {applications, [
                   kernel,
-                  stdlib,
-                  inets
+                  stdlib
                  ]},
-  {mod, {cuneiform_app, []}},
-  {env, []}
- ]}.
+  {mod, {cuneiform, []}},
+  {env, []},
+  {modules, [cuneiform_scan, cuneiform_parse]},
+  {maintainers, ["Jorgen Brandt"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [
+           {"GitHub", "https://github.com/joergen7/cuneiform/"}
+          ]}
+]}.
