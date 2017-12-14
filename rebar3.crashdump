@@ -1,0 +1,22 @@
+Error: {badmatch,{error,enoent}}
+[{rebar_erlc_compiler,modify_erlcinfo,5,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,476}]},
+ {rebar_erlc_compiler,'-update_erlcinfo_fun/2-fun-0-',4,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,462}]},
+ {lists,foldl,3,[{file,"lists.erl"},{line,1263}]},
+ {rebar_erlc_compiler,update_erlcinfo,3,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,447}]},
+ {rebar_erlc_compiler,'-update_erlcinfo_fun/2-fun-0-',4,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,462}]},
+ {lists,foldl,3,[{file,"lists.erl"},{line,1263}]},
+ {rebar_erlc_compiler,init_erlcinfo,4,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,410}]},
+ {rebar_erlc_compiler,compile_dirs,5,
+                      [{file,"/home/jorgen/git/rebar3/_build/default/lib/rebar/src/rebar_erlc_compiler.erl"},
+                       {line,195}]}]
+

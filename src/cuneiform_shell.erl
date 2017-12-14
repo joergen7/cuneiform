@@ -21,8 +21,9 @@
 
 -module( cuneiform_shell ).
 
--export( [shell/0] ).
+-include_lib( "cf_client/include/cuneiform.hrl" ).
 
+-export( [shell/1] ).
 
 -define( BUILD, "2017-12-13" ).
 -define( VSN, "3.0.0" ).
@@ -35,84 +36,249 @@
 -define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
 
--record( shell_state, [string_buf, token_buf, import_buf, import_lst, def_lst,
-                       query_lst] ).
+-record( shell_state, {line       = 1,
+                       string_buf = "",
+                       token_buf  = [],
+                       token_lst  = [],
+                       import_buf = [],
+                       import_lst = [],
+                       def_lst    = [],
+                       query_lst  = [],
+                       reply_lst  = []} ).
+
+-type stage() :: scan
+               | input
+               | parse
+               | type.
+
+-type reply() :: {query, e()}
+               | {error, stage(), _}.
 
 
--spec shell() -> ok.
 
-shell() ->
+
+
+-spec shell( ClientName :: _ ) -> ok.
+
+shell( ClientName ) ->
   io:format( "~s~n~n~n", [get_banner()] ),
-  shell_loop2().
+  shell_repl( ClientName, #shell_state{} ).
 
+-spec shell_repl( ClientName :: _, ShellState :: #shell_state{} ) -> ok.
 
+shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
 
--spec step( ShellState :: #shell_state{} ) -> #shell_state().
+  F =
+    fun
 
+      ( {query, E} ) ->
+        V = cre_client:eval( ClientName, E ),
+        S = format_expr( V ),
+        io:format( "~s~n", [S] );
 
-
-
--spec shell_loop() -> ok.
-      shell_loop() -> shell_loop( 1, "", [], {[], [], [], []} ).
-
--spec shell_loop( Line, StringBuf, TokenBuf, ParseState ) -> ok
-when Line       :: pos_integer(),
-     StringBuf  :: string(),
-     TokenBuf   :: [{atom(), pos_integer(), string()}],
-     ParseState :: {[_], [_], [_], [_]}.
-
-shell_loop( Line, StringBuf, TokenBuf, ParseState )
-when is_integer( Line ), Line > 0,
-     is_list( StringBuf ),
-     is_tuple( ParseState ) ->
-
-  {Line1, StringBuf1, TokenBuf1, ParseState1} =
-    case is_ready( StringBuf ) of
-      
-      true ->
-        {ok, TLst, L} = cuneiform_scan:string( StringBuf, Line ),
-        case lists:reverse( TLst ) of
-
-          [{A, _, _}|_] when A =:= semicolon orelse A =:= body ->
-            {ok, D} = cuneiform_parse:parse( TokenBuf++TLst ),
-            U = cuneiform_parse:join_stat( ParseState, D ),
-            case U of
-
-              {_, _, _, []} ->
-                {L, "", [], U};
-
-              {L1, L2, DefLst, [E|_]} -> % TODO: lists:foreach instead of just first
-                Closure = cuneiform_parse:create_closure( DefLst, E ),
-                Result = cre_client:eval( cf_client, Closure ),
-                io:format( "~p~n", [Result] ),
-                {L, "", [], {L1, L2, DefLst, []}}
-
-            end;
-
-          _ ->
-            {L, "", TokenBuf++TLst, ParseState}
-
-        end;
-
-
-
-      false ->
-        {Line, StringBuf, TokenBuf, ParseState}
+      ( Reply ) ->
+        S = format_error( Reply ),
+        io:format( "~s~n", [S] )
 
     end,
 
-  io:format( "{~p, ~p, ~p}~n", [StringBuf1, TokenBuf1, ParseState1] ),
-
-  Prompt =
-    case {StringBuf1, TokenBuf1} of
-      {"", []} -> io_lib:format( "~p> ", [Line1] );
-      _        -> ""
-    end,
+  Prompt = get_prompt( ShellState ),
   
   case io:get_line( Prompt ) of
-    "quit\n" -> ok;
-    Delta    -> shell_loop( Line1, StringBuf1++Delta, TokenBuf1, ParseState1 )
+
+    "quit\n" ->
+      ok;
+
+    "help\n" ->
+      io:format( "~s~n", [get_help()] ),
+      shell_repl( ClientName, ShellState );
+
+    "state\n" ->
+      lists:foreach( fun( {_, X, E} ) -> io:format( "~p\t~p~n", [X, E] ) end,
+                     DefLst ),
+      shell_repl( ClientName, ShellState );
+
+    Input    ->
+      {ReplyLst, ShellState1} = shell_eval( Input, ShellState ),
+      lists:foreach( F, ReplyLst ),
+
+      % io:format( "~p~n", [ShellState1] ),
+
+      shell_repl( ClientName, ShellState1 )
   end.
+
+
+
+-spec shell_eval( Input, ShellState ) -> {[reply()], #shell_state{}}
+when Input      :: string(),
+     ShellState :: #shell_state{}.
+
+shell_eval( Input, ShellState = #shell_state{ string_buf = StringBuf } ) ->
+
+  Eval =
+    fun Eval( S ) ->
+      case shell_step( S ) of
+        norule   -> S;
+        {ok, S1} -> Eval( S1 )
+      end
+    end,
+
+  StringBuf1 = StringBuf++Input,
+  ShellState1 = ShellState#shell_state{ string_buf = StringBuf1 },
+  ShellState2 = Eval( ShellState1 ),
+  #shell_state{ reply_lst = ReplyLst } = ShellState2,
+  ShellState3 = ShellState2#shell_state{ reply_lst = [] },
+
+  {ReplyLst, ShellState3}.
+
+
+
+-spec shell_step( ShellState ) -> norule | {ok, #shell_state{}}
+when ShellState :: #shell_state{}.
+
+shell_step( ShellState = #shell_state{ string_buf = "",
+                                       token_buf  = [],
+                                       token_lst  = [],
+                                       import_buf = [],
+                                       query_lst  = [_|_] } ) ->
+
+  #shell_state{ def_lst = DefLst,
+                query_lst = [Q1|QLst],
+                reply_lst = ReplyLst } = ShellState,
+
+  E = cuneiform_parse:create_closure( DefLst, Q1 ),
+
+  ShellState1 = 
+    case cuneiform_type:type( E ) of
+
+      {ok, _} ->
+
+        ReplyLst1 = ReplyLst++[{query, E}],
+
+        ShellState#shell_state{ query_lst = QLst,
+                                reply_lst = ReplyLst1 };
+
+      {error, Reason} ->
+
+        ReplyLst1 = ReplyLst++[{error, type, Reason}],
+
+        ShellState#shell_state{ query_lst = QLst,
+                                reply_lst = ReplyLst1 }
+
+    end,
+
+  {ok, ShellState1};
+
+
+
+
+% TODO: clear import buffer
+
+shell_step( ShellState = #shell_state{ string_buf = "",
+                                       token_buf  = [],
+                                       token_lst  = [_|_] } ) ->
+
+  #shell_state{ token_lst  = TokenLst,
+                import_buf = ImportBuf,
+                def_lst    = DefLst,
+                query_lst  = QueryLst,
+                reply_lst  = ReplyLst } = ShellState,
+
+  ShellState1 = 
+    case cuneiform_parse:parse( TokenLst ) of
+
+      {ok, {ILst, DLst, QLst}} ->
+
+        ImportBuf1 = ImportBuf++ILst,
+        DefLst1 = DefLst++DLst,
+        QueryLst1 = QueryLst++QLst,
+
+        ShellState#shell_state{ token_lst  = [],
+                                import_buf = ImportBuf1,
+                                def_lst    = DefLst1,
+                                query_lst  = QueryLst1 };
+
+      {error, Reason} ->
+
+        ReplyLst1 = ReplyLst++[{error, parse, Reason}],
+
+        ShellState#shell_state{
+          token_lst = [],
+          reply_lst = ReplyLst1 }
+
+    end,
+
+  {ok, ShellState1};
+
+
+
+shell_step( ShellState = #shell_state{ string_buf = "",
+                                       token_buf  = [_|_] } ) ->
+
+  #shell_state{ token_buf = TokenBuf,
+                token_lst = TokenLst } = ShellState,
+
+  case lists:last( TokenBuf ) of
+
+    {A, _, _} when A =:= semicolon orelse A =:= body ->
+
+      % TODO: update file info
+
+      TokenLst1 = TokenLst++TokenBuf,
+      ShellState1 = ShellState#shell_state{ token_buf = [],
+                                            token_lst = TokenLst1},
+
+      {ok, ShellState1};
+
+    _ ->
+      norule
+
+  end;
+
+
+shell_step( ShellState = #shell_state{ string_buf = [_|_] } ) ->
+
+  #shell_state{ line       = Line,
+                string_buf = StringBuf,
+                token_buf  = TokenBuf,
+                reply_lst  = ReplyLst } = ShellState,
+
+  case is_ready( StringBuf ) of
+
+    false ->
+      norule;
+
+    true ->
+
+      ShellState1 = 
+        case cuneiform_scan:string( StringBuf, Line ) of
+
+          {ok, TLst, Line1} ->
+
+            TokenBuf1 = TokenBuf++TLst,
+            
+            ShellState#shell_state{ line       = Line1,
+                                    string_buf = "",
+                                    token_buf  = TokenBuf1 };
+      
+          {error, Reason, _} ->
+            
+            ReplyLst1 = ReplyLst++[{error, scan, Reason}],
+            
+            ShellState#shell_state{
+              string_buf = "",
+              reply_lst  = ReplyLst1 }
+
+        end,
+
+      {ok, ShellState1}
+
+  end;
+
+
+shell_step( _ ) -> norule.
+
+
 
 
 
@@ -131,6 +297,18 @@ get_banner() ->
 ], "\n" ).
 
 
+-spec get_help() -> iolist().
+
+get_help() ->
+  string:join(
+    [?YLW( "help" )++"  show this usage info",
+     ?YLW( "state" )++" show variable bindings",
+     ?YLW( "tasks" )++" show task definitions",
+     ?YLW( "cwd" )++"   current working directory",
+     ?YLW( "quit" )++"  quit the shell"
+], "\n" ).
+
+
 -spec is_ready( Buf :: string() ) -> boolean().
       is_ready( Buf )             -> is_ready( Buf, true ).
 
@@ -140,3 +318,28 @@ is_ready( [], S )                -> S;
 is_ready( [$*, ${|Rest], true )  -> is_ready( Rest, false );
 is_ready( [$}, $*|Rest], false ) -> is_ready( Rest, true );
 is_ready( [_|Rest], S )          -> is_ready( Rest, S ).
+
+
+-spec get_prompt( ShellState :: #shell_state{} ) -> string().
+
+get_prompt( ShellState ) ->
+
+  case ShellState of
+
+    #shell_state{ line = Line, string_buf = "", token_buf = [] } ->
+      io_lib:format( "~p> ", [Line] );
+
+    _ ->
+      ""
+
+  end.
+
+-spec format_error( {error, Stage :: stage(), Reason :: _} ) -> string().
+
+format_error( {error, Stage, Reason} ) ->
+  io_lib:format( ?RED( "~p error: " )++?BRED( "~p" ), [Stage, Reason] ).
+
+-spec format_expr( E :: e() ) -> string().
+
+format_expr( E ) ->
+  io_lib:format( "~p", [E] ).

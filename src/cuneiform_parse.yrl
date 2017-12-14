@@ -44,9 +44,9 @@ Rootsymbol script.
 script          -> stat                       : '$1'.
 script          -> stat script                : join_stat( '$1', '$2' ).
 
-stat            -> imp                        : {['$1'], [], [], []}.
-stat            -> define                     : {[], [], ['$1'], []}.
-stat            -> e semicolon                : {[], [], [], ['$1']}.
+stat            -> imp                        : {['$1'], [], []}.
+stat            -> define                     : {[], ['$1'], []}.
+stat            -> e semicolon                : {[], [], ['$1']}.
 
 imp             -> import filelit semicolon   : visit_import( '$2' ).
 
@@ -168,12 +168,12 @@ file( Filename ) ->
       string( S )
   end.
 
--spec join_stat( T1, T2 ) -> {[_], [_], [_], [_]}
-when T1 :: {[_], [_], [_], [_]},
-     T2 :: {[_], [_], [_], [_]}.
+-spec join_stat( T1, T2 ) -> {[_], [_], [_]}
+when T1 :: {[_], [_], [_]},
+     T2 :: {[_], [_], [_]}.
 
-join_stat( {A1, B1, C1, D1}, {A2, B2, C2, D2} ) ->
-  {A1++A2, B1++B2, C1++C2, D1++D2}.
+join_stat( {A1, B1, C1}, {A2, B2, C2} ) ->
+  {A1++A2, B1++B2, C1++C2}.
 
 -spec create_closure( DefLst :: [{_, r(), e()}], EBody :: e() ) -> e().
 
