@@ -35,11 +35,21 @@
 -define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
 
+-record( shell_state, [string_buf, token_buf, import_buf, import_lst, def_lst,
+                       query_lst] ).
+
+
 -spec shell() -> ok.
 
 shell() ->
   io:format( "~s~n~n~n", [get_banner()] ),
-  shell_loop().
+  shell_loop2().
+
+
+
+-spec step( ShellState :: #shell_state{} ) -> #shell_state().
+
+
 
 
 -spec shell_loop() -> ok.
