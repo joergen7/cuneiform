@@ -33,7 +33,8 @@
 -define( GRN( Str ), "\e[32m" ++ Str ++ "\e[0m" ).
 -define( YLW( Str ), "\e[33m" ++ Str ++ "\e[0m" ).
 -define( BYLW( Str ), "\e[1;33m" ++ Str ++ "\e[0m" ).
--define( BLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
+-define( BLU( Str ), "\e[34m" ++ Str ++ "\e[0m" ).
+-define( BBLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
 
 -record( shell_state, {line       = 1,
@@ -42,6 +43,7 @@
                        token_lst  = [],
                        import_buf = [],
                        import_lst = [],
+                       def_buf    = [],
                        def_lst    = [],
                        query_lst  = [],
                        reply_lst  = []} ).
@@ -52,7 +54,8 @@
                | type.
 
 -type reply() :: {query, e()}
-               | {error, stage(), _}.
+               | {error, stage(), _}
+               | {parrot, e(), t()}.
 
 
 
@@ -73,8 +76,15 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
 
       ( {query, E} ) ->
         V = cre_client:eval( ClientName, E ),
-        S = format_expr( V ),
-        io:format( "~s~n", [S] );
+        {ok, T} = cuneiform_type:type( V ),
+        SV = format_expr( V ),
+        ST = format_type( T ),
+        io:format( ?GRN( "~s" )++"~n"++?BLU( ": " )++?BBLU( "~s" )++"~n", [SV, ST] );
+
+      ( {parrot, E, T} ) ->
+        SE = format_expr( E ),
+        ST = format_type( T ),
+        io:format( "~s~n"++?BLU( ": " )++?BBLU( "~s" )++"~n", [SE, ST] );
 
       ( Reply ) ->
         S = format_error( Reply ),
@@ -93,8 +103,14 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
       io:format( "~s~n", [get_help()] ),
       shell_repl( ClientName, ShellState );
 
-    "state\n" ->
-      lists:foreach( fun( {_, X, E} ) -> io:format( "~p\t~p~n", [X, E] ) end,
+    "hist\n" ->
+      G =
+        fun( {_, R, E} ) ->
+          SR = string:pad( format_pattern( R ), 16, trailing ),
+          SE = format_expr( E ),
+          io:format( "let ~s = ~s;~n", [SR, SE] )
+        end,
+      lists:foreach( G,
                      DefLst ),
       shell_repl( ClientName, ShellState );
 
@@ -136,10 +152,12 @@ shell_eval( Input, ShellState = #shell_state{ string_buf = StringBuf } ) ->
 -spec shell_step( ShellState ) -> norule | {ok, #shell_state{}}
 when ShellState :: #shell_state{}.
 
+% return query if it is typable
 shell_step( ShellState = #shell_state{ string_buf = "",
                                        token_buf  = [],
                                        token_lst  = [],
                                        import_buf = [],
+                                       def_buf    = [],
                                        query_lst  = [_|_] } ) ->
 
   #shell_state{ def_lst = DefLst,
@@ -174,13 +192,51 @@ shell_step( ShellState = #shell_state{ string_buf = "",
 
 % TODO: clear import buffer
 
+% type untyped definition
+shell_step( ShellState = #shell_state{ string_buf = "",
+                                       token_buf  = [],
+                                       token_lst  = [],
+                                       def_buf    = [_|_] } ) ->
+
+  #shell_state{ def_buf   = [D1|DBuf],
+                def_lst   = DefLst,
+                reply_lst = ReplyLst } = ShellState,
+
+  {_, _, E} = D1,
+
+  ShellState1 = 
+    case cuneiform_type:type( cuneiform_parse:create_closure( DefLst++[D1], E ) ) of
+
+      {ok, T} ->
+
+        ReplyLst1 = ReplyLst++[{parrot, E, T}],
+        DefLst1 = DefLst++[D1],
+
+        ShellState#shell_state{ def_buf   = DBuf,
+                                def_lst   = DefLst1,
+                                reply_lst = ReplyLst1 };
+
+      {error, Reason} ->
+
+        ReplyLst1 = ReplyLst++[{error, type, Reason}],
+
+        ShellState#shell_state{ def_buf = DBuf, reply_lst = ReplyLst1 }
+
+    end,
+
+  {ok, ShellState1};
+
+
+
+
+% extract imports, definitions, and queries if token list can be parsed
 shell_step( ShellState = #shell_state{ string_buf = "",
                                        token_buf  = [],
                                        token_lst  = [_|_] } ) ->
 
   #shell_state{ token_lst  = TokenLst,
                 import_buf = ImportBuf,
-                def_lst    = DefLst,
+                def_buf    = DefBuf,
                 query_lst  = QueryLst,
                 reply_lst  = ReplyLst } = ShellState,
 
@@ -190,12 +246,12 @@ shell_step( ShellState = #shell_state{ string_buf = "",
       {ok, {ILst, DLst, QLst}} ->
 
         ImportBuf1 = ImportBuf++ILst,
-        DefLst1 = DefLst++DLst,
+        DefBuf1 = DefBuf++DLst,
         QueryLst1 = QueryLst++QLst,
 
         ShellState#shell_state{ token_lst  = [],
                                 import_buf = ImportBuf1,
-                                def_lst    = DefLst1,
+                                def_buf    = DefBuf1,
                                 query_lst  = QueryLst1 };
 
       {error, Reason} ->
@@ -210,8 +266,7 @@ shell_step( ShellState = #shell_state{ string_buf = "",
 
   {ok, ShellState1};
 
-
-
+% mark token list for parsing if all mentioned files can be found
 shell_step( ShellState = #shell_state{ string_buf = "",
                                        token_buf  = [_|_] } ) ->
 
@@ -236,6 +291,7 @@ shell_step( ShellState = #shell_state{ string_buf = "",
   end;
 
 
+% scan string if we can be sure that all foreign code blocks are terminated
 shell_step( ShellState = #shell_state{ string_buf = [_|_] } ) ->
 
   #shell_state{ line       = Line,
@@ -290,8 +346,8 @@ get_banner() ->
      "           @@WB      Cuneiform",
      "          @@E_____   version "++?VSN++"    build "++?BUILD,
      "     _g@@@@@WWWWWWL",
-     "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info." ),
-     "  @@P    3@B              "            ++?BYLW( "quit" )++?YLW( " to exit shell." ),
+     "   g@@#*`3@B         "++?YLW( "Type " )++?BYLW( "help" )++?YLW( " for usage info" ),
+     "  @@P    3@B              "            ++?BYLW( "quit" )++?YLW( " to exit shell" ),
      "  @N____ 3@B",
      "  \"W@@@WF3@B         "++?BLU( "http://www.cuneiform-lang.org" )
 ], "\n" ).
@@ -301,11 +357,9 @@ get_banner() ->
 
 get_help() ->
   string:join(
-    [?YLW( "help" )++"  show this usage info",
-     ?YLW( "state" )++" show variable bindings",
-     ?YLW( "tasks" )++" show task definitions",
-     ?YLW( "cwd" )++"   current working directory",
-     ?YLW( "quit" )++"  quit the shell"
+    [?BYLW( "help" )++?YLW( " show this usage info" ),
+     ?BYLW( "hist" )++?YLW( " show definition history" ),
+     ?BYLW( "quit" )++?YLW( " quit the shell" )
 ], "\n" ).
 
 
@@ -341,5 +395,29 @@ format_error( {error, Stage, Reason} ) ->
 
 -spec format_expr( E :: e() ) -> string().
 
+format_expr( {str, _, B} )     -> io_lib:format( "\"~s\"", [B] );
+format_expr( {file, _, B, _} ) -> io_lib:format( "'~s'", [B] );
+format_expr( {true, _} )       -> "true";
+format_expr( {false, _} )      -> "false";
+
 format_expr( E ) ->
   io_lib:format( "~p", [E] ).
+
+
+-spec format_type( T :: t() ) -> string().
+
+format_type( 'Str' )  -> "Str";
+format_type( 'File' ) -> "File";
+format_type( 'Bool' ) -> "Bool";
+
+format_type( T ) ->
+  io_lib:format( "~p", [T] ).
+
+
+-spec format_pattern( R :: r() ) -> string().
+
+format_pattern( {r_var, X, T} ) ->
+  io_lib:format( "~p : ~s", [X, format_type( T )] );
+
+format_pattern( R ) ->
+  io_lib:format( "~p", [R] ).
