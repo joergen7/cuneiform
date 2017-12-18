@@ -141,7 +141,9 @@ Erlang code.
 
 -include_lib( "cf_client/include/cuneiform.hrl" ).
 
--export( [string/1, file/1, join_stat/2, create_closure/2] ).
+-export( [string/1, file/1, join_stat/2] ).
+
+-import( cuneiform_lang, [assign/3, create_closure/2] ).
 
 
 -spec string( S :: string() ) -> {ok, e()} | {error, _}.
@@ -175,14 +177,7 @@ when T1 :: {[_], [_], [_]},
 join_stat( {A1, B1, C1}, {A2, B2, C2} ) ->
   {A1++A2, B1++B2, C1++C2}.
 
--spec create_closure( DefLst :: [{_, r(), e()}], EBody :: e() ) -> e().
 
-create_closure( DefLst, EBody ) ->
-  F =
-    fun( {L, R1, E1}, EAcc ) ->
-      cuneiform_lang:assign( L, R1, E1, EAcc )
-    end,
-  lists:foldr( F, EBody, DefLst ).
 
 
 -spec visit_import( {filelit, L :: _, S :: string()} ) -> {import, _, string()}.
@@ -260,12 +255,26 @@ when L          :: _,
      EElse      :: e().
 
 visit_cnd( {cnd, L, _}, EIf, DefLstThen, EThen, DefLstElse, EElse ) ->
-  E2 = create_closure( DefLstThen, EThen ),
-  E3 = create_closure( DefLstElse, EElse ),
-  cuneiform_lang:cnd( L, EIf, E2, E3 ).
+  case create_closure( DefLstThen, EThen ) of
+
+    {error, R2} ->
+      throw( R2 );
+
+    {ok, E2} ->
+      case create_closure( DefLstElse, EElse ) of
+
+        {error, R3} ->
+          throw( R3 );
+
+        {ok, E3} ->
+          cuneiform_lang:cnd( L, EIf, E2, E3 )
+
+      end
+
+  end.
 
 
--spec visit_def_frn( Def, Id, ArgLst, UArgLst, Lang, Body ) -> {_, r(), e()}
+-spec visit_def_frn( Def, Id, ArgLst, UArgLst, Lang, Body ) -> assign()
 when Def     :: {def, _, _},
      Id      :: {id, _, string()},
      ArgLst  :: [t_arg()],
@@ -280,10 +289,10 @@ visit_def_frn( {def, L, _}, {id, _, SName}, ArgLst, UArgLst, Lang, {body, _, SBo
   T = cuneiform_lang:t_fn( frn, ArgLst, RetType ), 
   R = cuneiform_lang:r_var( FName, T ),
   Lam = cuneiform_lang:lam_frn( L, FName, ArgLst, RetType, Lang, BBody ),
-  {L, R, Lam}.
+  assign( L, R, Lam ).
 
 
--spec visit_def_ntv( Def, Id, ArgLst, RetType, DefLst, EBody ) -> {_, r(), e()}
+-spec visit_def_ntv( Def, Id, ArgLst, RetType, DefLst, EBody ) -> assign()
 when Def     :: {def, _, _},
      Id      :: {id, _, string()},
      ArgLst  :: [t_arg()],
@@ -292,16 +301,24 @@ when Def     :: {def, _, _},
      EBody   :: e().
 
 visit_def_ntv( {def, L, _}, {id, _, SName}, ArgLst, RetType, DefLst, EBody ) ->
-  FName = list_to_atom( SName ),
-  TFn = cuneiform_lang:t_fn( ntv, ArgLst, RetType ),
-  Lam = cuneiform_lang:fix(
-          L,
-          cuneiform_lang:lam_ntv(
-            L,
-            [cuneiform_lang:lam_ntv_arg( FName, TFn )|[{X, X, T} || {X, T} <- ArgLst]],
-            create_closure( DefLst, EBody ) ) ),
-  R = cuneiform_lang:r_var( FName, TFn ),
-  {L, R, Lam}.
+  case create_closure( DefLst, EBody ) of
+
+    {ok, C} ->
+      FName = list_to_atom( SName ),
+      TFn = cuneiform_lang:t_fn( ntv, ArgLst, RetType ),
+      Lam = cuneiform_lang:fix(
+              L,
+              cuneiform_lang:lam_ntv(
+                L,
+                [cuneiform_lang:lam_ntv_arg( FName, TFn )|[{X, X, T} || {X, T} <- ArgLst]],
+                C ) ),
+      R = cuneiform_lang:r_var( FName, TFn ),
+      assign( L, R, Lam );
+
+    {error, Reason} ->
+      throw( Reason )
+
+  end.
 
 
 -spec visit_t_arg( {id, _, S :: string()}, T :: t() ) -> t_arg().
@@ -367,7 +384,12 @@ visit_isnil( {isnil, L, _}, E ) ->
 -spec visit_for( {for, L :: _, _}, FromLst :: [e_bind()], DefLst :: [{r(), e()}], E :: e() ) -> e().
 
 visit_for( {for, L, _}, FromLst, DefLst, E ) ->
-  cuneiform_lang:for( L, FromLst, create_closure( DefLst, E ) ).
+  case create_closure( DefLst, E ) of
+    {ok, C} ->
+      cuneiform_lang:for( L, FromLst, C );
+    {error, Reason} ->
+      throw( Reason )
+  end.
 
 
 -spec visit_from( {id, _, S :: string()}, E :: e() ) -> e_bind().
@@ -378,9 +400,14 @@ visit_from( {id, _, S}, E ) ->
 -spec visit_fold( {fold, L :: _, _}, AccBind :: e_bind(), LstBind :: e_bind(), DefLst :: [{r(), e()}], EBody :: e() ) -> e().
 
 visit_fold( {fold, L, _}, AccBind, LstBind, DefLst, EBody ) ->
-  cuneiform_lang:fold( L, AccBind, LstBind, create_closure( DefLst, EBody ) ).
+  case create_closure( DefLst, EBody ) of
+    {ok, C} ->
+      cuneiform_lang:fold( L, AccBind, LstBind, C );
+    {error, Reason} ->
+      throw( Reason )
+  end.
 
--spec visit_assign( {assign, L :: _, _}, R :: r(), E :: e() ) -> {_, r(), e()}.
+-spec visit_assign( {assign, L :: _, _}, R :: r(), E :: e() ) -> assign().
 
 visit_assign( {assign, L, _}, R, E ) ->
-  {L, R, E}.
+  assign( L, R, E ).
