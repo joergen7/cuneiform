@@ -86,7 +86,7 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
         ST = format_type( T ),
         io:format( "~s~n"++?BLU( ": " )++?BBLU( "~s" )++"~n", [SE, ST] );
 
-      ( Reply ) ->
+      ( Reply = {error, _Stage, _Reason} ) ->
         S = format_error( Reply ),
         io:format( "~s~n", [S] )
 
@@ -164,14 +164,15 @@ shell_step( ShellState = #shell_state{ string_buf = "",
                 query_lst = [Q1|QLst],
                 reply_lst = ReplyLst } = ShellState,
 
-  E = cuneiform_parse:create_closure( DefLst, Q1 ),
+  % TODO: catch error
+  {ok, C} = cuneiform_lang:create_closure( DefLst, Q1 ),
 
   ShellState1 = 
-    case cuneiform_type:type( E ) of
+    case cuneiform_type:type( C ) of
 
       {ok, _} ->
 
-        ReplyLst1 = ReplyLst++[{query, E}],
+        ReplyLst1 = ReplyLst++[{query, C}],
 
         ShellState#shell_state{ query_lst = QLst,
                                 reply_lst = ReplyLst1 };
@@ -202,10 +203,13 @@ shell_step( ShellState = #shell_state{ string_buf = "",
                 def_lst   = DefLst,
                 reply_lst = ReplyLst } = ShellState,
 
-  {_, _, E} = D1,
+  {assign, _, _, E} = D1,
+
+  % TODO: catch error
+  {ok, C} = cuneiform_lang:create_closure( DefLst++[D1], E ),
 
   ShellState1 = 
-    case cuneiform_type:type( cuneiform_parse:create_closure( DefLst++[D1], E ) ) of
+    case cuneiform_type:type( C ) of
 
       {ok, T} ->
 
@@ -310,6 +314,8 @@ shell_step( ShellState = #shell_state{ string_buf = [_|_] } ) ->
         case cuneiform_scan:string( StringBuf, Line ) of
 
           {ok, TLst, Line1} ->
+
+            % TODO: augment token information with source file name
 
             TokenBuf1 = TokenBuf++TLst,
             
