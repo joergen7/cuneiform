@@ -105,7 +105,7 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
 
     "hist\n" ->
       G =
-        fun( {_, R, E} ) ->
+        fun( {assign, _, R, E} ) ->
           SR = string:pad( format_pattern( R ), 16, trailing ),
           SE = format_expr( E ),
           io:format( "let ~s = ~s;~n", [SR, SE] )
