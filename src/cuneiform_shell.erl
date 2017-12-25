@@ -279,15 +279,24 @@ shell_step( ShellState = #shell_state{ string_buf = "",
 
   case lists:last( TokenBuf ) of
 
-    {A, _, _} when A =:= semicolon orelse A =:= body ->
+    {A, _, _} when A =:= semicolon orelse A =:= rbrace orelse A =:= body ->
 
-      % TODO: update file info
+      case brace_level( TokenBuf, 0 ) > 0 of
 
-      TokenLst1 = TokenLst++TokenBuf,
-      ShellState1 = ShellState#shell_state{ token_buf = [],
-                                            token_lst = TokenLst1},
+        true ->
+          norule;
 
-      {ok, ShellState1};
+        false ->
+
+          % TODO: update file info
+
+          TokenLst1 = TokenLst++TokenBuf,
+          ShellState1 = ShellState#shell_state{ token_buf = [],
+                                                token_lst = TokenLst1},
+
+          {ok, ShellState1}
+
+      end;
 
     _ ->
       norule
@@ -427,3 +436,13 @@ format_pattern( {r_var, X, T} ) ->
 
 format_pattern( R ) ->
   io_lib:format( "~p", [R] ).
+
+
+-spec brace_level( TokenLst, L ) -> integer()
+when TokenLst :: [{atom(), info(), string()}],
+     L        :: integer().
+
+brace_level( [], L )                 -> L;
+brace_level( [{lbrace, _, _}|R], L ) -> brace_level( R, L+1 );
+brace_level( [{rbrace, _, _}|R], L ) -> brace_level( R, L-1 );
+brace_level( [_|R], L )              -> brace_level( R, L ).
