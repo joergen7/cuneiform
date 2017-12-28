@@ -64,6 +64,7 @@
 -spec shell( ClientName :: _ ) -> ok.
 
 shell( ClientName ) ->
+  true = link( whereis( ClientName ) ),
   io:format( "~s~n~n~n", [get_banner()] ),
   shell_repl( ClientName, #shell_state{} ).
 
