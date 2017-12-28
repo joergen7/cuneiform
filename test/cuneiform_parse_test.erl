@@ -10,7 +10,7 @@
                           t_arg/2, l_bash/0, lam_frn/6, t_lst/1, l_octave/0,
                           t_bool/0, l_perl/0, l_python/0, l_r/0, e_bind/2,
                           l_racket/0, fix/2, t_fn/4, rcd/2, r_rcd/1, r_bind/2,
-                          proj/3, append/3, lst/3, isnil/2, for/3, fold/4,
+                          proj/3, append/3, lst/3, isnil/2, for/4, fold/4,
                           assign/3
                          ] ).
 
@@ -824,10 +824,12 @@ map() ->
               {eq, 2, "="},
               {id, 2, "x"},
               {rparen, 2, ")"},
+              {colon, 2, ":"},
+              {t_str, 2, "Str"},
               {halt, 3, "end"},
               {semicolon, 3, ";"}],
   EBody = app( 2, var( 2, f ), [e_bind( x, var( 2, x ) )] ),
-  E = for( 1, [e_bind( x, var( 1, x_lst ) )], EBody ),
+  E = for( 1, t_str(), [e_bind( x, var( 1, x_lst ) )], EBody ),
   ?assertEqual( {ok, {[], [], [E]}}, parse( TokenLst ) ).
 
 map_let() ->
@@ -849,13 +851,15 @@ map_let() ->
               {rparen, 2, ")"},
               {semicolon, 2, ";"},
               {id, 3, "y"},
+              {colon, 3, ":"},
+              {t_str, 3, "Str"},
               {halt, 4, "end"},
               {semicolon, 4, ";"}],
   EBody = app( 2, lam_ntv( 2, [lam_ntv_arg( y, t_str() )], var( 3, y ) ),
                [e_bind( y, app( 2, 
                                 var( 2, f ),
                                 [e_bind( x, var( 2, x ) )] ) )] ),
-  E = for( 1, [e_bind( x, var( 1, x_lst ) )], EBody ),
+  E = for( 1, t_str(), [e_bind( x, var( 1, x_lst ) )], EBody ),
   ?assertEqual( {ok, {[], [], [E]}}, parse( TokenLst ) ).
 
 zip_pair() ->
@@ -878,10 +882,12 @@ zip_pair() ->
               {eq, 2, "="},
               {id, 2, "y"},
               {rparen, 2, ")"},
+              {colon, 2, ":"},
+              {t_str, 2, "Str"},
               {halt, 3, "end"},
               {semicolon, 3, ";"}],
   EBody = app( 2, var( 2, f ), [e_bind( x, var( 2, x ) ), e_bind( y, var( 2, y ) )] ),
-  E = for( 1, [e_bind( x, var( 1, x_lst ) ), e_bind( y, var( 1, y_lst ) )], EBody ),
+  E = for( 1, t_str(), [e_bind( x, var( 1, x_lst ) ), e_bind( y, var( 1, y_lst ) )], EBody ),
   ?assertEqual( {ok, {[], [], [E]}}, parse( TokenLst ) ).
 
 zip_triple() ->
@@ -912,10 +918,12 @@ zip_triple() ->
               {eq, 2, "="},
               {id, 2, "z"},
               {rparen, 2, ")"},
+              {colon, 2, ":"},
+              {t_str, 2, "Str"},
               {halt, 3, "end"},
               {semicolon, 3, ";"}],
   EBody = app( 2, var( 2, f ), [e_bind( x, var( 2, x ) ), e_bind( y, var( 2, y ) ), e_bind( z, var( 2, z ) )] ),
-  E = for( 1, [e_bind( x, var( 1, x_lst ) ), e_bind( y, var( 1, y_lst ) ), e_bind( z, var( 1, z_lst ) )], EBody ),
+  E = for( 1, t_str(), [e_bind( x, var( 1, x_lst ) ), e_bind( y, var( 1, y_lst ) ), e_bind( z, var( 1, z_lst ) )], EBody ),
   ?assertEqual( {ok, {[], [], [E]}}, parse( TokenLst ) ).
 
 fold() ->
