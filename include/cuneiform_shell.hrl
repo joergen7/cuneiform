@@ -1,0 +1,10 @@
+-record( shell_state, {line       = 1,
+                       string_buf = "",
+                       token_buf  = [],
+                       token_lst  = [],
+                       import_buf = [],
+                       import_lst = [],
+                       def_buf    = [],
+                       def_lst    = [],
+                       query_lst  = [],
+                       reply_lst  = []} ).

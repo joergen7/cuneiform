@@ -22,8 +22,9 @@
 -module( cuneiform_shell ).
 
 -include_lib( "cf_client/include/cuneiform.hrl" ).
+-include_lib( "cuneiform_shell.hrl" ).
 
--export( [shell/1] ).
+-export( [shell/1, shell_eval/2] ).
 
 -define( BUILD, "2017-12-13" ).
 -define( VSN, "3.0.0" ).
@@ -37,16 +38,7 @@
 -define( BBLU( Str ), "\e[1;34m" ++ Str ++ "\e[0m" ).
 
 
--record( shell_state, {line       = 1,
-                       string_buf = "",
-                       token_buf  = [],
-                       token_lst  = [],
-                       import_buf = [],
-                       import_lst = [],
-                       def_buf    = [],
-                       def_lst    = [],
-                       query_lst  = [],
-                       reply_lst  = []} ).
+
 
 -type stage() :: scan
                | input
