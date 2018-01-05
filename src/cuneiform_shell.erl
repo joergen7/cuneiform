@@ -400,7 +400,7 @@ get_prompt( ShellState ) ->
 -spec format_error( {error, Stage :: stage(), Reason :: _} ) -> string().
 
 format_error( {error, Stage, Reason} ) ->
-  io_lib:format( ?RED( "~p error: " )++?BRED( "~p" ), [Stage, Reason] ).
+  io_lib:format( "~p error: ~p", [Stage, Reason] ).
 
 -spec format_expr( E :: e() ) -> string().
 
