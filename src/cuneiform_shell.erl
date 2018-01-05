@@ -24,7 +24,8 @@
 -include_lib( "cf_client/include/cuneiform.hrl" ).
 -include_lib( "cuneiform_shell.hrl" ).
 
--export( [shell/1, shell_eval/2] ).
+-export( [shell/1, shell_eval/2, format_pattern/1, format_type/1, format_expr/1,
+          format_error/1] ).
 
 -define( BUILD, "2017-12-13" ).
 -define( VSN, "3.0.0" ).
