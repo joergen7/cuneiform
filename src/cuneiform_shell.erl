@@ -70,10 +70,18 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
 
       ( {query, E} ) ->
         V = cre_client:eval( ClientName, E ),
-        {ok, T} = cuneiform_type:type( V ),
-        SV = format_expr( V ),
-        ST = format_type( T ),
-        io:format( ?GRN( "~s" )++"~n"++?BLU( ": " )++?BBLU( "~s" )++"~n", [SV, ST] );
+        case V of
+
+          {err, _, _} ->
+            SE = format_error( {error, eval, V} ),
+            io:format( ?RED( "~s" )++"~n", [SE] );
+
+          _ ->
+            {ok, T} = cuneiform_type:type( V ),
+            SV = format_expr( V ),
+            ST = format_type( T ),
+            io:format( ?GRN( "~s" )++"~n"++?BLU( ": " )++?BBLU( "~s" )++"~n", [SV, ST] )
+        end;
 
       ( {parrot, E, T} ) ->
         SE = format_expr( E ),
