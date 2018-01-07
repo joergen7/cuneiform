@@ -1,2 +1,0 @@
--module( cuneiform_fs_posix ).
--behaviour( cuneiform_fs ).

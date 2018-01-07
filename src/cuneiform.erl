@@ -24,12 +24,6 @@
 
 main( _Args ) ->
   
-  % start CRE
-  ok = cre:start(),
-
-  % attach workers
-  ok = cf_worker:start(),
-
   % attach client service
   ok = cf_client:start(),
 
