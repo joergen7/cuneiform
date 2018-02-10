@@ -44,7 +44,8 @@
 -type stage() :: scan
                | input
                | parse
-               | type.
+               | type
+               | eval.
 
 -type reply() :: {query, e()}
                | {error, stage(), _}
