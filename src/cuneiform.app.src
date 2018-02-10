@@ -1,6 +1,6 @@
 {application, cuneiform,
  [
-  {description, "Cuneiform: A Functional Language for Large-Scale Scientific Data Analysis"},
+  {description, "A functional workflow language for large-scale scientific data analysis."},
   {vsn, "3.0.0"},
   {registered, []},
   {applications, [
