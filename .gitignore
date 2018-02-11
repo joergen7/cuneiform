@@ -12,6 +12,4 @@ _build
 rebar.lock
 doc
 !doc/overview.edoc
-src/cuneiform_scan.erl
-src/cuneiform_parse.erl
 rebar3.crashdump
