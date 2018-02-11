@@ -34,8 +34,8 @@
 -include_lib( "cf_client/include/cuneiform.hrl" ).
 -include_lib( "cuneiform_shell.hrl" ).
 
--export( [shell/1, shell_eval/2, format_pattern/1, format_type/1, format_expr/1,
-          format_error/1] ).
+-export( [shell/1, shell_eval_oneshot/1, process_reply_lst/2, format_pattern/1,
+          format_type/1, format_expr/1, format_error/1] ).
 
 -define( BUILD, "2017-12-13" ).
 -define( VSN, "3.0.0" ).
@@ -51,7 +51,8 @@
 
 
 
--type stage() :: scan
+-type stage() :: load
+               | scan
                | input
                | parse
                | type
@@ -72,9 +73,43 @@ shell( ClientName ) ->
   io:format( "~s~n~n~n", [get_banner()] ),
   shell_repl( ClientName, #shell_state{} ).
 
+
 -spec shell_repl( ClientName :: _, ShellState :: #shell_state{} ) -> ok.
 
 shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
+
+  Prompt = get_prompt( ShellState ),
+  
+  case io:get_line( Prompt ) of
+
+    "quit\n" ->
+      ok;
+
+    "help\n" ->
+      io:format( "~s~n", [get_help()] ),
+      shell_repl( ClientName, ShellState );
+
+    "hist\n" ->
+      G =
+        fun( {assign, _, R, E} ) ->
+          SR = string:pad( format_pattern( R ), 16, trailing ),
+          SE = format_expr( E ),
+          io:format( "let ~s = ~s;~n", [SR, SE] )
+        end,
+      lists:foreach( G,
+                     DefLst ),
+      shell_repl( ClientName, ShellState );
+
+    Input    ->
+      {ReplyLst, ShellState1} = shell_eval( Input, ShellState ),
+      process_reply_lst( ReplyLst, ClientName ),
+      shell_repl( ClientName, ShellState1 )
+  end.
+
+
+-spec process_reply_lst( ReplyLst :: [reply()], ClientName :: _ ) -> ok.
+
+process_reply_lst( ReplyLst, ClientName ) when is_list( ReplyLst ) ->
 
   F =
     fun
@@ -105,44 +140,23 @@ shell_repl( ClientName, ShellState = #shell_state{ def_lst = DefLst } ) ->
 
     end,
 
-  Prompt = get_prompt( ShellState ),
-  
-  case io:get_line( Prompt ) of
+  ok = lists:foreach( F, ReplyLst ).
 
-    "quit\n" ->
-      ok;
 
-    "help\n" ->
-      io:format( "~s~n", [get_help()] ),
-      shell_repl( ClientName, ShellState );
+-spec shell_eval_oneshot( Input ) -> [reply()]
+when Input :: string().
 
-    "hist\n" ->
-      G =
-        fun( {assign, _, R, E} ) ->
-          SR = string:pad( format_pattern( R ), 16, trailing ),
-          SE = format_expr( E ),
-          io:format( "let ~s = ~s;~n", [SR, SE] )
-        end,
-      lists:foreach( G,
-                     DefLst ),
-      shell_repl( ClientName, ShellState );
-
-    Input    ->
-      {ReplyLst, ShellState1} = shell_eval( Input, ShellState ),
-      lists:foreach( F, ReplyLst ),
-
-      % io:format( "~p~n", [ShellState1] ),
-
-      shell_repl( ClientName, ShellState1 )
-  end.
-
+shell_eval_oneshot( Input ) ->
+  {ReplyLst, _ShellState} = shell_eval( Input, #shell_state{} ),
+  ReplyLst.
 
 
 -spec shell_eval( Input, ShellState ) -> {[reply()], #shell_state{}}
 when Input      :: string(),
      ShellState :: #shell_state{}.
 
-shell_eval( Input, ShellState = #shell_state{ string_buf = StringBuf } ) ->
+shell_eval( Input, ShellState = #shell_state{ string_buf = StringBuf } )
+when is_list( Input ) ->
 
   Eval =
     fun Eval( S ) ->
