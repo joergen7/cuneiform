@@ -109,10 +109,10 @@ main( Args ) ->
           cuneiform_shell:shell( cf_client )
         end,
 
-      {Pid, Ref} = spawn_monitor( F ),
+      _ = spawn_monitor( F ),
 
       receive
-        {'DOWN', Ref, process, Pid, _Info} ->
+        {'DOWN', _, process, _, _Info} ->
           ok = timer:sleep( 1000 )
       end;
 
@@ -140,10 +140,10 @@ main( Args ) ->
                 cuneiform_shell:process_reply_lst( ReplyLst, cf_client, silent )
             end,
 
-          {Pid, Ref} = spawn_monitor( G ),
+          _ = spawn_monitor( G ),
 
           receive
-            {'DOWN', Ref, process, Pid, _Info} ->
+            {'DOWN', _, process, _, _Info} ->
               ok
           end
 
