@@ -32,10 +32,144 @@
 
 -export( [main/1] ).
 
+-define( VSN, "3.0.0" ).
 
 %%====================================================================
 %% Escript main function
 %%====================================================================
 
-main( _Args ) ->
-  ok.
+main( Args ) ->
+
+  % TODO: neutralize all configurations
+
+  try
+
+    case getopt:parse( get_optspec_lst(), Args ) of
+  
+      {error, R1} ->
+        throw( {error, R1} );
+
+      {ok, {OptLst, NonOptLst}} ->
+
+        % break if version needs to be displayed
+        case lists:member( version, OptLst ) of
+          false -> ok;
+          true  -> throw( version )
+        end,
+
+        % break if help needs to be displayed
+        case lists:member( help, OptLst ) of
+          false -> ok;
+          true  -> throw( help )
+        end,
+
+        % override configuration files
+        application:set_env( cf_client, global_file, undefined ),
+        application:set_env( cf_client, user_file, undefined ),
+        application:unset_env( cf_client, suppl_file ),
+        application:set_env( cf_worker, global_file, undefined ),
+        application:set_env( cf_worker, user_file, undefined ),
+        application:unset_env( cf_worker, suppl_file ),
+
+        % set flag maps
+        application:set_env( cf_client, flag_map, #{} ),
+        application:set_env( cf_worker, flag_map, #{} ),
+
+        % start CRE application
+        ok = cre:start(),
+        _ = monitor( process, cre_sup ),
+
+        % start worker application
+        ok = cf_worker:start(),
+        _ = monitor( process, cf_worker_sup ),
+
+        % start client application
+        ok = cf_client:start(),
+        _ = monitor( process, cf_client_sup ),
+
+        case NonOptLst of
+          []    -> throw( shell );
+          [_|_] -> throw( {load, NonOptLst} )
+        end
+
+    end
+
+  catch
+
+    throw:version ->
+      print_version();
+
+    throw:help ->
+      print_help();
+
+    throw:shell ->
+
+      F =
+        fun() ->
+          cuneiform_shell:shell( cf_client )
+        end,
+
+      {Pid, Ref} = spawn_monitor( F ),
+
+      receive
+        {'DOWN', Ref, process, Pid, _Info} ->
+          ok = timer:sleep( 1000 )
+      end;
+
+    throw:{load, FileLst} ->
+
+      F =
+        fun( File ) ->
+
+          % collect reply list
+          ReplyLst =
+            case file:read_file( File ) of
+
+              {error, R3} ->
+                [{error, load, {File, R3}}];
+
+              {ok, B} ->
+                S = binary_to_list( B ),
+                cuneiform_shell:shell_eval_oneshot( S )
+
+            end,
+
+          G =
+            fun() ->
+              ok =
+                cuneiform_shell:process_reply_lst( ReplyLst, cf_client, silent )
+            end,
+
+          {Pid, Ref} = spawn_monitor( G ),
+
+          receive
+            {'DOWN', Ref, process, Pid, _Info} ->
+              ok
+          end
+
+        end,
+
+      ok = lists:foreach( F, FileLst );
+
+    throw:{error, Reason} ->
+      ok = io:format( "~n~p~n", [Reason] )
+
+  end.
+
+
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
+
+get_optspec_lst() ->
+  [
+   {version,    $v, "version",    undefined, "Show cf_worker version."},
+   {help,       $h, "help",       undefined, "Show command line options."}
+  ].
+
+print_help() ->
+  getopt:usage( get_optspec_lst(), "cf_worker" ).
+
+print_version() ->
+  io:format( "cuneiform ~s~n", [?VSN] ).
