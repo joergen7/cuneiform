@@ -77,15 +77,12 @@ main( Args ) ->
 
         % start CRE application
         ok = cre:start(),
-        _ = monitor( process, cre_sup ),
 
         % start worker application
         ok = cf_worker:start(),
-        _ = monitor( process, cf_worker_sup ),
 
         % start client application
         ok = cf_client:start(),
-        _ = monitor( process, cf_client_sup ),
 
         case NonOptLst of
           []    -> throw( shell );
@@ -103,18 +100,7 @@ main( Args ) ->
       print_help();
 
     throw:shell ->
-
-      F =
-        fun() ->
-          cuneiform_shell:shell( cf_client )
-        end,
-
-      _ = spawn_monitor( F ),
-
-      receive
-        {'DOWN', _, process, _, _Info} ->
-          ok = timer:sleep( 1000 )
-      end;
+      cuneiform_shell:shell( cf_client );
 
     throw:{load, FileLst} ->
 
@@ -134,18 +120,7 @@ main( Args ) ->
 
             end,
 
-          G =
-            fun() ->
-              ok =
-                cuneiform_shell:process_reply_lst( ReplyLst, cf_client, silent )
-            end,
-
-          _ = spawn_monitor( G ),
-
-          receive
-            {'DOWN', _, process, _, _Info} ->
-              ok
-          end
+          cuneiform_shell:process_reply_lst( ReplyLst, cf_client, silent )
 
         end,
 
