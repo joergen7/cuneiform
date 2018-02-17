@@ -71,9 +71,42 @@ main( Args ) ->
         application:set_env( cf_worker, user_file, undefined ),
         application:unset_env( cf_worker, suppl_file ),
 
+
+        % extract number of workers
+        M1 =
+          case lists:keyfind( n_wrk, 1, OptLst ) of
+            false                 -> #{};
+            {n_wrk, 0}            -> #{ n_wrk => <<"auto">> };
+            {n_wrk, N} when N > 0 -> #{ n_wrk => N };
+            A                     -> throw( {error, {invalid_arg, A}} )
+          end,
+
+        % extract working directory
+        M2 =
+          case lists:keyfind( wrk_dir, 1, OptLst ) of
+            false        -> M1;
+            {wrk_dir, W} -> M1#{ wrk_dir => W }
+          end,
+
+        % extract repository directory
+        M3 =
+          case lists:keyfind( repo_dir, 1, OptLst ) of
+            false         -> M2;
+            {repo_dir, R} -> M2#{ repo_dir => R }
+          end,
+
+        % extract data directory
+        M4 =
+          case lists:keyfind( data_dir, 1, OptLst ) of
+            false         -> M3;
+            {data_dir, D} -> M3#{ data_dir => D }
+          end,
+
         % set flag maps
-        application:set_env( cf_client, flag_map, #{} ),
-        application:set_env( cf_worker, flag_map, #{} ),
+        ok = application:set_env( cf_client, flag_map, #{} ),
+        ok = application:set_env( cf_worker, flag_map, M4 ),
+
+
 
         % start CRE application
         ok = cre:start(),
@@ -140,7 +173,11 @@ main( Args ) ->
 get_optspec_lst() ->
   [
    {version,    $v, "version",    undefined, "Show cf_worker version."},
-   {help,       $h, "help",       undefined, "Show command line options."}
+   {help,       $h, "help",       undefined, "Show command line options."},
+   {n_wrk,      $n, "n_wrk",      integer,   "Number of worker processes to start. 0 means auto-detect available processors."},
+   {wrk_dir,    $w, "wrk_dir",    binary,    "Working directory in which workers store temporary files."},
+   {repo_dir,   $r, "repo_dir",   binary,    "Repository directory for intermediate and output data."},
+   {data_dir,   $d, "data_dir",   binary,    "Data directory where input data is located."}
   ].
 
 print_help() ->
