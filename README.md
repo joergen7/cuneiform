@@ -4,6 +4,8 @@
 
 [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
+![Cuneiform: Data analysis open and general](priv/cuneiform_title.jpg)
+
 Distributed functional programming with foreign language interfacing.
 
 Cuneiform is a minimal workflow specification language with immutable state,
@@ -18,7 +20,7 @@ requires. For further information, please refer to the [Cuneiform paper](http://
 
 ## Resources
 
-- [cuneiform-lang.org](https://www.cuneiform-lang.org/)
+- [cuneiform-lang.org](https://www.cuneiform-lang.org/). Official website of the Cuneiform programming language.
 - [joergen7/cre](https://github.com/joergen7/cre). A common runtime environment (CRE) for distributed workflow languages.
 - [joergen7/cf_client](https://github.com/joergen7/cf_client). A Cuneiform client implementation.
 - [joergen7/cf_worker](https://github.com/joergen7/cf_worker). A Cuneiform worker implementation.
