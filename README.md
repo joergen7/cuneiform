@@ -1,10 +1,7 @@
-# Cuneiform
-
-###### A functional language for large-scale scientific data analysis.
+![Cuneiform: Data analysis open and general](priv/cuneiform_title.jpg)
 
 [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
-![Cuneiform: Data analysis open and general](priv/cuneiform_title.jpg)
 
 Distributed functional programming with foreign language interfacing.
 
