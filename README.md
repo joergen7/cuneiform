@@ -1,6 +1,8 @@
-# Cuneiform [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
+# Cuneiform
 
-**[cuneiform-lang.org](http://www.cuneiform-lang.org/)**
+###### A functional language for large-scale scientific data analysis.
+
+[![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
 Distributed functional programming with foreign language interfacing.
 
@@ -14,13 +16,17 @@ Bash, R, or Python. This way users can not only supplement features absent
 in native Cuneiform but can reuse any tool or library no matter what API it
 requires. For further information, please refer to the [Cuneiform paper](http://ceur-ws.org/Vol-1330/paper-03.pdf)
 
-#### Links
+## Resources
 
-- [cuneiform-lang.org](http://www.cuneiform-lang.org/)
-- [saasfee.io](http://www.saasfee.io)
-- [Hi-WAY](https://github.com/marcbux/Hi-WAY)
+- [cuneiform-lang.org](https://www.cuneiform-lang.org/)
+- [joergen7/cre](https://github.com/joergen7/cre). A common runtime environment (CRE) for distributed workflow languages.
+- [joergen7/cf_client](https://github.com/joergen7/cf_client). A Cuneiform client implementation.
+- [joergen7/cf_worker](https://github.com/joergen7/cf_worker). A Cuneiform worker implementation.
 
-#### First steps
+## Authors
 
-- You can download the Cuneiform binaries from the official [download page](http://www.cuneiform-lang.org/download/)
-- The [documentation](http://www.cuneiform-lang.org/doc/) offers a quick start, tutorials, setup guides, and an overview over the Cuneiform syntax.
+- Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen.brandt@onlinehome.de](mailto:joergen.brandt@onlinehome.de)
+
+## License
+
+[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
