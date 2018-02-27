@@ -69,6 +69,10 @@ Alternatively, Cuneiform can be started by giving it a source file which will on
 
     ./cuneiform my_script.cfl
 
+## System Requirements
+
+- [Erlang](https://www.erlang.org) OTP 18.0 or higher
+- [Rebar3](https://www.rebar3.org) 3.0.0 or higher
 
 ## Resources
 
