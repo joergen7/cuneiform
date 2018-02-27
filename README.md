@@ -74,6 +74,22 @@ You can assign a value to a variable and retrieve a variable's content like so:
 
 In the first line we assign the value `"foo"` to a variable named `x` declaring its type to be `Str`. In the last line we query the variable `x`.
 
+### Booleans and Conditions
+
+We can branch execution based on conditions using conditional statements. Conditionals are expressions.
+
+    let x : Str =
+      if true
+      then
+        "bla"
+      else
+        "blub"
+      end;
+
+    x;
+
+The above command the conditional binding the string `"bla"` to the variable `x`. Then, we query the variable.
+
 ### Lists
 
 We can construct list literals by enumerating their elements in square brackets and declaring the type of the list elements.
@@ -127,7 +143,7 @@ Defining foreign functions is done by giving the function name, its signature, t
 
 The first line defines a foreign function `greet` taking one argument `person` of type `Str` and returning a tuple with a single field `out` of type `Str`. The foreign function body is given in Bash code. In the last line we call the foreign function, binding the argument `person` to the string value `"Peter"`.
 
-### Iterating Over Lists Using For
+### Iterating over Lists using For
 
 To perform an operation on each element of a list, one can iterate using for:
 
@@ -141,7 +157,7 @@ To perform an operation on each element of a list, one can iterate using for:
 
 Here, we define a list of four Booleans and negate each element.
 
-### Aggregating Lists Using Fold
+### Aggregating Lists using Fold
 
 We can aggregate over lists using fold:
 
