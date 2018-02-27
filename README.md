@@ -101,7 +101,7 @@ We can construct list literals by enumerating their elements in square brackets 
 
 Here, we define the list `xs` whose elements are of type `Bool` giving four Boolean values of which only the second is `false`.
 
-### Records
+### Records and Pattern Matching
 
 A record is a collection of fields that can be accessed via their labels. Literal records can be constructed like so:
 
