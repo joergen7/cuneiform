@@ -1,7 +1,6 @@
 ![Cuneiform: Data analysis open and general](priv/cuneiform_title.jpg)
 
-[![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
-
+[![hex.pm](https://img.shields.io/hexpm/v/cuneiform.svg?style=flat-square)](https://hex.pm/packages/cuneiform) [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
 Distributed functional programming with foreign language interfacing.
 
