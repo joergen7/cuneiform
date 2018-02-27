@@ -30,6 +30,7 @@ To display a help text enter
 
     ./cuneiform --help
 
+
 This will show the command line synopsis, which looks like the following:
 
     Usage: cf_worker [-v] [-h] [-n <n_wrk>] [-w <wrk_dir>] [-r <repo_dir>]
@@ -44,10 +45,35 @@ This will show the command line synopsis, which looks like the following:
       -d, --data_dir  Data directory where input data is located.
 
 
+#### Starting an Interactive Shell
+
+You can start a shell and program Cuneiform interactively by starting it without any command line parameters like so:
+
+    ./cuneiform
+
+This will open a shell giving the following initial output, along with a number of status messages:
+
+               @@WB      Cuneiform
+              @@E_____
+         _g@@@@@WWWWWWL  Type help for usage info
+       g@@#*`3@B              quit to exit shell
+      @@P    3@B
+      @N____ 3@B         http://www.cuneiform-lang.org
+      "W@@@WF3@B
+
+    1>
+
+#### Running a Cuneiform Script
+
+Alternatively, Cuneiform can be started by giving it a source file which will only output the final result of the computation. If your Cuneiform script is stored in `my_script.cfl` start it by entering
+
+    ./cuneiform my_script.cfl
+
 
 ## Resources
 
 - [cuneiform-lang.org](https://www.cuneiform-lang.org/). Official website of the Cuneiform programming language.
+- [joergen7/cuneiform-examples](https://github.com/joergen7/cuneiform-examples). Collection of small, self-contained Cuneiform code examples.
 - [joergen7/cre](https://github.com/joergen7/cre). A common runtime environment (CRE) for distributed workflow languages.
 - [joergen7/cf_client](https://github.com/joergen7/cf_client). A Cuneiform client implementation.
 - [joergen7/cf_worker](https://github.com/joergen7/cf_worker). A Cuneiform worker implementation.
