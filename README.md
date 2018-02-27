@@ -2,17 +2,7 @@
 
 [![hex.pm](https://img.shields.io/hexpm/v/cuneiform.svg?style=flat-square)](https://hex.pm/packages/cuneiform) [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
 
-Cuneiform is a functional language for large-scale data analysis.
-
-Cuneiform is a minimal workflow specification language with immutable state,
-lazy evaluation, lists, and second order functions operating on lists. In
-this, it borrows from Functional Programming languages. Cuneiform
-deliberately constrains users to specify workflows in a parallelizable way.
-Its execution environment is designed for clusters and clouds. In addition,
-functions (tasks) can be defined in any given scripting language, e.g.,
-Bash, R, or Python. This way users can not only supplement features absent
-in native Cuneiform but can reuse any tool or library no matter what API it
-requires. For further information, please refer to the [Cuneiform paper](http://ceur-ws.org/Vol-1330/paper-03.pdf)
+Cuneiform is a large-scale data analysis functional programming language. It is *open* because it integrates foreign tools and libraries, e.g., Python libraries or command line tools. It is *general* because it has the expressive power of a functional programming language while using the independence of sub-expressions to automatically parallelize Cuneiform programs.
 
 ## Usage
 
@@ -130,7 +120,7 @@ In the first line we define the function `identity` which consumes an argument `
 Defining foreign functions is done by giving the function name, its signature, the foreign language name, and the function body in mickey-mouse-eared curly braces.
 
     def greet( person : Str ) -> <out : Str> in Bash *{
-      out="Hell $person"
+      out="Hello $person"
     }*
 
     greet( person = "Peter" );
