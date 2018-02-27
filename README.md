@@ -69,6 +69,40 @@ Alternatively, Cuneiform can be started by giving it a source file which will on
 
     ./cuneiform my_script.cfl
 
+## Examples
+
+A collection of self-contained Cuneiform examples is available under [joergen7/cuneiform-examples](https://github.com/joergen7/cuneiform-examples).
+
+### Variable assignment
+
+You can assign a value to a variable and retrieve a variable's content like so:
+
+    let x : Str = "foo";
+    x;
+
+In the first line we assign the value `"foo"` to a variable named `x` declaring its type to be `Str`. In the second line we query the variable `x`. The result looks like the following:
+
+    "foo"
+    : Str
+
+### Native Function Definition
+
+Defining native functions in Cuneiform is done by giving the function name, its prototype and a body expression in curly braces:
+
+    def identity( x : Str ) -> Str {
+      x
+    }
+
+    identity( x = "bar" );
+
+In the first line we define the function `identity` which consumes an argument `x` of type `Str` and produces a return value of type `Str`. In the second line, the body expression is just the argument `x`. In the last line we call the function binding the argument `x` to the value `"bar"`.
+
+### Foreign Function Definition
+
+### Iterating with For
+
+### Folding
+
 ## System Requirements
 
 - [Erlang](https://www.erlang.org) OTP 18.0 or higher
