@@ -77,17 +77,45 @@ A collection of self-contained Cuneiform examples is available under [joergen7/c
 
 You can assign a value to a variable and retrieve a variable's content like so:
 
-    let x : Str = "foo";
+    let x : Str =
+      "foo";
+
     x;
 
-In the first line we assign the value `"foo"` to a variable named `x` declaring its type to be `Str`. In the second line we query the variable `x`. The result looks like the following:
+In the first line we assign the value `"foo"` to a variable named `x` declaring its type to be `Str`. In the last line we query the variable `x`.
 
-    "foo"
-    : Str
+### Lists
+
+We can construct list literals by enumerating their elements in square brackets and declaring the type of the list elements.
+
+    let xs : [Bool] =
+      [true, false, true, true : Bool];
+
+    xs;
+
+Here, we define the list `xs` whose elements are of type `Bool` giving four Boolean values of which only the second is `false`.
+
+### Records
+
+A record is a collection of fields that can be accessed via their labels. Literal records can be constructed like so:
+
+    let r : <a : Str, b : Bool> =
+      <a = "blub", b = false>;
+
+    ( r|a );
+
+We define a record `r` with two fields `a` and `b`, of types `Str` and `Bool` respectively. The field associated with `a` gets the value `"blub"` while the field associated with `b` gets the value `false`. In the last line we access the `a` field of the record `r`.
+
+Alternatively, we can access record fields via pattern matching:
+
+    let <a = z : Str> = r;
+    z;
+
+In the first line we associate the variable `z` with the field `a` of record `r`. In the second line we query the content of `z`.
 
 ### Native Function Definition
 
-Defining native functions in Cuneiform is done by giving the function name, its prototype and a body expression in curly braces:
+Defining native functions in Cuneiform is done by giving the function name, its signature, and a body expression in curly braces:
 
     def identity( x : Str ) -> Str {
       x
@@ -99,9 +127,48 @@ In the first line we define the function `identity` which consumes an argument `
 
 ### Foreign Function Definition
 
-### Iterating with For
+Defining foreign functions is done by giving the function name, its signature, the foreign language name, and the function body in mickey-mouse-eared curly braces.
 
-### Folding
+    def greet( person : Str ) -> <out : Str> in Bash *{
+      out="Hell $person"
+    }*
+
+    greet( person = "Peter" );
+
+The first line defines a foreign function `greet` taking one argument `person` of type `Str` and returning a tuple with a single field `out` of type `Str`. The foreign function body is given in Bash code. In the last line we call the foreign function, binding the argument `person` to the string value `"Peter"`.
+
+### Iterating Over Lists Using For
+
+To perform an operation on each element of a list, one can iterate using for:
+
+    let xs : [Bool] =
+      [true, false, true, true : Bool];
+
+    for x <- xs do
+      not x
+      : Bool
+    end;
+
+Here, we define a list of four Booleans and negate each element.
+
+### Aggregating Lists Using Fold
+
+We can aggregate over lists using fold:
+
+    def add( a : Str, b : Str ) -> <c : Str> in Python *{
+      c = int( a )+int( b )
+    }*
+
+    let xs : [Str] = [1, 2, 3 : Str];
+
+    let sum : Str =
+      fold acc = 0, x <- xs do
+        ( add( a = acc, b = x )|c )
+      end;
+
+    sum;
+
+Here, we first define the function `add` which lets us add two numbers in Python and then the string list `xs` containing the numbers from one to three. We aggregate the sum of the numbers in `xs` and store it the result in the variable `sum`. Lastly, we query the `sum` variable.
 
 ## System Requirements
 
