@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 3.0.0
+%% @version 3.0.1
 %% @copyright 2015-2018 Jörgen Brandt
 %%
 %%
@@ -32,7 +32,7 @@
 
 -export( [main/1] ).
 
--define( VSN, "3.0.0" ).
+-define( VSN, "3.0.1" ).
 
 %%====================================================================
 %% Escript main function
