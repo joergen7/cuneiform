@@ -133,6 +133,7 @@ main( Args ) ->
       print_help();
 
     throw:shell ->
+      print_version(),
       ok = cuneiform_shell:shell( cf_client );
 
     throw:{load, FileLst} ->
