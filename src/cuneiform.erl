@@ -63,20 +63,10 @@ main( Args ) ->
           true  -> throw( help )
         end,
 
-        % override configuration files
-        application:set_env( cf_client, global_file, undefined ),
-        application:set_env( cf_client, user_file, undefined ),
-        application:unset_env( cf_client, suppl_file ),
-        application:set_env( cf_worker, global_file, undefined ),
-        application:set_env( cf_worker, user_file, undefined ),
-        application:unset_env( cf_worker, suppl_file ),
-
-
         % extract number of workers
         M1 =
           case lists:keyfind( n_wrk, 1, OptLst ) of
-            false                 -> #{};
-            {n_wrk, 0}            -> #{ n_wrk => <<"auto">> };
+            false                 -> #{ n_wrk => <<"auto">> };
             {n_wrk, N} when N > 0 -> #{ n_wrk => N };
             A                     -> throw( {error, {invalid_arg, A}} )
           end,
@@ -84,29 +74,27 @@ main( Args ) ->
         % extract working directory
         M2 =
           case lists:keyfind( wrk_dir, 1, OptLst ) of
-            false        -> M1;
+            false        -> M1#{ wrk_dir => <<"./_cuneiform/wrk">> };
             {wrk_dir, W} -> M1#{ wrk_dir => W }
           end,
 
         % extract repository directory
         M3 =
           case lists:keyfind( repo_dir, 1, OptLst ) of
-            false         -> M2;
+            false         -> M2#{ repo_dir => <<"./_cuneiform/repo">> };
             {repo_dir, R} -> M2#{ repo_dir => R }
           end,
 
         % extract data directory
         M4 =
           case lists:keyfind( data_dir, 1, OptLst ) of
-            false         -> M3;
+            false         -> M3#{ data_dir => <<".">> };
             {data_dir, D} -> M3#{ data_dir => D }
           end,
 
         % set flag maps
-        ok = application:set_env( cf_client, flag_map, #{} ),
-        ok = application:set_env( cf_worker, flag_map, M4 ),
-
-
+        ok = application:set_env( cf_client, flag_map, #{ cre_node => <<"node">> } ),
+        ok = application:set_env( cf_worker, flag_map, M4#{ cre_node => <<"node">> } ),
 
         % start CRE application
         ok = cre:start(),
