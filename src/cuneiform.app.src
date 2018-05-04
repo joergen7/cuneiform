@@ -1,7 +1,7 @@
 {application, cuneiform,
  [
   {description, "A functional workflow language for large-scale scientific data analysis."},
-  {vsn, "3.0.3"},
+  {vsn, "3.0.4"},
   {registered, []},
   {applications, [
                   kernel,

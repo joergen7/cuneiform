@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% A functional workflow language for large-scale scientific data analysis.
+%% cuneiform
 %%
 %% Copyright 2015-2018 Jörgen Brandt
 %%
@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 3.0.3
+%% @version 3.0.4
 %% @copyright 2015-2018 Jörgen Brandt
 %%
 %%
@@ -32,7 +32,7 @@
 
 -export( [main/1] ).
 
--define( VSN, "3.0.3" ).
+-define( VSN, "3.0.4" ).
 
 %%====================================================================
 %% Escript main function
