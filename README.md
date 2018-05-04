@@ -51,7 +51,7 @@ This will open a shell giving the following initial output, along with a number 
        g@@#*`3@B              quit to exit shell
       @@P    3@B
       @N____ 3@B         http://www.cuneiform-lang.org
-      "W@@@WF3@B
+      "W@@@WF3@B         Jorgen Brandt
 
     1>
 
@@ -180,7 +180,7 @@ Here, we first define the function `add` which lets us add two numbers in Python
 
 ## System Requirements
 
-- [Erlang](https://www.erlang.org) OTP 18.0 or higher
+- [Erlang](https://www.erlang.org) OTP 19.0 or higher
 - [Rebar3](https://www.rebar3.org) 3.0.0 or higher
 
 ## Resources
