@@ -194,6 +194,10 @@ Here, we first define the function `add` which lets us add two numbers in Python
 ## Authors
 
 - Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen.brandt@onlinehome.de](mailto:joergen.brandt@onlinehome.de)
+- Carl Witt ([@carlwitt](https://github.com/carlwitt))
+- Maximilian Mackeprang ([@mackeprm](https://github.com/mackeprm))
+- Björn Groß ([@bearbob](https://github.com/bearbob))
+- Andrea Amantini ([@zampino](https://github.com/zampino))
 
 ## License
 

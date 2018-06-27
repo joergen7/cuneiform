@@ -170,7 +170,7 @@ get_optspec_lst() ->
   ].
 
 print_help() ->
-  getopt:usage( get_optspec_lst(), "cf_worker" ).
+  getopt:usage( get_optspec_lst(), "cuneiform" ).
 
 print_version() ->
   io:format( "cuneiform ~s~n", [?VSN] ).
