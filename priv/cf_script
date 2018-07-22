@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+
+SCRIPT=`mktemp`
+cat /dev/stdin > $SCRIPT
+
+cuneiform $@ $SCRIPT
