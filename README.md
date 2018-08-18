@@ -152,7 +152,7 @@ To perform an operation on each element of a list, one can iterate using for:
     let xs : [Bool] =
       [true, false, true, true : Bool];
 
-    for x <- xs do
+    for x : Bool <- xs do
       not x
       : Bool
     end;
@@ -170,7 +170,7 @@ We can aggregate over lists using fold:
     let xs : [Str] = [1, 2, 3 : Str];
 
     let sum : Str =
-      fold acc = 0, x <- xs do
+      fold acc : Str = 0, x : Str <- xs do
         ( add( a = acc, b = x )|c )
       end;
 
