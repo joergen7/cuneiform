@@ -3,6 +3,8 @@ install:
 language: erlang
 script: ./rebar3 eunit
 otp_release:
+  - 21.0
+  - 20.3
   - 20.2
   - 20.1
   - 20.0
