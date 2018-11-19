@@ -8,7 +8,7 @@
                   stdlib
                  ]},
   {env, []},
-  {modules, [cuneiform_parse, cuneiform_scan, cuneiform_shell]},
+  {modules, [cuneiform]},
   {maintainers, ["Jorgen Brandt"]},
   {licenses, ["Apache 2.0"]},
   {links, [
