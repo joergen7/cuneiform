@@ -2,7 +2,7 @@
 %%
 %% cuneiform
 %%
-%% Copyright 2015-2018 Jörgen Brandt
+%% Copyright 2015-2019 Jörgen Brandt
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 3.0.4
-%% @copyright 2015-2018 Jörgen Brandt
+%% @version 3.0.5
+%% @copyright 2015-2019 Jörgen Brandt
 %%
 %%
 %%

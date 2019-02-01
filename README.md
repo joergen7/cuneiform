@@ -25,7 +25,7 @@ To display a help text enter
 
 This will show the command line synopsis, which looks like the following:
 
-    Usage: cf_worker [-v] [-h] [-n <n_wrk>] [-w <wrk_dir>] [-r <repo_dir>]
+    Usage: cuneiform [-v] [-h] [-n <n_wrk>] [-w <wrk_dir>] [-r <repo_dir>]
                      [-d <data_dir>]
 
       -v, --version   Show cf_worker version.
