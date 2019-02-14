@@ -1,8 +1,8 @@
 %% -*- erlang -*-
 %%
-%% cuneiform
+%% Cuneiform distributed programming language
 %%
-%% Copyright 2015-2019 Jörgen Brandt
+%% Copyright 2015-2019 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
 %% @version 3.0.5
-%% @copyright 2015-2019 Jörgen Brandt
+%% @copyright 2015-2019
 %%
 %%
 %%
@@ -32,7 +32,7 @@
 
 -export( [main/1] ).
 
--define( VSN, "3.0.4" ).
+-define( VSN, "3.0.5" ).
 
 %%====================================================================
 %% Escript main function
