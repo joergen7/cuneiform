@@ -134,6 +134,7 @@ main( Args ) ->
             case file:read_file( File ) of
 
               {error, R3} ->
+                io:format( "we land here~n" ),
                 [{error, load, {File, R3}}];
 
               {ok, B} ->
@@ -149,7 +150,8 @@ main( Args ) ->
       ok = lists:foreach( F, FileLst );
 
     throw:{error, Reason} ->
-      ok = io:format( "~n~p~n", [Reason] )
+      ReplyLst = [{error, load, Reason}],
+      cuneiform_shell:process_reply_lst( ReplyLst, cf_client, silent )
 
   end.
 
@@ -174,3 +176,5 @@ print_help() ->
 
 print_version() ->
   io:format( "cuneiform ~s~n", [?VSN] ).
+
+
