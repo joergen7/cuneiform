@@ -14,13 +14,13 @@ Having rebar3 available on your system, compile the project by entering
 
     rebar3 escriptize
 
-### Starting Cuneiform
+### Displaying Cuneiform Help
 
-Compiling the Cuneiform client using `escriptize` creates an Erlang script file `cf_worker` which allows starting the Cuneiform client via the command line.
+Compiling the Cuneiform client using `rebar3 escriptize` creates an Erlang script file `_build/default/bin/cfl` which allows starting Cuneiform via the command line. 
 
 To display a help text enter
 
-    ./cuneiform --help
+    _build/default/bin/cfl --help
 
 
 This will show the command line synopsis, which looks like the following:
@@ -36,12 +36,14 @@ This will show the command line synopsis, which looks like the following:
       -r, --repo_dir  Repository directory for intermediate and output data.
       -d, --data_dir  Data directory where input data is located.
 
+This script is self-contained and can be moved around to, e.g., `~/bin/cfl`. From here on we assume that the `cfl` script is accessible in your system path and that we can start it by just entering `cfl` instead of `_build/default/bin/cfl`.
+
 
 #### Starting an Interactive Shell
 
 You can start a shell and program Cuneiform interactively by starting it without any command line parameters like so:
 
-    ./cuneiform
+    cfl
 
 This will open a shell giving the following initial output, along with a number of status messages:
 
@@ -55,11 +57,14 @@ This will open a shell giving the following initial output, along with a number 
 
     1>
 
+Note that starting Cuneiform like that will create a local instance of a Cuneiform that entails the scheduler service, a client service, and as many worker services as CPUs were detected on the host machine. To set up a distributed Cuneiform system, these services need to be started separately on multiple hosts as needed.
+
+
 #### Running a Cuneiform Script
 
 Alternatively, Cuneiform can be started by giving it a source file which will only output the final result of the computation. If your Cuneiform script is stored in `my_script.cfl` start it by entering
 
-    ./cuneiform my_script.cfl
+    cfl my_script.cfl
 
 ## Examples
 
