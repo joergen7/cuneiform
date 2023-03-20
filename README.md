@@ -25,8 +25,8 @@ To display a help text enter
 
 This will show the command line synopsis, which looks like the following:
 
-    Usage: cuneiform [-v] [-h] [-n <n_wrk>] [-w <wrk_dir>] [-r <repo_dir>]
-                     [-d <data_dir>]
+    Usage: cfl [-v] [-h] [-n <n_wrk>] [-w <wrk_dir>] [-r <repo_dir>]
+               [-d <data_dir>]
 
       -v, --version   Show cf_worker version.
       -h, --help      Show command line options.
@@ -195,14 +195,6 @@ Here, we first define the function `add` which lets us add two numbers in Python
 - [joergen7/cre](https://github.com/joergen7/cre). A common runtime environment (CRE) for distributed workflow languages.
 - [joergen7/cf_client](https://github.com/joergen7/cf_client). A Cuneiform client implementation.
 - [joergen7/cf_worker](https://github.com/joergen7/cf_worker). A Cuneiform worker implementation.
-
-## Authors
-
-- Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen.brandt@onlinehome.de](mailto:joergen.brandt@onlinehome.de)
-- Carl Witt ([@carlwitt](https://github.com/carlwitt))
-- Maximilian Mackeprang ([@mackeprm](https://github.com/mackeprm))
-- Björn Groß ([@bearbob](https://github.com/bearbob))
-- Andrea Amantini ([@zampino](https://github.com/zampino))
 
 ## License
 

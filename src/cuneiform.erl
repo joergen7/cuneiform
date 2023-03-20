@@ -2,7 +2,7 @@
 %%
 %% Cuneiform distributed programming language
 %%
-%% Copyright 2013-2020 Jörgen Brandt <joergen@cuneiform-lang.org>
+%% Copyright 2013 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 3.0.5
-%% @copyright 2013-2020
+%% @version 3.0.6
+%% @copyright 2013
 %%
 %%
 %%
@@ -32,7 +32,7 @@
 
 -export( [main/1] ).
 
--define( VSN, "3.0.5" ).
+-define( VSN, "3.0.6" ).
 
 %%====================================================================
 %% Escript main function
@@ -172,7 +172,7 @@ get_optspec_lst() ->
   ].
 
 print_help() ->
-  getopt:usage( get_optspec_lst(), "cuneiform" ).
+  getopt:usage( get_optspec_lst(), "cfl" ).
 
 print_version() ->
   io:format( "cuneiform ~s~n", [?VSN] ).

@@ -13,3 +13,4 @@ rebar.lock
 doc
 !doc/overview.edoc
 rebar3.crashdump
+*~
