@@ -1,0 +1,44 @@
+services:
+  cre:
+    build: .
+    command: cre
+    networks:
+      - cuneiform-net
+    hostname: cre_host    # the worker connects to cre@[hostname]
+
+  cfl_wrk:
+    build: .
+    command: cfl_wrk -c cre@cre_host -w /tmp/_cuneiform/wrk -r /opt/_cuneiform/repo -d /opt/_cuneiform/data
+    volumes:
+      - type: volume
+        source: repo-vol
+        target: /opt/_cuneiform/repo
+      - type: volume
+        source: data-vol
+        target: /opt/_cuneiform/data
+        read_only: true
+    networks:
+      - cuneiform-net
+    depends_on:
+      - cre
+    deploy:
+      mode: replicated
+      replicas: 2         # 2 replicas
+    cpus: 4               # each with 4 cores makes 8 worker processes
+
+  cfl_client:             # the cfl_client process starts a Cuneiform shell and then immediately exits
+    build: .
+    command: cfl_client -c cre@cre_host
+    networks:
+      - cuneiform-net
+    depends_on:
+      - cre
+
+
+networks:
+  cuneiform-net:
+
+volumes:
+  repo-vol:
+  data-vol:
+

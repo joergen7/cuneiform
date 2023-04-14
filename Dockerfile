@@ -20,4 +20,6 @@ RUN apk add nodejs octave racket bash elixir gnuplot openjdk17 python3 R R-dev R
 # Wal
 RUN apk add py3-pip cmake g++ python3-dev && pip install build && git clone https://github.com/ics-jku/wal.git && (cd wal && git checkout 1ffa6a3 && make install) && rm -rf wal
 
-ENTRYPOINT ["sh"]
+RUN echo '$y$j9T$7rB03tCGBZHKyQPR/jata1$UF9ICbyarE/Vs3s2paRKnIA8mP6ayA0mlog/KSSPMvD' > /root/.erlang.cookie && chmod 400 /root/.erlang.cookie
+
+CMD ["sh"]
