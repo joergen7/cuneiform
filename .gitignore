@@ -8,9 +8,10 @@ ebin/*.beam
 rel/example_project
 .concrete/DEV_MODE
 .rebar
+*~
 _build
 rebar.lock
-doc
-!doc/overview.edoc
 rebar3.crashdump
-*~
+doc/*
+!doc/overview.edoc
+.DS_Store
