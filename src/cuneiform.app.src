@@ -1,17 +1,11 @@
 {application, cuneiform,
- [
-  {description, "A functional workflow language for large-scale scientific data analysis."},
+ [{description, "A functional workflow language for large-scale scientific data analysis."},
   {vsn, "3.0.6"},
   {registered, []},
-  {applications, [
-                  kernel,
-                  stdlib
-                 ]},
+  {applications, [kernel,
+                  stdlib]},
   {env, []},
   {modules, [cuneiform]},
   {maintainers, ["Jorgen Brandt"]},
   {licenses, ["Apache 2.0"]},
-  {links, [
-           {"GitHub", "https://github.com/joergen7/cuneiform/"}
-          ]}
-]}.
+  {links, [{"GitHub", "https://github.com/joergen7/cuneiform/"}]}]}.
