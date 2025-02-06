@@ -1,6 +1,6 @@
 ![Cuneiform: Data analysis open and general](priv/cuneiform_title.jpg)
 
-[![hex.pm](https://img.shields.io/hexpm/v/cuneiform.svg?style=flat-square)](https://hex.pm/packages/cuneiform) [![Build Status](https://travis-ci.org/joergen7/cuneiform.svg?branch=master)](https://travis-ci.org/joergen7/cuneiform)
+[![hex.pm](https://img.shields.io/hexpm/v/cuneiform.svg?style=flat-square)](https://hex.pm/packages/cuneiform)
 
 Cuneiform is a large-scale data analysis functional programming language. It is *open* because it easily integrates foreign tools and libraries, e.g., Python libraries or command line tools. It is *general* because it has the expressive power of a functional programming language while using the independence of sub-expressions to automatically parallelize programs. Cuneiform uses distributed Erlang to scalably run in cluster and cloud environments.
 
